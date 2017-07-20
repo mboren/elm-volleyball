@@ -8,6 +8,8 @@ type alias Model =
   { paused : Bool
   , time : Time
   , delta : Time
+  , screenWidth : Int
+  , screenHeight : Int
   -- data for each player: kinematic info, score
   -- data for ball: kinematic info, timer
   -- size/position info for playing field and net
