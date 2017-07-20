@@ -38,5 +38,17 @@ view model =
         , Svg.Attributes.fill "lightskyblue"
         ]
         []
+      , drawNet model
       ]
     ]
+
+drawNet : Model -> Svg Msg
+drawNet {screenWidth, screenHeight, netWidth, netHeight} =
+  Svg.rect
+    [ Svg.Attributes.x (toString ((screenWidth // 2) - (netWidth // 2)))
+    , Svg.Attributes.y (toString (screenHeight - netHeight))
+    , Svg.Attributes.width (toString netWidth)
+    , Svg.Attributes.height (toString netHeight)
+    , Svg.Attributes.fill "black"
+    ]
+    []

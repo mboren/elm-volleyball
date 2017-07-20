@@ -4,7 +4,7 @@ import Types exposing (..)
 
 init : (Model, Cmd Msg)
 init =
-  (Model True 0 0 1000 600, Cmd.none)
+  (Model True 0 0 1000 600 10 250, Cmd.none)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =

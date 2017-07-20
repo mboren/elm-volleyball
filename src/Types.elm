@@ -10,11 +10,11 @@ type alias Model =
   , delta : Time
   , screenWidth : Int
   , screenHeight : Int
+  , netWidth : Int
+  , netHeight : Int
   -- data for each player: kinematic info, score
   -- data for ball: kinematic info, timer
-  -- size/position info for playing field and net
   -- pressed keys
-  -- 
   }
 
 type Msg
