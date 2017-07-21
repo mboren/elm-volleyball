@@ -10,6 +10,7 @@ type alias Mover a =
   , velocity : Float2
   , acceleration : Float2
   , size : Float
+  , onGround : Bool
   }
 
 type alias Explosive a =

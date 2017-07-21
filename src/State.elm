@@ -20,12 +20,14 @@ init =
       , velocity = (0, 0)
       , acceleration = (0, 0)
       , size = 50
+      , onGround = False
       }
     ball =
       { position = (1000/2, 600/3)
       , velocity = (-0.1, 0)
       , acceleration = (0, 0)
       , size = 20
+      , onGround = False
       , countdown = 10 * Time.second
       , exploding = False
       }
@@ -121,8 +123,11 @@ applyGravity player =
     -- to whatever makes falling look good
     g = (0, 0.001)
   in
-    player
-      |> addAcceleration g
+    if not player.onGround then
+      player
+        |> addAcceleration g
+    else
+      player
 
 bounce : Model -> Float -> Mover a -> Mover a
 bounce model bounciness ball =
@@ -226,12 +231,15 @@ updatePosition screenHeight dt player =
         |> V2.scale (0.5 * dt)
         |> V2.add player.position
 
+    newOnGround = (V2.getY player.position) + player.size >= toFloat screenHeight
+
     newAcceleration = (0, 0)
   in
     { player
       | position = newPosition
       , velocity = newVelocity
       , acceleration = newAcceleration
+      , onGround = newOnGround
     }
 
 updateCountdown : Time -> Explosive a -> Explosive a
