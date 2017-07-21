@@ -2,16 +2,22 @@ module State exposing (init, update, subscriptions)
 
 import Time exposing (Time)
 import Task
+import Keyboard
 
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
+
+friction = 0.6
+speedLimit = 0.7
+playerAccelX = 0.05
+frameTime = 10 * Time.millisecond
 
 init : (Model, Cmd Msg)
 init =
   let
     p1 = Player (1000/4,600/3) (0,0) (0,0) 50
   in
-    (Model True 0 0 1000 600 10 250 p1, Task.perform Resume Time.now)
+    (Model True 0 0 1000 600 10 250 p1 False False, Task.perform Resume Time.now)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -23,12 +29,14 @@ update msg model =
         , delta = 0
        }
       , Cmd.none)
+
     Tick newTime ->
       let
         dt = newTime - model.time
         player_ =
           model.player
             |> applyGravity
+            |> applyMovementKeys model.leftPressed model.rightPressed
             |> updatePosition model.screenHeight dt
       in
         ( { model
@@ -39,6 +47,31 @@ update msg model =
         , Cmd.none
         )
 
+    Press key ->
+      let
+        newModel =
+          case key of
+            37 ->
+              { model | leftPressed = True }
+            39 ->
+              { model | rightPressed = True }
+            _ ->
+              model
+      in
+        (newModel, Cmd.none)
+
+    Release key ->
+      let
+        newModel =
+          case key of
+            37 ->
+              { model | leftPressed = False }
+            39 ->
+              { model | rightPressed = False }
+            _ ->
+              model
+      in
+        (newModel, Cmd.none)
     _ ->
       (model, Cmd.none)
 
@@ -48,7 +81,11 @@ subscriptions model =
     True ->
       Sub.none
     False ->
-      Time.every (10 * Time.millisecond) Tick
+      Sub.batch
+        [ Time.every frameTime Tick
+        , Keyboard.downs Press
+        , Keyboard.ups Release
+        ]
 
 addAcceleration : Float2 -> Player -> Player
 addAcceleration a player =
@@ -65,6 +102,41 @@ applyGravity player =
   in
     player
       |> addAcceleration g
+
+applyMovementKeys : Bool -> Bool -> Player -> Player
+applyMovementKeys leftPressed rightPressed player =
+  case (leftPressed, rightPressed) of
+    (False, False) ->
+      -- if left/right are not pressed, then we apply friction
+      -- to x velocity
+      let
+        oldXVelocity = V2.getX player.velocity
+        newXVelocity = friction * oldXVelocity
+        newVelocity = V2.setX newXVelocity player.velocity
+      in
+        { player | velocity = newVelocity }
+
+    -- right
+    (False, True) ->
+      player |> addAcceleration (playerAccelX, 0)
+
+    -- left
+    (True, False) ->
+      player |> addAcceleration (-1 * playerAccelX, 0)
+
+    (True, True) ->
+      player
+
+clampX : Float -> Float -> Float2 -> Float2
+clampX low high vector =
+  let
+    newX =
+      vector
+        |> V2.getX
+        |> clamp low high
+  in
+    vector
+      |> V2.setX newX
 
 clampY : Float -> Float -> Float2 -> Float2
 clampY low high vector =
@@ -89,6 +161,7 @@ updatePosition screenHeight dt player =
       player.acceleration
         |> V2.scale dt
         |> V2.add player.velocity
+        |> clampX (-1 * speedLimit) speedLimit
 
     -- r = r0 + 0.5 * t * (v + v0)
     newPosition =

@@ -20,9 +20,12 @@ type alias Model =
   , netWidth : Int
   , netHeight : Int
   , player : Player
+  -- will likely use a different structure
+  -- for keys in the future
+  , leftPressed : Bool
+  , rightPressed : Bool
   -- data for each player: score
   -- data for ball: kinematic info, timer
-  -- pressed keys
   }
 
 type Msg
