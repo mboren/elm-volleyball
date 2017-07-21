@@ -27,6 +27,7 @@ init =
       , acceleration = (0, 0)
       , size = 20
       , countdown = 10 * Time.second
+      , exploding = False
       }
   in
     (Model True 0 0 1000 600 10 250 p1 ball False False, Task.perform Resume Time.now)

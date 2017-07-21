@@ -68,12 +68,15 @@ drawPlayer {position, size} =
     ]
     []
 
-drawBall : Mover {countdown : Time} -> Svg Msg
-drawBall {position, size} =
+drawBall : Mover {countdown : Time, exploding : Bool} -> Svg Msg
+drawBall {position, size, exploding} =
   Svg.circle
     [ Svg.Attributes.cx (toString (V2.getX position))
     , Svg.Attributes.cy (toString (V2.getY position))
     , Svg.Attributes.r (toString size)
-    , Svg.Attributes.fill "black"
+    , Svg.Attributes.fill
+        (case exploding of
+          True -> "red"
+          False -> "black")
     ]
     []

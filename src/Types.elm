@@ -12,6 +12,12 @@ type alias Mover a =
   , size : Float
   }
 
+type alias Explosive a =
+  { a
+  | countdown : Time
+  , exploding : Bool
+  }
+
 type alias Model =
   { paused : Bool
   , time : Time
@@ -21,13 +27,12 @@ type alias Model =
   , netWidth : Int
   , netHeight : Int
   , player : Mover {}
-  , ball : Mover {countdown : Time}
+  , ball : Explosive (Mover {})
   -- will likely use a different structure
   -- for keys in the future
   , leftPressed : Bool
   , rightPressed : Bool
   -- data for each player: score
-  -- data for ball: kinematic info, timer
   }
 
 type Msg
