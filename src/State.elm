@@ -57,6 +57,7 @@ update msg model =
             |> applyGravity
             |> bounce model 0.9
             |> updatePosition model.screenHeight dt
+            |> updateCountdown dt
       in
         ( { model
             | time = newTime
@@ -231,4 +232,15 @@ updatePosition screenHeight dt player =
       | position = newPosition
       , velocity = newVelocity
       , acceleration = newAcceleration
+    }
+
+updateCountdown : Time -> Explosive a -> Explosive a
+updateCountdown dt ball =
+  let
+    remainingTime = ball.countdown - dt
+    timerFinished = remainingTime <= 0
+  in
+    { ball
+      | countdown = ball.countdown - dt
+      , exploding = timerFinished
     }
