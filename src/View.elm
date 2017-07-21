@@ -5,6 +5,8 @@ import Html.Attributes
 import Svg exposing (Svg)
 import Svg.Attributes
 
+import Vector2 as V2 exposing (Vec2, Float2)
+
 import Types exposing (..)
 
 view : Model -> Svg Msg
@@ -39,6 +41,7 @@ view model =
         ]
         []
       , drawNet model
+      , drawPlayer model.player
       ]
     ]
 
@@ -49,6 +52,16 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     , Svg.Attributes.y (toString (screenHeight - netHeight))
     , Svg.Attributes.width (toString netWidth)
     , Svg.Attributes.height (toString netHeight)
+    , Svg.Attributes.fill "black"
+    ]
+    []
+
+drawPlayer : Player -> Svg Msg
+drawPlayer {position} =
+  Svg.circle
+    [ Svg.Attributes.cx (toString (V2.getX position))
+    , Svg.Attributes.cy (toString (V2.getY position))
+    , Svg.Attributes.r "50"
     , Svg.Attributes.fill "black"
     ]
     []
