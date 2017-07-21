@@ -4,6 +4,7 @@ import Html exposing (Html, div)
 import Html.Attributes
 import Svg exposing (Svg)
 import Svg.Attributes
+import Time exposing (Time)
 
 import Vector2 as V2 exposing (Vec2, Float2)
 
@@ -42,6 +43,7 @@ view model =
         []
       , drawNet model
       , drawPlayer model.player
+      , drawBall model.ball
       ]
     ]
 
@@ -56,8 +58,18 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     ]
     []
 
-drawPlayer : Player -> Svg Msg
+drawPlayer : Mover {} -> Svg Msg
 drawPlayer {position, size} =
+  Svg.circle
+    [ Svg.Attributes.cx (toString (V2.getX position))
+    , Svg.Attributes.cy (toString (V2.getY position))
+    , Svg.Attributes.r (toString size)
+    , Svg.Attributes.fill "black"
+    ]
+    []
+
+drawBall : Mover {countdown : Time} -> Svg Msg
+drawBall {position, size} =
   Svg.circle
     [ Svg.Attributes.cx (toString (V2.getX position))
     , Svg.Attributes.cy (toString (V2.getY position))

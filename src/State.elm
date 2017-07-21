@@ -15,9 +15,21 @@ frameTime = 10 * Time.millisecond
 init : (Model, Cmd Msg)
 init =
   let
-    p1 = Player (1000/4,600/3) (0,0) (0,0) 50
+    p1 =
+      { position = (1000/4, 600/3)
+      , velocity = (0, 0)
+      , acceleration = (0, 0)
+      , size = 50
+      }
+    ball =
+      { position = (1000/2, 600/3)
+      , velocity = (-0.1, 0)
+      , acceleration = (0, 0)
+      , size = 20
+      , countdown = 10 * Time.second
+      }
   in
-    (Model True 0 0 1000 600 10 250 p1 False False, Task.perform Resume Time.now)
+    (Model True 0 0 1000 600 10 250 p1 ball False False, Task.perform Resume Time.now)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -38,11 +50,18 @@ update msg model =
             |> applyGravity
             |> applyMovementKeys model.leftPressed model.rightPressed
             |> updatePosition model.screenHeight dt
+            |> clampPosition (0, 0) (toFloat model.screenWidth, toFloat model.screenHeight)
+        ball_ =
+          model.ball
+            |> applyGravity
+            |> bounce model 0.9
+            |> updatePosition model.screenHeight dt
       in
         ( { model
             | time = newTime
             , delta = dt
             , player = player_
+            , ball = ball_
           }
         , Cmd.none
         )
@@ -87,13 +106,13 @@ subscriptions model =
         , Keyboard.ups Release
         ]
 
-addAcceleration : Float2 -> Player -> Player
+addAcceleration : Float2 -> Mover a -> Mover a
 addAcceleration a player =
   { player
     | acceleration = (V2.add a player.acceleration)
   }
 
-applyGravity : Player -> Player
+applyGravity : Mover a -> Mover a
 applyGravity player =
   let
     -- choice of g is essentially arbitrary and should be set
@@ -103,7 +122,42 @@ applyGravity player =
     player
       |> addAcceleration g
 
-applyMovementKeys : Bool -> Bool -> Player -> Player
+bounce : Model -> Float -> Mover a -> Mover a
+bounce model bounciness ball =
+  let
+    (x, y) = ball.position
+    (ax, ay) = ball.acceleration
+    (vx, vy) = ball.velocity
+    bounceX =
+      if x + ball.size > (toFloat model.screenWidth) then
+        -1.0 * (abs vx) * bounciness
+      else if x - ball.size < 0 then
+        (abs vx) * bounciness
+      else
+        vx
+
+    bounceY =
+      if y + ball.size > (toFloat model.screenHeight) then
+        -1.0 * (abs vy) * bounciness
+      else if y - ball.size < 0 then
+        (abs vy) * bounciness
+      else
+        vy
+  in
+    { ball | velocity = (bounceX, bounceY) }
+
+clampPosition : Float2 -> Float2 -> Mover a -> Mover a
+clampPosition low high player =
+  let
+    newPosition =
+      player.position
+        |> clampX ((V2.getX low) + player.size) ((V2.getX high) - player.size)
+        |> clampY ((V2.getY low) + player.size) ((V2.getY high) - player.size)
+  in
+    { player | position = newPosition }
+
+
+applyMovementKeys : Bool -> Bool -> Mover a -> Mover a
 applyMovementKeys leftPressed rightPressed player =
   case (leftPressed, rightPressed) of
     (False, False) ->
@@ -153,7 +207,7 @@ clampY low high vector =
    Vertical position is capped to keep player on screen.
    Acceleration is zeroed after it is applied.
 -}
-updatePosition : Int -> Time -> Player -> Player
+updatePosition : Int -> Time -> Mover a -> Mover a
 updatePosition screenHeight dt player =
   let
     -- v = v0 + a * t
@@ -169,8 +223,6 @@ updatePosition screenHeight dt player =
         |> V2.add newVelocity
         |> V2.scale (0.5 * dt)
         |> V2.add player.position
-        -- keep in vertical bounds
-        |> clampY 0 ((toFloat screenHeight) - player.size)
 
     newAcceleration = (0, 0)
   in

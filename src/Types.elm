@@ -4,8 +4,9 @@ import Time exposing (Time)
 import Keyboard
 import Vector2 as V2 exposing (Vec2, Float2)
 
-type alias Player =
-  { position : Float2
+type alias Mover a =
+  { a
+  | position : Float2
   , velocity : Float2
   , acceleration : Float2
   , size : Float
@@ -19,7 +20,8 @@ type alias Model =
   , screenHeight : Int
   , netWidth : Int
   , netHeight : Int
-  , player : Player
+  , player : Mover {}
+  , ball : Mover {countdown : Time}
   -- will likely use a different structure
   -- for keys in the future
   , leftPressed : Bool
