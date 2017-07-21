@@ -33,6 +33,7 @@ type alias Model =
   -- for keys in the future
   , leftPressed : Bool
   , rightPressed : Bool
+  , jumpPressed : Bool
   -- data for each player: score
   }
 

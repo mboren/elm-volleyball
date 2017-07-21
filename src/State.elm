@@ -11,6 +11,7 @@ friction = 0.6
 speedLimit = 0.7
 playerAccelX = 0.05
 frameTime = 10 * Time.millisecond
+jumpSpeed = -0.7
 
 init : (Model, Cmd Msg)
 init =
@@ -32,7 +33,7 @@ init =
       , exploding = False
       }
   in
-    (Model True 0 0 1000 600 10 250 p1 ball False False, Task.perform Resume Time.now)
+    (Model True 0 0 1000 600 10 250 p1 ball False False False, Task.perform Resume Time.now)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -52,6 +53,7 @@ update msg model =
           model.player
             |> applyGravity
             |> applyMovementKeys model.leftPressed model.rightPressed
+            |> applyJump model.jumpPressed
             |> updatePosition model.screenHeight dt
             |> clampPosition (0, 0) (toFloat model.screenWidth, toFloat model.screenHeight)
         ball_ =
@@ -78,6 +80,8 @@ update msg model =
               { model | leftPressed = True }
             39 ->
               { model | rightPressed = True }
+            32 ->
+              { model | jumpPressed = True }
             _ ->
               model
       in
@@ -91,6 +95,8 @@ update msg model =
               { model | leftPressed = False }
             39 ->
               { model | rightPressed = False }
+            32 ->
+              { model | jumpPressed = False }
             _ ->
               model
       in
@@ -187,6 +193,13 @@ applyMovementKeys leftPressed rightPressed player =
 
     (True, True) ->
       player
+
+applyJump : Bool -> Mover a -> Mover a
+applyJump jumpPressed player =
+  if player.onGround && jumpPressed then
+    { player | velocity = player.velocity |> V2.setY jumpSpeed }
+  else
+    player
 
 clampX : Float -> Float -> Float2 -> Float2
 clampX low high vector =
