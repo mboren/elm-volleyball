@@ -7,6 +7,7 @@ import Vector2 as V2 exposing (Vec2, Float2)
 type alias Player =
   { position : Float2
   , velocity : Float2
+  , acceleration : Float2
   , size : Float
   }
 
@@ -19,7 +20,7 @@ type alias Model =
   , netWidth : Int
   , netHeight : Int
   , player : Player
-  -- data for each player: kinematic info, score
+  -- data for each player: score
   -- data for ball: kinematic info, timer
   -- pressed keys
   }
