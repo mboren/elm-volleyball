@@ -7,6 +7,7 @@ import Vector2 as V2 exposing (Vec2, Float2)
 type alias Player =
   { position : Float2
   , velocity : Float2
+  , size : Float
   }
 
 type alias Model =

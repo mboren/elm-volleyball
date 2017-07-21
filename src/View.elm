@@ -57,11 +57,11 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     []
 
 drawPlayer : Player -> Svg Msg
-drawPlayer {position} =
+drawPlayer {position, size} =
   Svg.circle
     [ Svg.Attributes.cx (toString (V2.getX position))
     , Svg.Attributes.cy (toString (V2.getY position))
-    , Svg.Attributes.r "50"
+    , Svg.Attributes.r (toString size)
     , Svg.Attributes.fill "black"
     ]
     []
