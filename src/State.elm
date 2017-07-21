@@ -55,7 +55,7 @@ update msg model =
             |> applyMovementKeys model.leftPressed model.rightPressed
             |> applyJump model.jumpPressed
             |> updatePosition model.screenHeight dt
-            |> clampPosition (0, 0) (toFloat model.screenWidth, toFloat model.screenHeight)
+            |> handleFloor (toFloat model.screenHeight)
         ball_ =
           model.ball
             |> applyGravity
@@ -222,6 +222,33 @@ clampY low high vector =
   in
     vector
       |> V2.setY newY
+
+handleFloor : Float -> Mover a -> Mover a
+handleFloor floorY mover =
+  if (V2.getY mover.position) + mover.size >= floorY then
+    let
+      newPosition = mover.position |> V2.setY (floorY - mover.size)
+
+      newVelocity =
+        if (V2.getY mover.velocity) < 0 then
+          mover.velocity |> V2.setY 0
+        else
+          mover.velocity
+
+      newAcceleration =
+        if (V2.getY mover.acceleration) < 0 then
+          mover.acceleration |> V2.setY 0
+        else
+          mover.acceleration
+    in
+      { mover
+        | position = newPosition
+        , velocity = newVelocity
+        , acceleration = newAcceleration
+        , onGround = True
+      }
+  else
+    mover
 
 {- Calculate change in position, velocity, and acceleration for this frame.
    Vertical position is capped to keep player on screen.
