@@ -33,7 +33,7 @@ type alias Model =
   , screenHeight : Int
   , netWidth : Int
   , netHeight : Int
-  , player : Controlled (Mover {})
+  , player1 : Controlled (Mover {})
   , ball : Explosive (Mover {})
   -- data for each player: score
   }

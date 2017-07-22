@@ -53,7 +53,7 @@ update msg model =
       let
         dt = newTime - model.time
         player_ =
-          model.player
+          model.player1
             |> applyGravity
             |> applyMovementKeys
             |> applyJump
@@ -63,14 +63,14 @@ update msg model =
           model.ball
             |> applyGravity
             |> bounce model 0.9
-            |> applyPlayerCollision (toFloat model.screenWidth) model.player
+            |> applyPlayerCollision (toFloat model.screenWidth) model.player1
             |> updatePosition model.screenHeight dt
             |> updateCountdown dt
       in
         ( { model
             | time = newTime
             , delta = dt
-            , player = player_
+            , player1 = player_
             , ball = ball_
           }
         , Cmd.none
@@ -78,7 +78,7 @@ update msg model =
 
     Press key ->
       let
-        player = model.player
+        player = model.player1
         newPlayer =
           case key of
             37 ->
@@ -90,11 +90,11 @@ update msg model =
             _ ->
               player
       in
-        ({ model | player = newPlayer }, Cmd.none)
+        ({ model | player1 = newPlayer }, Cmd.none)
 
     Release key ->
       let
-        player = model.player
+        player = model.player1
         newPlayer =
           case key of
             37 ->
@@ -106,7 +106,7 @@ update msg model =
             _ ->
               player
       in
-        ({ model | player = newPlayer }, Cmd.none)
+        ({ model | player1 = newPlayer }, Cmd.none)
     _ ->
       (model, Cmd.none)
 
