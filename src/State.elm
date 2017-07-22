@@ -26,6 +26,16 @@ init =
       , rightPressed = False
       , jumpPressed = False
       }
+    p2 =
+      { position = (3*1000/4, 600/3)
+      , velocity = (0, 0)
+      , acceleration = (0, 0)
+      , size = 50
+      , onGround = False
+      , leftPressed = False
+      , rightPressed = False
+      , jumpPressed = False
+      }
     ball =
       { position = (1000/2, 600/3)
       , velocity = (-0.1, 0)
@@ -36,7 +46,7 @@ init =
       , exploding = False
       }
   in
-    (Model True 0 0 1000 600 10 250 p1 ball, Task.perform Resume Time.now)
+    (Model True 0 0 1000 600 10 250 p1 p2 ball, Task.perform Resume Time.now)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -52,13 +62,6 @@ update msg model =
     Tick newTime ->
       let
         dt = newTime - model.time
-        player_ =
-          model.player1
-            |> applyGravity
-            |> applyMovementKeys
-            |> applyJump
-            |> updatePosition model.screenHeight dt
-            |> handleFloor (toFloat model.screenHeight)
         ball_ =
           model.ball
             |> applyGravity
@@ -70,45 +73,32 @@ update msg model =
         ( { model
             | time = newTime
             , delta = dt
-            , player1 = player_
+            , player1 = playerStep dt (toFloat model.screenHeight) model.player1
+            , player2 = playerStep dt (toFloat model.screenHeight) model.player2
             , ball = ball_
           }
         , Cmd.none
         )
 
     Press key ->
-      let
-        player = model.player1
-        newPlayer =
-          case key of
-            37 ->
-                { player | leftPressed = True }
-            39 ->
-              { player | rightPressed = True }
-            32 ->
-              { player | jumpPressed = True }
-            _ ->
-              player
-      in
-        ({ model | player1 = newPlayer }, Cmd.none)
+      ( { model
+          | player1 = handleKey 83 70 69 True key model.player1
+          , player2 = handleKey 74 76 73 True key model.player2
+        }
+      , Cmd.none
+      )
 
     Release key ->
-      let
-        player = model.player1
-        newPlayer =
-          case key of
-            37 ->
-                { player | leftPressed = False }
-            39 ->
-              { player | rightPressed = False }
-            32 ->
-              { player | jumpPressed = False }
-            _ ->
-              player
-      in
-        ({ model | player1 = newPlayer }, Cmd.none)
+      ( { model
+          | player1 = handleKey 83 70 69 False key model.player1
+          , player2 = handleKey 74 76 73 False key model.player2
+        }
+      , Cmd.none
+      )
+
     _ ->
       (model, Cmd.none)
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -121,6 +111,26 @@ subscriptions model =
         , Keyboard.downs Press
         , Keyboard.ups Release
         ]
+
+playerStep : Time -> Float -> Controlled (Mover a) -> Controlled (Mover a)
+playerStep dt screenHeight player =
+  player
+    |> applyGravity
+    |> applyMovementKeys
+    |> applyJump
+    |> updatePosition (floor screenHeight) dt
+    |> handleFloor screenHeight
+
+handleKey : Keyboard.KeyCode -> Keyboard.KeyCode -> Keyboard.KeyCode -> Bool -> Keyboard.KeyCode -> Controlled a -> Controlled a
+handleKey leftKey rightKey jumpKey pressed key player =
+  if key == leftKey then
+    { player | leftPressed = pressed }
+  else if key == rightKey then
+    { player | rightPressed = pressed }
+  else if key == jumpKey then
+    { player | jumpPressed = pressed }
+  else
+    player
 
 addAcceleration : Float2 -> Mover a -> Mover a
 addAcceleration a player =

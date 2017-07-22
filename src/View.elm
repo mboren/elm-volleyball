@@ -43,6 +43,7 @@ view model =
         []
       , drawNet model
       , drawPlayer model.player1
+      , drawPlayer model.player2
       , drawBall model.ball
       ]
     ]
