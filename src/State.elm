@@ -60,6 +60,7 @@ update msg model =
           model.ball
             |> applyGravity
             |> bounce model 0.9
+            |> applyPlayerCollision (toFloat model.screenWidth) model.player
             |> updatePosition model.screenHeight dt
             |> updateCountdown dt
       in
@@ -158,6 +159,37 @@ bounce model bounciness ball =
         vy
   in
     { ball | velocity = (bounceX, bounceY) }
+
+{-
+When the ball collides with a player, we take the player's velocity, change
+the signs of its components so it points toward the other side, then add
+to the ball's velocity.
+I like the way this feels a lot. It's intuitive, and it makes a wide variety of
+shots possible. Feels a lot better than just normal collision.
+-}
+applyPlayerCollision : Float -> Mover a -> Explosive (Mover a) -> Explosive (Mover a)
+applyPlayerCollision screenWidth player ball =
+  let
+    minimumDistance = player.size + ball.size
+    distance = V2.distance player.position ball.position
+
+    horizontalSign =
+      if (V2.getX player.position) < screenWidth / 2 then
+        1.0
+      else
+        -1.0
+
+    newVelocity =
+      if distance <= minimumDistance then
+        V2.map abs player.velocity
+          |> Tuple.mapFirst ((*) horizontalSign) -- X should point to other side
+          |> Tuple.mapSecond ((*) -1.0) -- Y should always point up or level
+          |> V2.scale 1.0
+          |> V2.add ball.velocity
+      else
+        ball.velocity
+  in
+    { ball | velocity = newVelocity }
 
 clampPosition : Float2 -> Float2 -> Mover a -> Mover a
 clampPosition low high player =
