@@ -126,6 +126,7 @@ playerStep dt screenHeight player =
     |> applyMovementKeys
     |> applyJump
     |> updatePosition (floor screenHeight) dt
+    |> handleWalls
     |> handleFloor screenHeight
 
 handleKey : Keyboard.KeyCode -> Keyboard.KeyCode -> Keyboard.KeyCode -> Bool -> Keyboard.KeyCode -> Controlled a -> Controlled a
@@ -301,6 +302,30 @@ handleFloor floorY mover =
       }
   else
     mover
+
+handleWalls : Mover a -> Mover a
+handleWalls mover =
+  let
+    (x, y) = mover.position
+    (ax, ay) = mover.acceleration
+    (vx, vy) = mover.velocity
+    leftBoundX = mover.leftWallX + mover.size
+    rightBoundX = mover.rightWallX - mover.size
+  in
+    if x >= rightBoundX then
+      { mover
+        | position = (rightBoundX, y)
+        , velocity = (Basics.min 0 vx, vy)
+        , acceleration = (Basics.min 0 ax, ay)
+      }
+    else if x <= leftBoundX then
+      { mover
+        | position = (leftBoundX, y)
+        , velocity = (Basics.max 0 vx, vy)
+        , acceleration = (Basics.max 0 ax, ay)
+      }
+    else
+      mover
 
 {- Calculate change in position, velocity, and acceleration for this frame.
    Vertical position is capped to keep player on screen.
