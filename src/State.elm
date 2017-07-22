@@ -276,23 +276,22 @@ clampY low high vector =
     vector
       |> V2.setY newY
 
+mapX : (Float -> Float) -> Float2 -> Float2
+mapX f (x, y) =
+  (f x, y)
+
+mapY : (Float -> Float) -> Float2 -> Float2
+mapY f (x, y) =
+  (x, f y)
+
 handleFloor : Float -> Mover a -> Mover a
 handleFloor floorY mover =
   if (V2.getY mover.position) + mover.size >= floorY then
     let
       newPosition = mover.position |> V2.setY (floorY - mover.size)
 
-      newVelocity =
-        if (V2.getY mover.velocity) > 0 then
-          mover.velocity |> V2.setY 0
-        else
-          mover.velocity
-
-      newAcceleration =
-        if (V2.getY mover.acceleration) > 0 then
-          mover.acceleration |> V2.setY 0
-        else
-          mover.acceleration
+      newVelocity = mapY (Basics.min 0) mover.velocity
+      newAcceleration = mapY (Basics.min 0) mover.acceleration
     in
       { mover
         | position = newPosition
