@@ -78,6 +78,7 @@ update msg model =
               |> updatePosition model.screenHeight dt
               |> handleNet model
               |> updateCountdown dt
+              |> detectDetonation
           else
             model.ball
       in
@@ -356,14 +357,11 @@ updatePosition screenHeight dt player =
 
 updateCountdown : Time -> Explosive a -> Explosive a
 updateCountdown dt ball =
-  let
-    remainingTime = ball.countdown - dt
-    timerFinished = remainingTime <= 0
-  in
-    { ball
-      | countdown = ball.countdown - dt
-      , exploding = timerFinished
-    }
+  { ball | countdown = ball.countdown - dt }
+
+detectDetonation : Explosive (Mover a) -> Explosive (Mover a)
+detectDetonation ball =
+  { ball | exploding = (ball.countdown <= 0) || ball.onGround }
 
 aiMovement : Model -> Controlled (Mover a) -> Controlled (Mover a)
 aiMovement {ball} player =
