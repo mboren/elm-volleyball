@@ -73,6 +73,7 @@ update msg model =
             |> applyGravity
             |> bounce (toFloat model.screenHeight) 0.9
             |> applyPlayerCollision (toFloat model.screenWidth) model.player1
+            |> applyPlayerCollision (toFloat model.screenWidth) model.player2
             |> updatePosition model.screenHeight dt
             |> updateCountdown dt
       in
