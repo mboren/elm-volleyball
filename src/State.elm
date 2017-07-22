@@ -213,17 +213,6 @@ applyPlayerCollision screenWidth player ball =
   in
     { ball | velocity = newVelocity }
 
-clampPosition : Float2 -> Float2 -> Mover a -> Mover a
-clampPosition low high player =
-  let
-    newPosition =
-      player.position
-        |> clampX ((V2.getX low) + player.size) ((V2.getX high) - player.size)
-        |> clampY ((V2.getY low) + player.size) ((V2.getY high) - player.size)
-  in
-    { player | position = newPosition }
-
-
 applyMovementKeys : Controlled (Mover a) -> Controlled (Mover a)
 applyMovementKeys player =
   case (player.leftPressed, player.rightPressed) of
@@ -265,25 +254,6 @@ clampX low high vector =
   in
     vector
       |> V2.setX newX
-
-clampY : Float -> Float -> Float2 -> Float2
-clampY low high vector =
-  let
-    newY =
-      vector
-        |> V2.getY
-        |> clamp low high
-  in
-    vector
-      |> V2.setY newY
-
-mapX : (Float -> Float) -> Float2 -> Float2
-mapX f (x, y) =
-  (f x, y)
-
-mapY : (Float -> Float) -> Float2 -> Float2
-mapY f (x, y) =
-  (x, f y)
 
 handleFloor : Float -> Mover a -> Mover a
 handleFloor floorY mover =
