@@ -8,7 +8,7 @@ import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
 
 friction = 0.6
-speedLimit = 0.7
+speedLimit = 0.3
 playerAccelX = 0.05
 frameTime = 10 * Time.millisecond
 jumpSpeed = -0.7
