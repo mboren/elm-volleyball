@@ -3,6 +3,7 @@ module State exposing (init, update, subscriptions)
 import Time exposing (Time)
 import Task
 import Keyboard
+import Random exposing (pair, float)
 
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
@@ -12,6 +13,20 @@ speedLimit = 0.3
 playerAccelX = 0.05
 frameTime = 10 * Time.millisecond
 jumpSpeed = -0.7
+
+defaultBall : Explosive (Mover {})
+defaultBall =
+  { position = (1000/2, 600/3)
+  , velocity = (0, 0)
+  , acceleration = (0, 0)
+  , size = 20
+  , onGround = False
+  , leftWallX = 0
+  , rightWallX = 1000
+  , countdown = 10 * Time.second
+  , exploding = False
+  , explosionRadius = 50
+  }
 
 init : (Model, Cmd Msg)
 init =
@@ -40,24 +55,20 @@ init =
       , rightPressed = False
       , jumpPressed = False
       }
-    ball =
-      { position = (1000/2, 600/3)
-      , velocity = (-0.1, 0)
-      , acceleration = (0, 0)
-      , size = 20
-      , onGround = False
-      , leftWallX = 0
-      , rightWallX = 1000
-      , countdown = 10 * Time.second
-      , exploding = False
-      , explosionRadius = 50
-      }
   in
-    (Model True 0 0 1000 600 10 250 p1 p2 ball, Task.perform Resume Time.now)
+    (Model True 0 0 1000 600 10 250 p1 p2 defaultBall)
+    ! [ Random.generate NewBallVelocity velocityGenerator
+      , Task.perform Resume Time.now]
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    NewBallVelocity v ->
+      let
+        newBall = { defaultBall | velocity = v }
+      in
+        ({ model | ball = newBall }, Cmd.none)
+
     Resume startTime ->
       ({ model
         | paused = False
@@ -375,3 +386,9 @@ aiMovement {ball} player =
       , rightPressed = px < bx
       , jumpPressed = py < by
     }
+
+velocityGenerator =
+  let
+    component = float (-speedLimit) speedLimit
+  in
+    (pair component component)

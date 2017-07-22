@@ -48,3 +48,4 @@ type Msg
   | Resume Time
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
+  | NewBallVelocity Float2
