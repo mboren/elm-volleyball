@@ -368,8 +368,8 @@ updateCountdown dt ball =
 aiMovement : Model -> Controlled (Mover a) -> Controlled (Mover a)
 aiMovement {ball} player =
   let
-      (px, py) = player.position
-      (bx, by) = ball.position
+    (px, py) = player.position
+    (bx, by) = ball.position
   in
     { player
       | leftPressed = px > bx
