@@ -75,6 +75,7 @@ update msg model =
             |> applyPlayerCollision (toFloat model.screenWidth) model.player1
             |> applyPlayerCollision (toFloat model.screenWidth) model.player2
             |> updatePosition model.screenHeight dt
+            |> handleNet model
             |> updateCountdown dt
       in
         ( { model
@@ -294,6 +295,30 @@ handleWalls mover =
       }
     else
       mover
+
+handleNet : Model -> Explosive (Mover a) -> Explosive (Mover a)
+handleNet {screenWidth, screenHeight, netWidth, netHeight} ball =
+  let
+    (x,y) = ball.position
+    (vx, vy) = ball.velocity
+    nx = toFloat ((screenWidth // 2) - (netWidth // 2))
+    ny = toFloat (screenHeight - netHeight)
+  in
+    -- This just checks if the center of the ball is within the net.
+    -- I think more sophisticated collision detection would not look
+    -- sufficiently goofy.
+    if (y >= ny) && (x >= nx) && (x <= nx + (toFloat netWidth)) then
+      { ball
+        -- vx is reflected based on which side of the screen it's on.
+        -- This keeps the ball from getting stuck.
+        | velocity =
+          if x <= toFloat (screenWidth // 2) then
+            (-vx, -vy)
+          else
+            (vx, -vy)
+      }
+    else
+      ball
 
 {- Calculate change in position, velocity, and acceleration for this frame.
    Vertical position is capped to keep player on screen.
