@@ -287,21 +287,21 @@ mapY f (x, y) =
 
 handleFloor : Float -> Mover a -> Mover a
 handleFloor floorY mover =
-  if (V2.getY mover.position) + mover.size >= floorY then
-    let
-      newPosition = mover.position |> V2.setY (floorY - mover.size)
-
-      newVelocity = mapY (Basics.min 0) mover.velocity
-      newAcceleration = mapY (Basics.min 0) mover.acceleration
-    in
+  let
+    (x, y) = mover.position
+    (ax, ay) = mover.acceleration
+    (vx, vy) = mover.velocity
+    upperBoundY = floorY - mover.size
+  in
+    if y >= upperBoundY then
       { mover
-        | position = newPosition
-        , velocity = newVelocity
-        , acceleration = newAcceleration
+        | position = (x, upperBoundY)
+        , velocity = (vx, Basics.min 0 vy)
+        , acceleration = (ax, Basics.min 0 ay)
         , onGround = True
       }
-  else
-    mover
+    else
+      mover
 
 handleWalls : Mover a -> Mover a
 handleWalls mover =
