@@ -69,7 +69,7 @@ drawPlayer {position, size} =
     ]
     []
 
-drawBall : Mover {countdown : Time, exploding : Bool} -> Svg Msg
+drawBall : Explosive (Mover a) -> Svg Msg
 drawBall {position, size, exploding} =
   Svg.circle
     [ Svg.Attributes.cx (toString (V2.getX position))
