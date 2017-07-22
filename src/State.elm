@@ -69,14 +69,17 @@ update msg model =
       let
         dt = newTime - model.time
         ball_ =
-          model.ball
-            |> applyGravity
-            |> bounce (toFloat model.screenHeight) 0.9
-            |> applyPlayerCollision (toFloat model.screenWidth) model.player1
-            |> applyPlayerCollision (toFloat model.screenWidth) model.player2
-            |> updatePosition model.screenHeight dt
-            |> handleNet model
-            |> updateCountdown dt
+          if not model.ball.exploding then
+            model.ball
+              |> applyGravity
+              |> bounce (toFloat model.screenHeight) 0.9
+              |> applyPlayerCollision (toFloat model.screenWidth) model.player1
+              |> applyPlayerCollision (toFloat model.screenWidth) model.player2
+              |> updatePosition model.screenHeight dt
+              |> handleNet model
+              |> updateCountdown dt
+          else
+            model.ball
       in
         ( { model
             | time = newTime
