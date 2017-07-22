@@ -82,7 +82,7 @@ update msg model =
             | time = newTime
             , delta = dt
             , player1 = playerStep dt (toFloat model.screenHeight) model.player1
-            , player2 = playerStep dt (toFloat model.screenHeight) model.player2
+            , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
             , ball = ball_
           }
         , Cmd.none
@@ -360,4 +360,16 @@ updateCountdown dt ball =
     { ball
       | countdown = ball.countdown - dt
       , exploding = timerFinished
+    }
+
+aiMovement : Model -> Controlled (Mover a) -> Controlled (Mover a)
+aiMovement {ball} player =
+  let
+      (px, py) = player.position
+      (bx, by) = ball.position
+  in
+    { player
+      | leftPressed = px > bx
+      , rightPressed = px < bx
+      , jumpPressed = py < by
     }
