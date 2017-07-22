@@ -25,6 +25,7 @@ type alias Explosive a =
   { a
   | countdown : Time
   , exploding : Bool
+  , explosionRadius : Float
   }
 
 type alias Model =

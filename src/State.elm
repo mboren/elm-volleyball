@@ -50,6 +50,7 @@ init =
       , rightWallX = 1000
       , countdown = 10 * Time.second
       , exploding = False
+      , explosionRadius = 50
       }
   in
     (Model True 0 0 1000 600 10 250 p1 p2 ball, Task.perform Resume Time.now)

@@ -70,14 +70,19 @@ drawPlayer {position, size} =
     []
 
 drawBall : Explosive (Mover a) -> Svg Msg
-drawBall {position, size, exploding} =
-  Svg.circle
-    [ Svg.Attributes.cx (toString (V2.getX position))
-    , Svg.Attributes.cy (toString (V2.getY position))
-    , Svg.Attributes.r (toString size)
-    , Svg.Attributes.fill
-        (case exploding of
-          True -> "red"
-          False -> "black")
-    ]
-    []
+drawBall {position, size, exploding, explosionRadius} =
+  let
+    (fill, radius) =
+      case exploding of
+        True ->
+          ("red", explosionRadius)
+        False ->
+          ("black", size)
+  in
+    Svg.circle
+      [ Svg.Attributes.cx (toString (V2.getX position))
+      , Svg.Attributes.cy (toString (V2.getY position))
+      , Svg.Attributes.r (toString radius)
+      , Svg.Attributes.fill fill
+      ]
+      []
