@@ -22,6 +22,8 @@ init =
       , acceleration = (0, 0)
       , size = 50
       , onGround = False
+      , leftWallX = 0
+      , rightWallX = 1000/2
       , leftPressed = False
       , rightPressed = False
       , jumpPressed = False
@@ -32,6 +34,8 @@ init =
       , acceleration = (0, 0)
       , size = 50
       , onGround = False
+      , leftWallX = 1000/2
+      , rightWallX = 1000
       , leftPressed = False
       , rightPressed = False
       , jumpPressed = False
@@ -42,6 +46,8 @@ init =
       , acceleration = (0, 0)
       , size = 20
       , onGround = False
+      , leftWallX = 0
+      , rightWallX = 1000
       , countdown = 10 * Time.second
       , exploding = False
       }
@@ -65,7 +71,7 @@ update msg model =
         ball_ =
           model.ball
             |> applyGravity
-            |> bounce model 0.9
+            |> bounce (toFloat model.screenHeight) 0.9
             |> applyPlayerCollision (toFloat model.screenWidth) model.player1
             |> updatePosition model.screenHeight dt
             |> updateCountdown dt
@@ -151,22 +157,22 @@ applyGravity player =
     else
       player
 
-bounce : Model -> Float -> Mover a -> Mover a
-bounce model bounciness ball =
+bounce : Float -> Float -> Mover a -> Mover a
+bounce screenHeight bounciness ball =
   let
     (x, y) = ball.position
     (ax, ay) = ball.acceleration
     (vx, vy) = ball.velocity
     bounceX =
-      if x + ball.size > (toFloat model.screenWidth) then
+      if x + ball.size > (ball.rightWallX) then
         -1.0 * (abs vx) * bounciness
-      else if x - ball.size < 0 then
+      else if x - ball.size < ball.leftWallX then
         (abs vx) * bounciness
       else
         vx
 
     bounceY =
-      if y + ball.size > (toFloat model.screenHeight) then
+      if y + ball.size > screenHeight then
         -1.0 * (abs vy) * bounciness
       else if y - ball.size < 0 then
         (abs vy) * bounciness

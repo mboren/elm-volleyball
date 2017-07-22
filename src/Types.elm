@@ -17,6 +17,8 @@ type alias Mover a =
   , acceleration : Float2
   , size : Float
   , onGround : Bool
+  , leftWallX : Float
+  , rightWallX : Float
   }
 
 type alias Explosive a =
