@@ -42,6 +42,7 @@ init =
       , leftPressed = False
       , rightPressed = False
       , jumpPressed = False
+      , alive = True
       }
     p2 =
       { position = (3*1000/4, 600/3)
@@ -54,6 +55,7 @@ init =
       , leftPressed = False
       , rightPressed = False
       , jumpPressed = False
+      , alive = True
       }
   in
     (Model True 0 0 1000 600 10 250 p1 p2 defaultBall)
@@ -64,7 +66,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Reset ->
-      (model, Random.generate NewBallVelocity velocityGenerator)
+      (model |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
 
     NewBallVelocity v ->
       let
@@ -104,6 +106,7 @@ update msg model =
             , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
             , ball = ball_
           }
+          |> handleExplosionCasualties
         , Cmd.none
         )
 
@@ -396,3 +399,44 @@ velocityGenerator =
     component = float (-speedLimit) speedLimit
   in
     (pair component component)
+
+checkCollision : Float2 -> Float -> Float2 -> Float -> Bool
+checkCollision center1 radius1 center2 radius2 =
+  let
+    minimumDistance = radius1 + radius2
+    distance = V2.distance center1 center2
+  in
+    distance <= minimumDistance
+
+handleExplosionCasualties : Model -> Model
+handleExplosionCasualties model =
+  if model.ball.exploding then
+    let
+      p1 = model.player1
+      p2 = model.player2
+      ball = model.ball
+      newPlayer1 =
+        if checkCollision p1.position p1.size ball.position ball.explosionRadius then
+          { p1 | alive = False }
+        else
+          p1
+      newPlayer2 =
+        if checkCollision p2.position p2.size ball.position ball.explosionRadius then
+          { p2 | alive = False }
+        else
+          p2
+    in
+      { model | player1 = newPlayer1, player2 = newPlayer2 }
+  else
+    model
+
+revive : Controlled a -> Controlled a
+revive player =
+  { player | alive = True }
+
+revivePlayers : Model -> Model
+revivePlayers model =
+  { model
+    | player1 = revive model.player1
+    , player2 = revive model.player2
+  }

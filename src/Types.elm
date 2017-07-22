@@ -9,6 +9,7 @@ type alias Controlled a =
   | leftPressed : Bool
   , rightPressed : Bool
   , jumpPressed : Bool
+  , alive : Bool
   }
 type alias Mover a =
   { a

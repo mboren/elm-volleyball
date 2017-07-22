@@ -61,13 +61,21 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     ]
     []
 
-drawPlayer : Mover a -> Svg Msg
-drawPlayer {position, size} =
+drawPlayer : Controlled (Mover a) -> Svg Msg
+drawPlayer {position, size, alive} =
+  let
+    fillColor =
+      case alive of
+        True ->
+          "green"
+        False ->
+          "blue"
+  in
   Svg.circle
     [ Svg.Attributes.cx (toString (V2.getX position))
     , Svg.Attributes.cy (toString (V2.getY position))
     , Svg.Attributes.r (toString size)
-    , Svg.Attributes.fill "black"
+    , Svg.Attributes.fill fillColor
     ]
     []
 
