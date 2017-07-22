@@ -321,7 +321,6 @@ handleNet {screenWidth, screenHeight, netWidth, netHeight} ball =
       ball
 
 {- Calculate change in position, velocity, and acceleration for this frame.
-   Vertical position is capped to keep player on screen.
    Acceleration is zeroed after it is applied.
 -}
 updatePosition : Int -> Time -> Mover a -> Mover a
