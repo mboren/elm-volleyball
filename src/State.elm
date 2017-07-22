@@ -161,7 +161,6 @@ bounce : Float -> Float -> Mover a -> Mover a
 bounce screenHeight bounciness ball =
   let
     (x, y) = ball.position
-    (ax, ay) = ball.acceleration
     (vx, vy) = ball.velocity
     bounceX =
       if x + ball.size > (ball.rightWallX) then
