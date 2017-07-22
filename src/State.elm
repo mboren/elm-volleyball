@@ -220,11 +220,9 @@ applyMovementKeys player =
       -- if left/right are not pressed, then we apply friction
       -- to x velocity
       let
-        oldXVelocity = V2.getX player.velocity
-        newXVelocity = friction * oldXVelocity
-        newVelocity = V2.setX newXVelocity player.velocity
+        (vx, vy) = player.velocity
       in
-        { player | velocity = newVelocity }
+        { player | velocity = (friction * vx, vy) }
 
     -- right
     (False, True) ->
