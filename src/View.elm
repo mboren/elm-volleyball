@@ -4,6 +4,7 @@ import Html exposing (Html, div)
 import Html.Attributes
 import Svg exposing (Svg)
 import Svg.Attributes
+import Svg.Events
 import Time exposing (Time)
 
 import Vector2 as V2 exposing (Vec2, Float2)
@@ -45,6 +46,7 @@ view model =
       , drawPlayer model.player1
       , drawPlayer model.player2
       , drawBall model.ball
+      , svgButton 30 30 130 50 "reset" Reset
       ]
     ]
 
@@ -86,3 +88,32 @@ drawBall {position, size, exploding, explosionRadius} =
       , Svg.Attributes.fill fill
       ]
       []
+
+svgButton : number -> number -> Int -> Int -> String -> Msg -> Svg Msg
+svgButton x y w h text onClickEvent =
+  let
+    transform = "translate(" ++ (toString x) ++ "," ++ (toString y) ++ ")"
+  in
+    Svg.g
+      [ Svg.Attributes.transform transform
+      , Svg.Attributes.cursor "pointer"
+      , Svg.Events.onClick onClickEvent
+      ]
+      [ Svg.rect
+        [ Svg.Attributes.width (toString w)
+        , Svg.Attributes.height (toString h)
+        , Svg.Attributes.fill "black"
+        ]
+        []
+      , Svg.text_
+        [ Svg.Attributes.x (toString ((toFloat w)/2.0))
+        , Svg.Attributes.y (toString ((toFloat h)/2.0))
+        , Svg.Attributes.style
+          ( "text-anchor: middle; font-family: sans-serif; font-size: "
+          ++ (toString (h - 5))
+          ++ "px; alignment-baseline: middle")
+        , Svg.Attributes.fill "white"
+        ]
+        [ Svg.text text
+        ]
+      ]

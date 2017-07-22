@@ -63,6 +63,9 @@ init =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    Reset ->
+      (model, Random.generate NewBallVelocity velocityGenerator)
+
     NewBallVelocity v ->
       let
         newBall = { defaultBall | velocity = v }
@@ -387,6 +390,7 @@ aiMovement {ball} player =
       , jumpPressed = py < by
     }
 
+velocityGenerator : Random.Generator Float2
 velocityGenerator =
   let
     component = float (-speedLimit) speedLimit
