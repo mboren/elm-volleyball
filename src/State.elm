@@ -22,6 +22,9 @@ init =
       , acceleration = (0, 0)
       , size = 50
       , onGround = False
+      , leftPressed = False
+      , rightPressed = False
+      , jumpPressed = False
       }
     ball =
       { position = (1000/2, 600/3)
@@ -33,7 +36,7 @@ init =
       , exploding = False
       }
   in
-    (Model True 0 0 1000 600 10 250 p1 ball False False False, Task.perform Resume Time.now)
+    (Model True 0 0 1000 600 10 250 p1 ball, Task.perform Resume Time.now)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -52,8 +55,8 @@ update msg model =
         player_ =
           model.player
             |> applyGravity
-            |> applyMovementKeys model.leftPressed model.rightPressed
-            |> applyJump model.jumpPressed
+            |> applyMovementKeys
+            |> applyJump
             |> updatePosition model.screenHeight dt
             |> handleFloor (toFloat model.screenHeight)
         ball_ =
@@ -75,33 +78,35 @@ update msg model =
 
     Press key ->
       let
-        newModel =
+        player = model.player
+        newPlayer =
           case key of
             37 ->
-              { model | leftPressed = True }
+                { player | leftPressed = True }
             39 ->
-              { model | rightPressed = True }
+              { player | rightPressed = True }
             32 ->
-              { model | jumpPressed = True }
+              { player | jumpPressed = True }
             _ ->
-              model
+              player
       in
-        (newModel, Cmd.none)
+        ({ model | player = newPlayer }, Cmd.none)
 
     Release key ->
       let
-        newModel =
+        player = model.player
+        newPlayer =
           case key of
             37 ->
-              { model | leftPressed = False }
+                { player | leftPressed = False }
             39 ->
-              { model | rightPressed = False }
+              { player | rightPressed = False }
             32 ->
-              { model | jumpPressed = False }
+              { player | jumpPressed = False }
             _ ->
-              model
+              player
       in
-        (newModel, Cmd.none)
+        ({ model | player = newPlayer }, Cmd.none)
     _ ->
       (model, Cmd.none)
 
@@ -167,7 +172,7 @@ to the ball's velocity.
 I like the way this feels a lot. It's intuitive, and it makes a wide variety of
 shots possible. Feels a lot better than just normal collision.
 -}
-applyPlayerCollision : Float -> Mover a -> Explosive (Mover a) -> Explosive (Mover a)
+applyPlayerCollision : Float -> Controlled (Mover a) -> Explosive (Mover a) -> Explosive (Mover a)
 applyPlayerCollision screenWidth player ball =
   let
     minimumDistance = player.size + ball.size
@@ -202,9 +207,9 @@ clampPosition low high player =
     { player | position = newPosition }
 
 
-applyMovementKeys : Bool -> Bool -> Mover a -> Mover a
-applyMovementKeys leftPressed rightPressed player =
-  case (leftPressed, rightPressed) of
+applyMovementKeys : Controlled (Mover a) -> Controlled (Mover a)
+applyMovementKeys player =
+  case (player.leftPressed, player.rightPressed) of
     (False, False) ->
       -- if left/right are not pressed, then we apply friction
       -- to x velocity
@@ -226,9 +231,9 @@ applyMovementKeys leftPressed rightPressed player =
     (True, True) ->
       player
 
-applyJump : Bool -> Mover a -> Mover a
-applyJump jumpPressed player =
-  if player.onGround && jumpPressed then
+applyJump : Controlled (Mover a) -> Controlled (Mover a)
+applyJump player =
+  if player.onGround && player.jumpPressed then
     { player | velocity = player.velocity |> V2.setY jumpSpeed }
   else
     player
