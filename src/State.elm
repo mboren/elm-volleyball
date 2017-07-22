@@ -262,13 +262,13 @@ handleFloor floorY mover =
       newPosition = mover.position |> V2.setY (floorY - mover.size)
 
       newVelocity =
-        if (V2.getY mover.velocity) < 0 then
+        if (V2.getY mover.velocity) > 0 then
           mover.velocity |> V2.setY 0
         else
           mover.velocity
 
       newAcceleration =
-        if (V2.getY mover.acceleration) < 0 then
+        if (V2.getY mover.acceleration) > 0 then
           mover.acceleration |> V2.setY 0
         else
           mover.acceleration
