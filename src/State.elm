@@ -43,6 +43,7 @@ init =
       , rightPressed = False
       , jumpPressed = False
       , alive = True
+      , score = 0
       }
     p2 =
       { position = (3*1000/4, 600/3)
@@ -56,6 +57,7 @@ init =
       , rightPressed = False
       , jumpPressed = False
       , alive = True
+      , score = 0
       }
   in
     (Model True 0 0 1000 600 10 250 p1 p2 defaultBall)

@@ -5,7 +5,7 @@ import Keyboard
 import Vector2 as V2 exposing (Vec2, Float2)
 
 type alias Player =
-  Controlled (Mover { alive: Bool })
+  Controlled (Mover { alive: Bool, score: Int })
 
 type alias Controlled a =
   { a
