@@ -430,7 +430,7 @@ handleExplosionCasualties model =
   else
     model
 
-revive : Controlled a -> Controlled a
+revive : Player -> Player
 revive player =
   { player | alive = True }
 

@@ -61,7 +61,7 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     ]
     []
 
-drawPlayer : Controlled (Mover a) -> Svg Msg
+drawPlayer : Player -> Svg Msg
 drawPlayer {position, size, alive} =
   let
     fillColor =

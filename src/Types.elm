@@ -4,12 +4,14 @@ import Time exposing (Time)
 import Keyboard
 import Vector2 as V2 exposing (Vec2, Float2)
 
+type alias Player =
+  Controlled (Mover { alive: Bool })
+
 type alias Controlled a =
   { a
   | leftPressed : Bool
   , rightPressed : Bool
   , jumpPressed : Bool
-  , alive : Bool
   }
 type alias Mover a =
   { a
@@ -37,8 +39,8 @@ type alias Model =
   , screenHeight : Int
   , netWidth : Int
   , netHeight : Int
-  , player1 : Controlled (Mover {})
-  , player2 : Controlled (Mover {})
+  , player1 : Player
+  , player2 : Player
   , ball : Explosive (Mover {})
   -- data for each player: score
   }
