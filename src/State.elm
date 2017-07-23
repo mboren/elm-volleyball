@@ -429,12 +429,12 @@ handleExplosionCasualties model =
           if checkCollision p1.position p1.size ball.position ball.explosionRadius then
             kill p1
           else
-            p1
+            { p1 | score = p1.score + 1 }
         newPlayer2 =
           if checkCollision p2.position p2.size ball.position ball.explosionRadius then
             kill p2
           else
-            p2
+            { p2 | score = p2.score + 1 }
 
         explodedBall = { ball | status = Exploded }
       in
@@ -449,10 +449,7 @@ handleExplosionCasualties model =
 kill : Player -> Player
 kill player =
   if player.alive then
-    { player
-      | alive = False
-      , score = player.score - 1
-    }
+    { player | alive = False }
   else
     player
 
