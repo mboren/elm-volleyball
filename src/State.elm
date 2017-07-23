@@ -47,6 +47,7 @@ init =
       , jumpPressed = False
       , alive = True
       , score = 0
+      , ai = False
       }
     p2 =
       { position = (3*1000/4, 600/3)
@@ -61,6 +62,7 @@ init =
       , jumpPressed = False
       , alive = True
       , score = 0
+      , ai = True
       }
   in
     (Model True 0 0 1000 600 10 250 p1 p2 defaultBall)
@@ -110,7 +112,7 @@ update msg model =
         ( { model
             | time = newTime
             , delta = dt
-            , player1 = playerStep dt (toFloat model.screenHeight) model.player1
+            , player1 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player1)
             , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
             , ball = ball_
           }
@@ -395,15 +397,18 @@ detectDetonation ball =
 
 aiMovement : Model -> Controlled (Mover a) -> Controlled (Mover a)
 aiMovement {ball} player =
-  let
-    (px, py) = player.position
-    (bx, by) = ball.position
-  in
-    { player
-      | leftPressed = px > bx
-      , rightPressed = px < bx
-      , jumpPressed = py < by
-    }
+  if player.ai then
+    let
+      (px, py) = player.position
+      (bx, by) = ball.position
+    in
+      { player
+        | leftPressed = px > bx
+        , rightPressed = px < bx
+        , jumpPressed = py < by
+      }
+  else
+    player
 
 velocityGenerator : Random.Generator Float2
 velocityGenerator =
