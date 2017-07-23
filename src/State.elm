@@ -419,18 +419,28 @@ handleExplosionCasualties model =
       ball = model.ball
       newPlayer1 =
         if checkCollision p1.position p1.size ball.position ball.explosionRadius then
-          { p1 | alive = False }
+          kill p1
         else
           p1
       newPlayer2 =
         if checkCollision p2.position p2.size ball.position ball.explosionRadius then
-          { p2 | alive = False }
+          kill p2
         else
           p2
     in
       { model | player1 = newPlayer1, player2 = newPlayer2 }
   else
     model
+
+kill : Player -> Player
+kill player =
+  if player.alive then
+    { player
+      | alive = False
+      , score = player.score - 1
+    }
+  else
+    player
 
 revive : Player -> Player
 revive player =
