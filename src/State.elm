@@ -13,6 +13,7 @@ speedLimit = 0.3
 playerAccelX = 0.05
 frameTime = 10 * Time.millisecond
 jumpSpeed = -0.7
+ballVyLimit = 0.8
 
 defaultBall : Explosive (Mover {})
 defaultBall =
@@ -236,6 +237,7 @@ applyPlayerCollision screenWidth player ball =
           |> Tuple.mapSecond ((*) -1.0) -- Y should always point up or level
           |> V2.scale 1.0
           |> V2.add ball.velocity
+          |> \(vx,vy)->(vx, clamp (-ballVyLimit) ballVyLimit vy)
       else
         ball.velocity
   in
