@@ -49,7 +49,6 @@ type alias Model =
 
 type Msg
   = Tick Time
-  | Pause
   | Resume Time
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
