@@ -47,6 +47,7 @@ view model =
       , drawPlayer model.player2
       , drawBall model.ball
       , svgButton 30 30 130 50 "reset" Reset
+      , drawScore model
       ]
     ]
 
@@ -125,5 +126,39 @@ svgButton x y w h text onClickEvent =
         , Svg.Attributes.fill "white"
         ]
         [ Svg.text text
+        ]
+      ]
+
+drawScore : Model -> Svg Msg
+drawScore {player1, player2, screenWidth} =
+  let
+    size = 50
+    middle = screenWidth // 2
+    offset = 20
+  in
+    Svg.g
+      [
+      ]
+      [ Svg.text_
+        [ Svg.Attributes.x (toString (middle - offset))
+        , Svg.Attributes.y "50"
+        , Svg.Attributes.style
+          ( "text-anchor: end; font-family: sans-serif; font-size: "
+          ++ (toString (size))
+          ++ "px; alignment-baseline: middle")
+        , Svg.Attributes.fill "white"
+        ]
+        [ Svg.text (toString player1.score)
+        ]
+      , Svg.text_
+        [ Svg.Attributes.x (toString (middle + offset))
+        , Svg.Attributes.y "50"
+        , Svg.Attributes.style
+          ( "text-anchor: start; font-family: sans-serif; font-size: "
+          ++ (toString (size))
+          ++ "px; alignment-baseline: middle")
+        , Svg.Attributes.fill "white"
+        ]
+        [ Svg.text (toString player2.score)
         ]
       ]
