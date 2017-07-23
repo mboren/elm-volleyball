@@ -24,10 +24,11 @@ type alias Mover a =
   , rightWallX : Float
   }
 
+type ExplosiveStatus = Safe | Exploding | Exploded
 type alias Explosive a =
   { a
   | countdown : Time
-  , exploding : Bool
+  , status : ExplosiveStatus
   , explosionRadius : Float
   }
 

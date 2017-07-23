@@ -80,13 +80,15 @@ drawPlayer {position, size, alive} =
     []
 
 drawBall : Explosive (Mover a) -> Svg Msg
-drawBall {position, size, exploding, explosionRadius} =
+drawBall {position, size, status, explosionRadius} =
   let
     (fill, radius) =
-      case exploding of
-        True ->
+      case status of
+        Exploded ->
+          ("orange", explosionRadius)
+        Exploding ->
           ("red", explosionRadius)
-        False ->
+        Safe ->
           ("black", size)
   in
     Svg.circle

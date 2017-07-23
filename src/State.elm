@@ -24,7 +24,7 @@ defaultBall =
   , leftWallX = 0
   , rightWallX = 1000
   , countdown = 10 * Time.second
-  , exploding = False
+  , status = Safe
   , explosionRadius = 50
   }
 
@@ -88,18 +88,21 @@ update msg model =
       let
         dt = newTime - model.time
         ball_ =
-          if not model.ball.exploding then
-            model.ball
-              |> applyGravity
-              |> bounce (toFloat model.screenHeight) 0.9
-              |> applyPlayerCollision (toFloat model.screenWidth) model.player1
-              |> applyPlayerCollision (toFloat model.screenWidth) model.player2
-              |> updatePosition model.screenHeight dt
-              |> handleNet model
-              |> updateCountdown dt
-              |> detectDetonation
-          else
-            model.ball
+          case model.ball.status of
+            Safe ->
+              model.ball
+                |> applyGravity
+                |> bounce (toFloat model.screenHeight) 0.9
+                |> applyPlayerCollision (toFloat model.screenWidth) model.player1
+                |> applyPlayerCollision (toFloat model.screenWidth) model.player2
+                |> updatePosition model.screenHeight dt
+                |> handleNet model
+                |> updateCountdown dt
+                |> detectDetonation
+            Exploding ->
+              model.ball
+            Exploded ->
+              model.ball
       in
         ( { model
             | time = newTime
@@ -381,7 +384,10 @@ updateCountdown dt ball =
 
 detectDetonation : Explosive (Mover a) -> Explosive (Mover a)
 detectDetonation ball =
-  { ball | exploding = (ball.countdown <= 0) || ball.onGround }
+  if ball.status == Safe && ((ball.countdown <= 0) || ball.onGround) then
+    { ball | status = Exploding }
+  else
+    ball
 
 aiMovement : Model -> Controlled (Mover a) -> Controlled (Mover a)
 aiMovement {ball} player =
@@ -412,25 +418,33 @@ checkCollision center1 radius1 center2 radius2 =
 
 handleExplosionCasualties : Model -> Model
 handleExplosionCasualties model =
-  if model.ball.exploding then
-    let
-      p1 = model.player1
-      p2 = model.player2
-      ball = model.ball
-      newPlayer1 =
-        if checkCollision p1.position p1.size ball.position ball.explosionRadius then
-          kill p1
-        else
-          p1
-      newPlayer2 =
-        if checkCollision p2.position p2.size ball.position ball.explosionRadius then
-          kill p2
-        else
-          p2
-    in
-      { model | player1 = newPlayer1, player2 = newPlayer2 }
-  else
-    model
+  case model.ball.status of
+    Exploding ->
+      let
+        p1 = model.player1
+        p2 = model.player2
+        ball = model.ball
+
+        newPlayer1 =
+          if checkCollision p1.position p1.size ball.position ball.explosionRadius then
+            kill p1
+          else
+            p1
+        newPlayer2 =
+          if checkCollision p2.position p2.size ball.position ball.explosionRadius then
+            kill p2
+          else
+            p2
+
+        explodedBall = { ball | status = Exploded }
+      in
+        { model
+          | player1 = newPlayer1
+          , player2 = newPlayer2
+          , ball = explodedBall
+        }
+    _ ->
+      model
 
 kill : Player -> Player
 kill player =
