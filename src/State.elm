@@ -212,7 +212,7 @@ to the ball's velocity.
 I like the way this feels a lot. It's intuitive, and it makes a wide variety of
 shots possible. Feels a lot better than just normal collision.
 -}
-applyPlayerCollision : Float -> Controlled (Mover a) -> Explosive (Mover a) -> Explosive (Mover a)
+applyPlayerCollision : Float -> Controlled (Mover a) -> Explosive (Mover b) -> Explosive (Mover b)
 applyPlayerCollision screenWidth player ball =
   let
     minimumDistance = player.size + ball.size
