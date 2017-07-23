@@ -416,33 +416,30 @@ checkCollision center1 radius1 center2 radius2 =
   in
     distance <= minimumDistance
 
+{- Kill player if they are within explosion radius,
+   otherwise, increment their score
+-}
+explosionCasualtyHelper : Explosive (Mover a) -> Player -> Player
+explosionCasualtyHelper {position, explosionRadius} player =
+  if checkCollision player.position player.size position explosionRadius then
+    kill player
+  else
+    { player | score = player.score + 1 }
+
 handleExplosionCasualties : Model -> Model
 handleExplosionCasualties model =
   case model.ball.status of
     Exploding ->
       let
-        p1 = model.player1
-        p2 = model.player2
         ball = model.ball
-
-        newPlayer1 =
-          if checkCollision p1.position p1.size ball.position ball.explosionRadius then
-            kill p1
-          else
-            { p1 | score = p1.score + 1 }
-        newPlayer2 =
-          if checkCollision p2.position p2.size ball.position ball.explosionRadius then
-            kill p2
-          else
-            { p2 | score = p2.score + 1 }
-
         explodedBall = { ball | status = Exploded }
       in
         { model
-          | player1 = newPlayer1
-          , player2 = newPlayer2
+          | player1 = explosionCasualtyHelper ball model.player1
+          , player2 = explosionCasualtyHelper ball model.player2
           , ball = explodedBall
         }
+
     _ ->
       model
 
