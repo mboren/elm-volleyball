@@ -8,12 +8,14 @@ import Random exposing (pair, float)
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
 
+-- calculated based on screen dimensions and gravity value
+speedLimit = 0.41739935579996074
+jumpSpeed = -0.6708203932499369
+ballVyLimit = 0.714142842854285
+
 friction = 0.6
-speedLimit = 0.3
 playerAccelX = 0.05
 frameTime = 10 * Time.millisecond
-jumpSpeed = -0.7
-ballVyLimit = 0.8
 
 defaultBall : Explosive (Mover {})
 defaultBall =
