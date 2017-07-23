@@ -47,6 +47,8 @@ view model =
       , drawPlayer model.player2
       , drawBall model.ball
       , svgButton 30 30 130 50 "reset" Reset
+      , svgButton 30 90 200 30 "Toggle Player1 AI" TogglePlayer1Ai
+      , svgButton 30 130 200 30 "Toggle Player2 AI" TogglePlayer2Ai
       , drawScore model
       ]
     ]

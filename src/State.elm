@@ -136,8 +136,34 @@ update msg model =
       , Cmd.none
       )
 
-    _ ->
-      (model, Cmd.none)
+    TogglePlayer1Ai ->
+      let
+        p = model.player1
+      in
+        ({ model
+          | player1 =
+            { p
+            | ai = not p.ai
+            , leftPressed = False
+            , rightPressed = False
+            , jumpPressed = False
+            }
+         }, Cmd.none)
+
+    TogglePlayer2Ai ->
+      let
+        p = model.player2
+      in
+        ({ model
+          | player2 =
+            { p
+            | ai = not p.ai
+            , leftPressed = False
+            , rightPressed = False
+            , jumpPressed = False
+            }
+         }, Cmd.none)
+
 
 
 subscriptions : Model -> Sub Msg
