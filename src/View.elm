@@ -11,6 +11,8 @@ import Vector2 as V2 exposing (Vec2, Float2)
 
 import Types exposing (..)
 
+uiSlope = 2
+
 view : Model -> Svg Msg
 view model =
   div
@@ -50,6 +52,7 @@ view model =
       , svgButton 30 90 200 30 "Toggle Player1 AI" TogglePlayer1Ai
       , svgButton 30 130 200 30 "Toggle Player2 AI" TogglePlayer2Ai
       , drawScore model
+      , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) (-60/2) 0 220 60 "black"
       ]
     ]
 
@@ -164,3 +167,61 @@ drawScore {player1, player2, screenWidth} =
         [ Svg.text (toString player2.score)
         ]
       ]
+
+{-
+Convert list of ordered pairs into a string suitable for Svg.Attributes.points
+-}
+pointsListToString : List (number, number) -> String
+pointsListToString list =
+  list
+    |> List.map (\(x,y)->(toString x) ++ " " ++ (toString y))
+    |> String.join ", "
+
+parallelogramPoints : Float -> Float -> Float -> Float -> List (Float, Float)
+parallelogramPoints x y w h =
+  let
+    xoffset = h / uiSlope
+  in
+    [ (x, y + h)
+    , (x + w, y + h)
+    , (x + w + xoffset, y)
+    , (x + xoffset, y)
+    ]
+
+{-
+Draws a parallelogram, and takes a callback function to draw its contents.
+Most of the UI is made up of these blocks.
+-}
+drawUiBlock : (Float -> Float -> Svg Msg) -> Float -> Float -> Float -> Float -> String -> Svg Msg
+drawUiBlock contents sideOffset topOffset baseWidth height fill =
+  let
+    points =
+      parallelogramPoints sideOffset topOffset baseWidth height
+        |> pointsListToString
+
+    midpointOffset = sideOffset + (baseWidth + height / uiSlope) / 2
+  in
+    Svg.g
+      [
+      ]
+      [ Svg.polygon
+        [ Svg.Attributes.points points
+        , Svg.Attributes.fill fill
+        ]
+        []
+      , contents midpointOffset topOffset
+      ]
+
+drawCenteredText : String -> number -> Float -> Float -> Svg Msg
+drawCenteredText text size x y =
+  Svg.text_
+    [ Svg.Attributes.x (toString x)
+    , Svg.Attributes.y (toString y)
+    , Svg.Attributes.style
+      ( "text-anchor: middle; font-family: sans-serif; font-size: "
+      ++ (toString size)
+      ++ "px; alignment-baseline: before-edge")
+    , Svg.Attributes.fill "white"
+    ]
+    [ Svg.text text
+    ]
