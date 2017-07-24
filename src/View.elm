@@ -52,7 +52,8 @@ view model =
       , svgButton 30 90 200 30 "Toggle Player1 AI" TogglePlayer1Ai
       , svgButton 30 130 200 30 "Toggle Player2 AI" TogglePlayer2Ai
       , drawScore model
-      , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) (-60/2) 0 220 60 "black"
+      , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
+      , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
       ]
     ]
 
@@ -192,14 +193,32 @@ parallelogramPoints x y w h =
 Draws a parallelogram, and takes a callback function to draw its contents.
 Most of the UI is made up of these blocks.
 -}
-drawUiBlock : (Float -> Float -> Svg Msg) -> Float -> Float -> Float -> Float -> String -> Svg Msg
-drawUiBlock contents sideOffset topOffset baseWidth height fill =
+drawUiBlock : (Float -> Float -> Svg Msg) -> Float -> Float -> Float -> Float -> String -> Side -> Float -> Svg Msg
+drawUiBlock contents sideOffset topOffset baseWidth height fill side screenWidth=
   let
     points =
       parallelogramPoints sideOffset topOffset baseWidth height
         |> pointsListToString
 
     midpointOffset = sideOffset + (baseWidth + height / uiSlope) / 2
+    midpointX =
+      case side of
+        Left ->
+          midpointOffset
+        Right ->
+          screenWidth - midpointOffset
+
+    -- mirror the background polygon if we're on the right
+    transform =
+      case side of
+        Left ->
+          Svg.Attributes.transform ""
+        Right ->
+          Svg.Attributes.transform
+            ( "translate("
+            ++ toString screenWidth
+            ++ ",0) scale(-1,1)"
+            )
   in
     Svg.g
       [
@@ -207,9 +226,10 @@ drawUiBlock contents sideOffset topOffset baseWidth height fill =
       [ Svg.polygon
         [ Svg.Attributes.points points
         , Svg.Attributes.fill fill
+        , transform
         ]
         []
-      , contents midpointOffset topOffset
+      , contents midpointX topOffset
       ]
 
 drawCenteredText : String -> number -> Float -> Float -> Svg Msg

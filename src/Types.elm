@@ -56,3 +56,5 @@ type Msg
   | NewBallVelocity Float2
   | TogglePlayer1Ai
   | TogglePlayer2Ai
+
+type Side = Left | Right
