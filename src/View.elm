@@ -193,8 +193,8 @@ parallelogramPoints x y w h =
 Draws a parallelogram, and takes a callback function to draw its contents.
 Most of the UI is made up of these blocks.
 -}
-drawUiBlock : (Float -> Float -> Svg Msg) -> Float -> Float -> Float -> Float -> String -> Side -> Float -> Svg Msg
-drawUiBlock contents sideOffset topOffset baseWidth height fill side screenWidth=
+drawUiBlock : (Float -> Float -> Svg Msg) -> Maybe Msg -> Float -> Float -> Float -> Float -> String -> Side -> Float -> Svg Msg
+drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill side screenWidth =
   let
     points =
       parallelogramPoints sideOffset topOffset baseWidth height
@@ -221,8 +221,14 @@ drawUiBlock contents sideOffset topOffset baseWidth height fill side screenWidth
             )
   in
     Svg.g
-      [
-      ]
+      ( case clickEvent of
+         Nothing ->
+           []
+         Just event ->
+           [ Svg.Events.onClick event
+           , Svg.Attributes.cursor "pointer"
+           ]
+      )
       [ Svg.polygon
         [ Svg.Attributes.points points
         , Svg.Attributes.fill fill
