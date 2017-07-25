@@ -182,11 +182,15 @@ drawControlToggle model leftKey jumpKey rightKey sideOffset topOffset w h side =
           (model.player2.ai, TogglePlayer2Ai)
 
     aiFill = getToggleColor ai
+    keyboardFill = getToggleColor (not ai)
+
+    drawKeyboardControls = (drawControls leftKey jumpKey rightKey (h/2))
   in
     Svg.g
       []
       [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" side (toFloat model.screenWidth)
       , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill side (toFloat model.screenWidth)
+      , drawUiBlock (drawKeyboardControls) (Just aiToggleMsg) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill side (toFloat model.screenWidth)
       ]
 
 getToggleColor : Bool -> String
@@ -277,4 +281,40 @@ drawCenteredText text size x y =
     , Svg.Attributes.fill "white"
     ]
     [ Svg.text text
+    ]
+
+{-
+Compact display of movement keys that is horizontally and vertically
+centered on (x,y).
+
+looks like this:
+     W
+    A D
+-}
+drawControls : String -> String -> String -> Float -> Float -> Float -> Svg Msg
+drawControls leftKey jumpKey rightKey h x y =
+  Svg.g
+    []
+    [ Svg.text_
+      [ Svg.Attributes.x (toString x)
+      , Svg.Attributes.y (toString (y+h/2))
+      , Svg.Attributes.style
+        ( "text-anchor: middle; font-family: monospace; font-size: "
+        ++ (toString ((h-4)/2))
+        ++ "px; alignment-baseline: after-edge")
+      , Svg.Attributes.fill "white"
+      ]
+      [ Svg.text jumpKey
+      ]
+    , Svg.text_
+      [ Svg.Attributes.x (toString x)
+      , Svg.Attributes.y (toString (y+h/2))
+      , Svg.Attributes.style
+        ( "text-anchor: middle; font-family: monospace; font-size: "
+        ++ (toString ((h-4)/2))
+        ++ "px; alignment-baseline: before-edge")
+      , Svg.Attributes.fill "white"
+      ]
+      [ Svg.text (leftKey ++ " " ++ rightKey)
+      ]
     ]
