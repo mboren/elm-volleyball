@@ -50,6 +50,7 @@ view model =
       , drawBall model.ball
       , svgButton 10 70 130 50 "reset" Reset
       , drawScore model
+      , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
       , drawUiBlock (drawCenteredText "" 0) Nothing (-40) 30 160 95 "gray" Right (toFloat model.screenWidth)
       , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left (toFloat model.screenWidth)
       , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
@@ -87,6 +88,20 @@ drawPlayer {position, size, alive} =
     , Svg.Attributes.fill fillColor
     ]
     []
+
+drawTimer : Time -> Float -> Float -> Float -> Svg Msg
+drawTimer time x y height =
+  Svg.text_
+    [ Svg.Attributes.x (toString x)
+    , Svg.Attributes.y (toString y)
+    , Svg.Attributes.style
+      ( "text-anchor: middle; font-family: sans-serif; font-size: "
+      ++ (toString height)
+      ++ "px; alignment-baseline: before-edge")
+    , Svg.Attributes.fill "white"
+    ]
+    [ Svg.text (toString (floor (Time.inSeconds time)))
+    ]
 
 drawBall : Explosive (Mover a) -> Svg Msg
 drawBall {position, size, status, explosionRadius} =
