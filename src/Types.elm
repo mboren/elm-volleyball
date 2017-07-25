@@ -3,6 +3,7 @@ module Types exposing (..)
 import Time exposing (Time)
 import Keyboard
 import Vector2 as V2 exposing (Vec2, Float2)
+import Animation exposing (Animation)
 
 type alias Player =
   Controlled (Mover { alive: Bool, score: Int })
@@ -31,6 +32,7 @@ type alias Explosive a =
   | countdown : Time
   , status : ExplosiveStatus
   , explosionRadius : Float
+  , animation : Animation
   }
 
 type alias Model =

@@ -5,6 +5,7 @@ import AnimationFrame
 import Task
 import Keyboard
 import Random exposing (pair, float)
+import Animation exposing (animation, from, to, duration)
 
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
@@ -28,7 +29,8 @@ defaultBall =
   , rightWallX = 1000
   , countdown = 10 * Time.second
   , status = Safe
-  , explosionRadius = 50
+  , explosionRadius = 100
+  , animation = Animation.static 20
   }
 
 init : (Model, Cmd Msg)
@@ -94,9 +96,10 @@ update msg model =
                 |> updatePosition model.screenHeight dt
                 |> handleNet model
                 |> updateCountdown dt
-                |> detectDetonation
+                |> detectDetonation model.time
             Exploding ->
               model.ball
+                |> handleExplosionAnimation model.time
             Exploded ->
               model.ball
       in
@@ -404,10 +407,18 @@ updateCountdown : Time -> Explosive a -> Explosive a
 updateCountdown dt ball =
   { ball | countdown = max 0 (ball.countdown - dt) }
 
-detectDetonation : Explosive (Mover a) -> Explosive (Mover a)
-detectDetonation ball =
+
+detectDetonation : Time -> Explosive (Mover a) -> Explosive (Mover a)
+detectDetonation time ball =
   if ball.status == Safe && ((ball.countdown <= 0) || ball.onGround) then
-    { ball | status = Exploding }
+    { ball
+      | status = Exploding
+      , animation =
+          animation time
+            |> from defaultBall.size
+            |> to ball.explosionRadius
+            |> duration (0.1 * Time.second)
+    }
   else
     ball
 
@@ -444,9 +455,9 @@ checkCollision center1 radius1 center2 radius2 =
 {- Kill player if they are within explosion radius,
    otherwise, increment their score
 -}
-explosionCasualtyHelper : Explosive (Mover a) -> Player -> Player
-explosionCasualtyHelper {position, explosionRadius} player =
-  if checkCollision player.position player.size position explosionRadius then
+explosionCasualtyHelper : Mover a -> Player -> Player
+explosionCasualtyHelper {position, size} player =
+  if checkCollision player.position player.size position size then
     kill player
   else
     player
@@ -457,16 +468,25 @@ handleExplosionCasualties model =
     Exploding ->
       let
         ball = model.ball
-        explodedBall = { ball | status = Exploded }
+        newStatus =
+          if Animation.isDone model.time model.ball.animation then
+            Exploded
+          else
+            Exploding
+
+        newBall = { ball | status = newStatus }
       in
         { model
           | player1 = explosionCasualtyHelper ball model.player1
           , player2 = explosionCasualtyHelper ball model.player2
-          , ball = explodedBall
+          , ball = newBall
         }
 
     _ ->
       model
+handleExplosionAnimation : Time -> Explosive (Mover a) -> Explosive (Mover a)
+handleExplosionAnimation time ball =
+  { ball | size = Animation.animate time ball.animation }
 
 kill : Player -> Player
 kill player =

@@ -104,21 +104,21 @@ drawTimer time x y height =
     ]
 
 drawBall : Explosive (Mover a) -> Svg Msg
-drawBall {position, size, status, explosionRadius} =
+drawBall {position, size, status} =
   let
-    (fill, radius) =
+    fill =
       case status of
         Exploded ->
-          ("orange", explosionRadius)
+          "orange"
         Exploding ->
-          ("red", explosionRadius)
+          "red"
         Safe ->
-          ("black", size)
+          "black"
   in
     Svg.circle
       [ Svg.Attributes.cx (toString (V2.getX position))
       , Svg.Attributes.cy (toString (V2.getY position))
-      , Svg.Attributes.r (toString radius)
+      , Svg.Attributes.r (toString size)
       , Svg.Attributes.fill fill
       ]
       []
