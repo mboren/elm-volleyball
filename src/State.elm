@@ -412,7 +412,7 @@ updatePosition screenHeight dt player =
 
 updateCountdown : Time -> Explosive a -> Explosive a
 updateCountdown dt ball =
-  { ball | countdown = ball.countdown - dt }
+  { ball | countdown = max 0 (ball.countdown - dt) }
 
 detectDetonation : Explosive (Mover a) -> Explosive (Mover a)
 detectDetonation ball =
