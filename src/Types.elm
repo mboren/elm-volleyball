@@ -36,7 +36,6 @@ type alias Explosive a =
 type alias Model =
   { paused : Bool
   , time : Time
-  , delta : Time
   , screenWidth : Int
   , screenHeight : Int
   , netWidth : Int
@@ -49,7 +48,6 @@ type alias Model =
 
 type Msg
   = Tick Time
-  | Resume Time
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
   | Reset

@@ -1,6 +1,7 @@
 module State exposing (init, update, subscriptions)
 
 import Time exposing (Time)
+import AnimationFrame
 import Task
 import Keyboard
 import Random exposing (pair, float)
@@ -15,7 +16,6 @@ ballVyLimit = 0.714142842854285
 
 friction = 0.6
 playerAccelX = 0.05
-frameTime = 10 * Time.millisecond
 
 defaultBall : Explosive (Mover {})
 defaultBall =
@@ -65,9 +65,9 @@ init =
       , ai = True
       }
   in
-    (Model True 0 0 1000 600 10 250 p1 p2 defaultBall)
-    ! [ Random.generate NewBallVelocity velocityGenerator
-      , Task.perform Resume Time.now]
+    (Model False 0 1000 600 10 250 p1 p2 defaultBall)
+    ! [ Random.generate NewBallVelocity velocityGenerator ]
+
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -81,17 +81,8 @@ update msg model =
       in
         ({ model | ball = newBall }, Cmd.none)
 
-    Resume startTime ->
-      ({ model
-        | paused = False
-        , time = startTime
-        , delta = 0
-       }
-      , Cmd.none)
-
-    Tick newTime ->
+    Tick dt ->
       let
-        dt = newTime - model.time
         ball_ =
           case model.ball.status of
             Safe ->
@@ -110,11 +101,10 @@ update msg model =
               model.ball
       in
         ( { model
-            | time = newTime
-            , delta = dt
-            , player1 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player1)
+            | player1 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player1)
             , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
             , ball = ball_
+            , time = model.time + dt
           }
           |> handleExplosionCasualties
         , Cmd.none
@@ -173,7 +163,7 @@ subscriptions model =
       Sub.none
     False ->
       Sub.batch
-        [ Time.every frameTime Tick
+        [ AnimationFrame.diffs Tick
         , Keyboard.downs Press
         , Keyboard.ups Release
         ]
