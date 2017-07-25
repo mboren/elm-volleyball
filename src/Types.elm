@@ -45,7 +45,6 @@ type alias Model =
   , player1 : Player
   , player2 : Player
   , ball : Explosive (Mover {})
-  -- data for each player: score
   }
 
 type Msg
