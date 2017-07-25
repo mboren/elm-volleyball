@@ -155,35 +155,14 @@ svgButton x y w h text onClickEvent =
 drawScore : Model -> Svg Msg
 drawScore {player1, player2, screenWidth} =
   let
-    size = 50
-    middle = screenWidth // 2
-    offset = 20
+    size = 60
+    offset = 324
   in
     Svg.g
       [
       ]
-      [ Svg.text_
-        [ Svg.Attributes.x (toString (middle - offset))
-        , Svg.Attributes.y "50"
-        , Svg.Attributes.style
-          ( "text-anchor: end; font-family: sans-serif; font-size: "
-          ++ (toString (size))
-          ++ "px; alignment-baseline: middle")
-        , Svg.Attributes.fill "white"
-        ]
-        [ Svg.text (toString player1.score)
-        ]
-      , Svg.text_
-        [ Svg.Attributes.x (toString (middle + offset))
-        , Svg.Attributes.y "50"
-        , Svg.Attributes.style
-          ( "text-anchor: start; font-family: sans-serif; font-size: "
-          ++ (toString (size))
-          ++ "px; alignment-baseline: middle")
-        , Svg.Attributes.fill "white"
-        ]
-        [ Svg.text (toString player2.score)
-        ]
+      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing (toFloat (offset)) 0 90 60 "lightcoral" Left (toFloat screenWidth)
+      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing (toFloat (190)) 0 90 60 "lightcoral" Right (toFloat screenWidth)
       ]
 
 drawControlToggle : Model -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
