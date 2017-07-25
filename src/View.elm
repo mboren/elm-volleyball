@@ -105,23 +105,23 @@ drawTimer time x y height =
 
 drawBall : Explosive (Mover a) -> Svg Msg
 drawBall {position, size, status} =
-  let
-    fill =
-      case status of
-        Exploded ->
-          "orange"
-        Exploding ->
-          "red"
-        Safe ->
-          "black"
-  in
-    Svg.circle
-      [ Svg.Attributes.cx (toString (V2.getX position))
-      , Svg.Attributes.cy (toString (V2.getY position))
-      , Svg.Attributes.r (toString size)
-      , Svg.Attributes.fill fill
-      ]
-      []
+  case status of
+    Exploded ->
+      Svg.g [] []
+    Exploding ->
+      drawCircle position size "red"
+    Safe ->
+      drawCircle position size "black"
+
+drawCircle : Float2 -> Float -> String -> Svg Msg
+drawCircle position radius color =
+  Svg.circle
+    [ Svg.Attributes.cx (toString (V2.getX position))
+    , Svg.Attributes.cy (toString (V2.getY position))
+    , Svg.Attributes.r (toString radius)
+    , Svg.Attributes.fill color
+    ]
+    []
 
 svgButton : number -> number -> Int -> Int -> String -> Msg -> Svg Msg
 svgButton x y w h text onClickEvent =
