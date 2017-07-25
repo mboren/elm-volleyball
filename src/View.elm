@@ -48,7 +48,7 @@ view model =
       , drawPlayer model.player1
       , drawPlayer model.player2
       , drawBall model.ball
-      , svgButton 30 30 130 50 "reset" Reset
+      , svgButton 10 70 130 50 "reset" Reset
       , drawScore model
       , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
       , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
