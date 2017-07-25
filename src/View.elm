@@ -52,7 +52,7 @@ view model =
       , drawScore model
       , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
       , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
-      , drawControlToggle model "A" "W" "D" 190 0 130 60 Left
+      , drawControlToggle model "S" "E" "F" 190 0 130 60 Left
       , drawControlToggle model "J" "I" "L" 190 0 130 60 Right
       ]
     ]
