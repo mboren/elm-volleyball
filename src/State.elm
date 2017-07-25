@@ -73,7 +73,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Reset ->
-      (model |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
+      (model |> updateScores |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
 
     NewBallVelocity v ->
       let
@@ -449,7 +449,7 @@ explosionCasualtyHelper {position, explosionRadius} player =
   if checkCollision player.position player.size position explosionRadius then
     kill player
   else
-    { player | score = player.score + 1 }
+    player
 
 handleExplosionCasualties : Model -> Model
 handleExplosionCasualties model =
@@ -485,3 +485,29 @@ revivePlayers model =
     | player1 = revive model.player1
     , player2 = revive model.player2
   }
+
+addPoints : Int -> Player -> Player
+addPoints points player =
+  { player | score = player.score + points }
+
+{-
+Increment each player's score if they are the sole survivor
+of a round.
+If both are dead or both are alive, nobody gets a point
+-}
+updateScores : Model -> Model
+updateScores model =
+  let
+    (p1Points, p2Points) =
+      case (model.player1.alive, model.player2.alive) of
+        (True, False) ->
+          (1, 0)
+        (False, True) ->
+          (0, 1)
+        _ ->
+          (0, 0)
+  in
+    { model
+      | player1 = (addPoints p1Points model.player1)
+      , player2 = (addPoints p2Points model.player2)
+    }
