@@ -49,11 +49,11 @@ view model =
       , drawPlayer model.player2
       , drawBall model.ball
       , svgButton 30 30 130 50 "reset" Reset
-      , svgButton 30 90 200 30 "Toggle Player1 AI" TogglePlayer1Ai
-      , svgButton 30 130 200 30 "Toggle Player2 AI" TogglePlayer2Ai
       , drawScore model
-      , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
-      , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
+      , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
+      , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
+      , drawControlToggle model "A" "W" "D" 190 0 130 60 Left
+      , drawControlToggle model "J" "I" "L" 190 0 130 60 Right
       ]
     ]
 
@@ -168,6 +168,33 @@ drawScore {player1, player2, screenWidth} =
         [ Svg.text (toString player2.score)
         ]
       ]
+
+drawControlToggle : Model -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
+drawControlToggle model leftKey jumpKey rightKey sideOffset topOffset w h side =
+  let
+    labelX = sideOffset + (h / 2) / uiSlope
+
+    (ai, aiToggleMsg) =
+      case side of
+        Left ->
+          (model.player1.ai, TogglePlayer1Ai)
+        Right ->
+          (model.player2.ai, TogglePlayer2Ai)
+
+    aiFill = getToggleColor ai
+  in
+    Svg.g
+      []
+      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" side (toFloat model.screenWidth)
+      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill side (toFloat model.screenWidth)
+      ]
+
+getToggleColor : Bool -> String
+getToggleColor selected =
+  if selected then
+    "darkslategray"
+  else
+    "lightskyblue"
 
 {-
 Convert list of ordered pairs into a string suitable for Svg.Attributes.points
