@@ -257,7 +257,7 @@ applyPlayerCollision screenWidth player ball =
         V2.map abs player.velocity
           |> Tuple.mapFirst ((*) horizontalSign) -- X should point to other side
           |> Tuple.mapSecond ((*) -1.0) -- Y should always point up or level
-          |> V2.scale 1.0
+          |> V2.scale 1.6
           |> V2.add ball.velocity
           |> \(vx,vy)->(vx, clamp (-ballVyLimit) ballVyLimit vy)
       else
