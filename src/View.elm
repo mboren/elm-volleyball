@@ -12,6 +12,8 @@ import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
 
 uiSlope = 2
+pauseBlurId = "pauseBlur"
+
 
 view : Model -> Svg Msg
 view model =
@@ -38,12 +40,36 @@ view model =
         , ("user-select", "none")
         ]
       ]
-      [ case model.page of
+      [ Svg.filter
+        [ Svg.Attributes.id pauseBlurId ]
+        [ Svg.feGaussianBlur
+          [ Svg.Attributes.in_ "SourceGraphic"
+          , Svg.Attributes.stdDeviation "2"
+          ]
+          []
+        ]
+      , case model.page of
           Title ->
             titleView model
           Game ->
-            gameView model
+            if model.paused then
+              Svg.g
+                []
+                [ gameView model
+                  |> blur
+                , pauseMenu model
+                ]
+            else
+              gameView model
+
       ]
+    ]
+
+pauseMenu : Model -> Svg Msg
+pauseMenu model =
+  Svg.g
+    []
+    [ svgButton 10 70 140 50 "Play" TogglePause
     ]
 
 titleView : Model -> Svg Msg
@@ -52,6 +78,14 @@ titleView model =
     []
     [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" Left (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" Left (toFloat model.screenWidth)
+    ]
+
+blur : Svg Msg -> Svg Msg
+blur svg =
+  Svg.g
+    [ Svg.Attributes.filter ("url(#" ++ pauseBlurId ++ ")")
+    ]
+    [ svg
     ]
 
 gameView : Model -> Svg Msg
