@@ -79,9 +79,6 @@ init =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Reset ->
-      (model |> updateScores |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
-
     NewBallVelocity v ->
       let
         newBall = { defaultBall | velocity = v }

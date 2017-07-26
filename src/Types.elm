@@ -52,7 +52,6 @@ type Msg
   = Tick Time
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
-  | Reset
   | NewBallVelocity Float2
   | TogglePlayer1Ai
   | TogglePlayer2Ai

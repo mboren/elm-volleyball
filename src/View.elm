@@ -48,7 +48,6 @@ view model =
       , drawPlayer model.player1
       , drawPlayer model.player2
       , drawBall model.ball
-      , svgButton 10 70 130 50 "reset" Reset
       , drawScore model
       , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
       , drawUiBlock (drawCenteredText "" 0) Nothing (-40) 30 160 95 "gray" Right (toFloat model.screenWidth)
