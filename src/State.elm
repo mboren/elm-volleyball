@@ -13,15 +13,18 @@ import Types exposing (..)
 -- calculated based on screen dimensions and gravity value
 speedLimit = 0.41739935579996074
 jumpSpeed = -0.6708203932499369
+ballVxLimit = 0.514142842854285
 ballVyLimit = 0.714142842854285
 
 friction = 0.6
 playerAccelX = 0.05
 
+
 defaultBall : Explosive (Mover {})
 defaultBall =
   { position = (1000/2, 600/3)
   , velocity = (0, 0)
+  , maxVx = ballVxLimit
   , acceleration = (0, 0)
   , size = 20
   , onGround = False
@@ -39,6 +42,7 @@ init =
     p1 =
       { position = (1000/4, 600/3)
       , velocity = (0, 0)
+      , maxVx = speedLimit
       , acceleration = (0, 0)
       , size = 50
       , onGround = False
@@ -54,6 +58,7 @@ init =
     p2 =
       { position = (3*1000/4, 600/3)
       , velocity = (0, 0)
+      , maxVx = speedLimit
       , acceleration = (0, 0)
       , size = 50
       , onGround = False
@@ -385,7 +390,7 @@ updatePosition screenHeight dt player =
       player.acceleration
         |> V2.scale dt
         |> V2.add player.velocity
-        |> clampX (-1 * speedLimit) speedLimit
+        |> clampX (-1 * player.maxVx) player.maxVx
 
     -- r = r0 + 0.5 * t * (v + v0)
     newPosition =

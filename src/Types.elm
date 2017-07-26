@@ -19,6 +19,7 @@ type alias Mover a =
   { a
   | position : Float2
   , velocity : Float2
+  , maxVx : Float
   , acceleration : Float2
   , size : Float
   , onGround : Bool
