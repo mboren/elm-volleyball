@@ -84,34 +84,14 @@ update msg model =
         ({ model | ball = newBall }, Cmd.none)
 
     Tick dt ->
-      let
-        ball_ =
-          case model.ball.status of
-            Safe ->
-              model.ball
-                |> applyGravity
-                |> bounce (toFloat model.screenHeight) 0.9
-                |> applyPlayerCollision (toFloat model.screenWidth) model.player1
-                |> applyPlayerCollision (toFloat model.screenWidth) model.player2
-                |> updatePosition model.screenHeight dt
-                |> handleNet model
-                |> updateCountdown dt
-                |> detectDetonation model.time
-            Exploding ->
-              model.ball
-                |> handleExplosionAnimation model.time
-            Exploded ->
-              model.ball
-      in
-        ( { model
-            | player1 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player1)
-            , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
-            , ball = ball_
-            , time = model.time + dt
-          }
-          |> handleExplosionCasualties
-        , Cmd.none
-        )
+      { model
+          | player1 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player1)
+          , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
+          , ball = ballStep dt model model.ball
+          , time = model.time + dt
+        }
+        |> handleExplosionCasualties
+        |> resetAtEndOfRound
 
     Press key ->
       ( { model
@@ -180,6 +160,25 @@ playerStep dt screenHeight player =
     |> updatePosition (floor screenHeight) dt
     |> handleWalls
     |> handleFloor screenHeight
+
+ballStep : Time -> Model -> Explosive (Mover {}) -> Explosive (Mover {})
+ballStep dt model ball =
+  case ball.status of
+    Safe ->
+      ball
+        |> applyGravity
+        |> bounce (toFloat model.screenHeight) 0.9
+        |> applyPlayerCollision (toFloat model.screenWidth) model.player1
+        |> applyPlayerCollision (toFloat model.screenWidth) model.player2
+        |> updatePosition model.screenHeight dt
+        |> handleNet model
+        |> updateCountdown dt
+        |> detectDetonation model.time
+    Exploding ->
+      model.ball
+        |> handleExplosionAnimation model.time
+    Exploded ->
+      model.ball
 
 handleKey : Keyboard.KeyCode -> Keyboard.KeyCode -> Keyboard.KeyCode -> Bool -> Keyboard.KeyCode -> Controlled a -> Controlled a
 handleKey leftKey rightKey jumpKey pressed key player =
@@ -531,3 +530,13 @@ updateScores model =
       | player1 = (addPoints p1Points model.player1)
       , player2 = (addPoints p2Points model.player2)
     }
+
+resetAtEndOfRound : Model -> (Model, Cmd Msg)
+resetAtEndOfRound model =
+  case model.ball.status of
+    Exploded ->
+      (model
+        |> updateScores
+        |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
+    _ ->
+      (model, Cmd.none)
