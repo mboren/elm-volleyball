@@ -72,7 +72,7 @@ init =
       , ai = True
       }
   in
-    ( (Model False 0 1000 600 10 250 p1 p2 defaultBall)
+    ( (Model False Title 0 1000 600 10 250 p1 p2 defaultBall)
     , Random.generate NewBallVelocity velocityGenerator
     )
 
@@ -80,6 +80,17 @@ init =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    StartGame ->
+      let
+        p1 = model.player1
+        p2 = model.player2
+        p1Reset = { p1 | score = 0, alive = True }
+        p2Reset = { p2 | score = 0, alive = True }
+      in
+        ( { model | page = Game, paused = False, player1 = p1, player2 = p2 }
+        , Random.generate NewBallVelocity velocityGenerator
+        )
+
     NewBallVelocity v ->
       let
         newBall = { defaultBall | velocity = v }

@@ -38,26 +38,45 @@ view model =
         , ("user-select", "none")
         ]
       ]
-      [ Svg.rect
-        [ Svg.Attributes.width "100%"
-        , Svg.Attributes.height "100%"
-        , Svg.Attributes.fill "lightskyblue"
-        ]
-        []
-      , drawNet model
-      , drawPlayer model.player1
-      , drawPlayer model.player2
-      , drawBall model.ball
-      , svgButton 10 70 140 50 "Pause" TogglePause
-      , drawScore model
-      , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
-      , drawUiBlock (drawCenteredText "" 0) Nothing (-40) 30 160 95 "gray" Right (toFloat model.screenWidth)
-      , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left (toFloat model.screenWidth)
-      , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
-      , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
-      , drawControlToggle model "S" "E" "F" 200 0 120 55 Left
-      , drawControlToggle model "J" "I" "L" (-15) 60 130 60 Right
+      [ case model.page of
+          Title ->
+            titleView model
+          Game ->
+            gameView model
       ]
+    ]
+
+titleView : Model -> Svg Msg
+titleView model =
+  Svg.g
+    []
+    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" Left (toFloat model.screenWidth)
+    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" Left (toFloat model.screenWidth)
+    ]
+
+gameView : Model -> Svg Msg
+gameView model =
+  Svg.g
+    []
+    [ Svg.rect
+      [ Svg.Attributes.width "100%"
+      , Svg.Attributes.height "100%"
+      , Svg.Attributes.fill "lightskyblue"
+      ]
+      []
+    , drawNet model
+    , drawPlayer model.player1
+    , drawPlayer model.player2
+    , drawBall model.ball
+    , svgButton 10 70 140 50 "Pause" TogglePause
+    , drawScore model
+    , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
+    , drawUiBlock (drawCenteredText "" 0) Nothing (-40) 30 160 95 "gray" Right (toFloat model.screenWidth)
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left (toFloat model.screenWidth)
+    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
+    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
+    , drawControlToggle model "S" "E" "F" 200 0 120 55 Left
+    , drawControlToggle model "J" "I" "L" (-15) 60 130 60 Right
     ]
 
 drawNet : Model -> Svg Msg

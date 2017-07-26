@@ -36,8 +36,11 @@ type alias Explosive a =
   , animation : Animation
   }
 
+type Page = Title | Game
+
 type alias Model =
   { paused : Bool
+  , page : Page
   , time : Time
   , screenWidth : Int
   , screenHeight : Int
@@ -50,6 +53,7 @@ type alias Model =
 
 type Msg
   = Tick Time
+  | StartGame
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
   | NewBallVelocity Float2
