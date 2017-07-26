@@ -32,7 +32,7 @@ defaultBall =
   , rightWallX = 1000
   , countdown = 10 * Time.second
   , status = Safe
-  , explosionRadius = 100
+  , explosionRadius = 250
   , animation = Animation.static 20
   }
 
