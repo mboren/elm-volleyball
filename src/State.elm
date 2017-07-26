@@ -271,10 +271,13 @@ applyMovementKeys player =
     (False, False) ->
       -- if left/right are not pressed, then we apply friction
       -- to x velocity
-      let
-        (vx, vy) = player.velocity
-      in
-        { player | velocity = (friction * vx, vy) }
+      if player.onGround then
+        let
+          (vx, vy) = player.velocity
+        in
+          { player | velocity = (friction * vx, vy) }
+      else
+        player
 
     -- right
     (False, True) ->
