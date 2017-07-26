@@ -244,6 +244,8 @@ drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill side 
   let
     points =
       parallelogramPoints sideOffset topOffset baseWidth height
+        -- cut off side if it hangs off the screen
+        |> List.map (\(x,y)->(max 0 x, y))
         |> pointsListToString
 
     midpointOffset = sideOffset + (baseWidth + height / uiSlope) / 2
