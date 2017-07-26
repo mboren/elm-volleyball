@@ -72,8 +72,9 @@ init =
       , ai = True
       }
   in
-    (Model False 0 1000 600 10 250 p1 p2 defaultBall)
-    ! [ Random.generate NewBallVelocity velocityGenerator ]
+    ( (Model False 0 1000 600 10 250 p1 p2 defaultBall)
+    , Random.generate NewBallVelocity velocityGenerator
+    )
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
