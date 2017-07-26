@@ -139,7 +139,8 @@ update msg model =
             }
          }, Cmd.none)
 
-
+    TogglePause ->
+      ({ model | paused = not model.paused }, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

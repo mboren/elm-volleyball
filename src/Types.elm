@@ -55,5 +55,6 @@ type Msg
   | NewBallVelocity Float2
   | TogglePlayer1Ai
   | TogglePlayer2Ai
+  | TogglePause
 
 type Side = Left | Right
