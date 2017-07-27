@@ -119,6 +119,7 @@ update msg model =
       ( { model
           | player1 = handleKey 83 70 69 False key model.player1
           , player2 = handleKey 74 76 73 False key model.player2
+          , paused = (xor model.paused (key == 32))
         }
       , Cmd.none
       )
@@ -158,7 +159,10 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   case model.paused of
     True ->
-      Sub.none
+      Sub.batch
+        [ Keyboard.downs Press
+        , Keyboard.ups Release
+        ]
     False ->
       Sub.batch
         [ AnimationFrame.diffs Tick
