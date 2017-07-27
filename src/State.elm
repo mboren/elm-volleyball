@@ -87,7 +87,7 @@ update msg model =
         p1Reset = { p1 | score = 0, alive = True }
         p2Reset = { p2 | score = 0, alive = True }
       in
-        ( { model | page = Game, paused = False, player1 = p1, player2 = p2 }
+        ( { model | page = Game, paused = False, player1 = p1Reset, player2 = p2Reset }
         , Random.generate NewBallVelocity velocityGenerator
         )
 
