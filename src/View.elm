@@ -105,7 +105,7 @@ gameView model =
     , svgButton 10 70 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
-    , drawUiBlock (drawCenteredText "" 0) Nothing (-40) 30 160 95 "gray" Right (toFloat model.screenWidth)
+    , drawUiBlock (drawCenteredText "" 0) Nothing (-60) 30 180 95 "gray" Right (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
