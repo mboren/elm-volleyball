@@ -157,18 +157,24 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  case model.paused of
-    True ->
-      Sub.batch
-        [ Keyboard.downs Press
-        , Keyboard.ups Release
-        ]
-    False ->
-      Sub.batch
-        [ AnimationFrame.diffs Tick
-        , Keyboard.downs Press
-        , Keyboard.ups Release
-        ]
+  case model.page of
+    Title ->
+      Sub.none
+
+    Game ->
+      case model.paused of
+        True ->
+          Sub.batch
+            [ Keyboard.downs Press
+            , Keyboard.ups Release
+            ]
+
+        False ->
+          Sub.batch
+            [ AnimationFrame.diffs Tick
+            , Keyboard.downs Press
+            , Keyboard.ups Release
+            ]
 
 playerStep : Time -> Float -> Controlled (Mover a) -> Controlled (Mover a)
 playerStep dt screenHeight player =
