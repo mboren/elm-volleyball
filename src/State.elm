@@ -240,15 +240,19 @@ bounce screenHeight bounciness ball =
   let
     (x, y) = ball.position
     (vx, vy) = ball.velocity
-    bounceX =
+    (bounceVx, newX) =
       if x + ball.size > (ball.rightWallX) then
-        -1.0 * (abs vx) * bounciness
+        ( -1.0 * (abs vx) * bounciness
+        , ball.rightWallX - ball.size
+        )
       else if x - ball.size < ball.leftWallX then
-        (abs vx) * bounciness
+        ( (abs vx) * bounciness
+        , ball.leftWallX + ball.size
+        )
       else
-        vx
+        (vx, x)
 
-    bounceY =
+    bounceVy =
       if y + ball.size > screenHeight then
         -1.0 * (abs vy) * bounciness
       else if y - ball.size < 0 then
@@ -256,7 +260,7 @@ bounce screenHeight bounciness ball =
       else
         vy
   in
-    { ball | velocity = (bounceX, bounceY) }
+    { ball | velocity = (bounceVx, bounceVy), position = (newX, y) }
 
 {-
 When the ball collides with a player, we take the player's velocity, change
