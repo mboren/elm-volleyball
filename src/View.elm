@@ -65,11 +65,15 @@ view model =
       ]
     ]
 
+pauseMenuX : Model -> Float
+pauseMenuX {screenWidth} =
+  0.5 * (toFloat screenWidth) - 70
+
 pauseMenu : Model -> Svg Msg
 pauseMenu model =
   Svg.g
     []
-    [ svgButton 10 70 140 50 "Play" TogglePause
+    [ svgButton (pauseMenuX model) 80 140 50 "Play" TogglePause
     ]
 
 titleView : Model -> Svg Msg
@@ -102,7 +106,7 @@ gameView model =
     , drawPlayer model.player1
     , drawPlayer model.player2
     , drawBall model.ball
-    , svgButton 10 70 140 50 "Pause" TogglePause
+    , svgButton (pauseMenuX model) 80 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
     , drawUiBlock (drawCenteredText "" 0) Nothing (-60) 30 180 95 "gray" Right (toFloat model.screenWidth)
