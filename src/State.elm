@@ -191,12 +191,12 @@ ballStep dt model ball =
   case ball.status of
     Safe ->
       ball
+        |> adjustBallBounds model
         |> applyGravity
         |> bounce (toFloat model.screenHeight) 0.9
         |> applyPlayerCollision (toFloat model.screenWidth) model.player1
         |> applyPlayerCollision (toFloat model.screenWidth) model.player2
         |> updatePosition model.screenHeight dt
-        |> handleNet model
         |> updateCountdown dt
         |> detectDetonation model.time
     Exploding ->
@@ -379,29 +379,51 @@ handleWalls mover =
     else
       mover
 
-handleNet : Model -> Explosive (Mover a) -> Explosive (Mover a)
-handleNet {screenWidth, screenHeight, netWidth, netHeight} ball =
+{-
+Split the screen into 3 regions based on the net position,
+and change leftWallX and rightWallX depending on which region
+the ball is in
+          |             |
+          |     top     |
+          |right | left |
+          |______|______|
+-}
+adjustBallBounds : Model -> Explosive (Mover {}) -> Explosive (Mover {})
+adjustBallBounds {screenWidth, screenHeight, netWidth, netHeight} ball =
   let
-    (x,y) = ball.position
-    (vx, vy) = ball.velocity
-    nx = toFloat ((screenWidth // 2) - (netWidth // 2))
-    ny = toFloat (screenHeight - netHeight)
-  in
-    -- This just checks if the center of the ball is within the net.
-    -- I think more sophisticated collision detection would not look
-    -- sufficiently goofy.
-    if (y >= ny) && (x >= nx) && (x <= nx + (toFloat netWidth)) then
-      { ball
-        -- vx is reflected based on which side of the screen it's on.
-        -- This keeps the ball from getting stuck.
-        | velocity =
-          if x <= toFloat (screenWidth // 2) then
-            (-vx, -vy)
+    (x, y) = ball.position
+
+    netX =
+      if x < (toFloat screenWidth) / 2 then
+        toFloat ((screenWidth // 2) - (netWidth // 2))
+      else
+        toFloat ((screenWidth // 2) + (netWidth // 2))
+
+    netY = toFloat (screenHeight - netHeight)
+
+    (newLeftWall, newRightWall) =
+      if (y + ball.size) < netY then
+        -- above net
+        (0, toFloat screenWidth)
+      else
+        if x < (toFloat screenWidth) / 2 then
+          -- left of net
+          (0, netX)
+        else
+          if x > (toFloat screenWidth) / 2 then
+            -- right of net
+            (netX, toFloat screenWidth)
           else
-            (vx, -vy)
-      }
-    else
-      ball
+            -- if we're precisely in the middle, crash.
+            -- I want to see how common this case is to determine
+            -- how much effort to put into resolving it nicely.
+            Debug.crash "ball in middle" (0, toFloat screenWidth)
+  in
+    { ball
+      | leftWallX = newLeftWall
+      , rightWallX = newRightWall
+    }
+
 
 {- Calculate change in position, velocity, and acceleration for this frame.
    Acceleration is zeroed after it is applied.
