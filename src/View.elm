@@ -56,7 +56,7 @@ view model =
               Svg.g
                 []
                 [ gameView model
-                  |> blur
+                  |> filter pauseBlurId
                 , pauseMenu model
                 ]
             else
@@ -84,10 +84,10 @@ titleView model =
     , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" Left (toFloat model.screenWidth)
     ]
 
-blur : Svg Msg -> Svg Msg
-blur svg =
+filter : String -> Svg Msg -> Svg Msg
+filter filterId svg =
   Svg.g
-    [ Svg.Attributes.filter ("url(#" ++ pauseBlurId ++ ")")
+    [ Svg.Attributes.filter ("url(#" ++ filterId ++ ")")
     ]
     [ svg
     ]
