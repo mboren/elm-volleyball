@@ -13,6 +13,7 @@ import Types exposing (..)
 
 uiSlope = 2
 pauseBlurId = "pauseBlur"
+turbulenceId = "turbulenceFilter"
 
 
 view : Model -> Svg Msg
@@ -45,6 +46,24 @@ view model =
         [ Svg.feGaussianBlur
           [ Svg.Attributes.in_ "SourceGraphic"
           , Svg.Attributes.stdDeviation "2"
+          ]
+          []
+        ]
+      , Svg.filter
+        [ Svg.Attributes.id turbulenceId ]
+        [ Svg.feTurbulence
+          [ Svg.Attributes.type_ "turbulence"
+          , Svg.Attributes.baseFrequency "0.05"
+          , Svg.Attributes.numOctaves "2"
+          , Svg.Attributes.result "turbulence"
+          ]
+          []
+        , Svg.feDisplacementMap
+          [ Svg.Attributes.in2 "turbulence"
+          , Svg.Attributes.in_ "SourceGraphic"
+          , Svg.Attributes.scale "50"
+          , Svg.Attributes.xChannelSelector "R"
+          , Svg.Attributes.yChannelSelector "G"
           ]
           []
         ]
@@ -167,6 +186,7 @@ drawBall {position, size, status} =
       Svg.g [] []
     Exploding ->
       drawCircle position size "red"
+        |> filter turbulenceId
     Safe ->
       drawCircle position size "black"
 
