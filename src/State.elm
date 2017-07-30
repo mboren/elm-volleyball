@@ -54,6 +54,9 @@ init =
       , leftPressed = False
       , rightPressed = False
       , jumpPressed = False
+      , leftKey = 83
+      , rightKey = 70
+      , jumpKey = 69
       , alive = True
       , score = 0
       , ai = False
@@ -70,6 +73,9 @@ init =
       , leftPressed = False
       , rightPressed = False
       , jumpPressed = False
+      , leftKey = 74
+      , rightKey = 76
+      , jumpKey = 73
       , alive = True
       , score = 0
       , ai = True
@@ -123,16 +129,16 @@ update msg model =
 
     Press key ->
       ( { model
-          | player1 = handleKey 83 70 69 True key model.player1
-          , player2 = handleKey 74 76 73 True key model.player2
+          | player1 = handleKey True key model.player1
+          , player2 = handleKey True key model.player2
         }
       , Cmd.none
       )
 
     Release key ->
       ( { model
-          | player1 = handleKey 83 70 69 False key model.player1
-          , player2 = handleKey 74 76 73 False key model.player2
+          | player1 = handleKey False key model.player1
+          , player2 = handleKey False key model.player2
           , paused = (xor model.paused (key == 32))
         }
       , Cmd.none
@@ -223,13 +229,13 @@ ballStep dt model ball =
     Exploded ->
       model.ball
 
-handleKey : Keyboard.KeyCode -> Keyboard.KeyCode -> Keyboard.KeyCode -> Bool -> Keyboard.KeyCode -> Controlled a -> Controlled a
-handleKey leftKey rightKey jumpKey pressed key player =
-  if key == leftKey then
+handleKey : Bool -> Keyboard.KeyCode -> MovementKeys (Controlled a) -> MovementKeys (Controlled a)
+handleKey pressed key player =
+  if key == player.leftKey then
     { player | leftPressed = pressed }
-  else if key == rightKey then
+  else if key == player.rightKey then
     { player | rightPressed = pressed }
-  else if key == jumpKey then
+  else if key == player.jumpKey then
     { player | jumpPressed = pressed }
   else
     player
