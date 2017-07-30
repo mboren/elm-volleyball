@@ -9,8 +9,8 @@ import Animation exposing (animation, from, to, duration)
 
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
+import Mover
 
-gravity = 0.001
 friction = 0.6
 playerAccelX = 0.05
 
@@ -185,13 +185,13 @@ subscriptions model =
 playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
 playerStep dt screenHeight ball player =
   player
-    |> applyGravity
+    |> Mover.applyGravity
     |> applyMovementKeys
     |> aiMovement ball
     |> applyJump
-    |> updatePosition screenHeight dt
-    |> handleWalls
-    |> handleFloor screenHeight
+    |> Mover.updatePosition screenHeight dt
+    |> Mover.stopAtWalls
+    |> Mover.stopAtFloor screenHeight
     |> killIfInExplosion ball
 
 ballStep : Time -> Model -> Explosive (Mover {}) -> Explosive (Mover {})
@@ -201,11 +201,11 @@ ballStep dt model ball =
       if model.warmupTimer <= 0 then
         ball
           |> adjustBallBounds model
-          |> applyGravity
-          |> bounce model.screenHeight 0.9
+          |> Mover.applyGravity
+          |> Mover.bounceOffWalls model.screenHeight 0.9
           |> applyPlayerCollision model.screenWidth model.player1
           |> applyPlayerCollision model.screenWidth model.player2
-          |> updatePosition model.screenHeight dt
+          |> Mover.updatePosition model.screenHeight dt
           |> updateCountdown dt
           |> detectDetonation model.time
       else
@@ -230,46 +230,6 @@ handleKey pressed key player =
   else
     player
 
-addAcceleration : Float2 -> Mover a -> Mover a
-addAcceleration a player =
-  { player
-    | acceleration = (V2.add a player.acceleration)
-  }
-
-applyGravity : Mover a -> Mover a
-applyGravity player =
-  if not player.onGround then
-    player
-      |> addAcceleration (0, gravity)
-  else
-    player
-
-bounce : Float -> Float -> Mover a -> Mover a
-bounce screenHeight bounciness ball =
-  let
-    (x, y) = ball.position
-    (vx, vy) = ball.velocity
-    (bounceVx, newX) =
-      if x + ball.size > (ball.rightWallX) then
-        ( -1.0 * (abs vx) * bounciness
-        , ball.rightWallX - ball.size
-        )
-      else if x - ball.size < ball.leftWallX then
-        ( (abs vx) * bounciness
-        , ball.leftWallX + ball.size
-        )
-      else
-        (vx, x)
-
-    bounceVy =
-      if y + ball.size > screenHeight then
-        -1.0 * (abs vy) * bounciness
-      else if y - ball.size < 0 then
-        (abs vy) * bounciness
-      else
-        vy
-  in
-    { ball | velocity = (bounceVx, bounceVy), position = (newX, y) }
 
 {-
 When the ball collides with a player, we take the player's velocity, change
@@ -319,11 +279,11 @@ applyMovementKeys player =
 
     -- right
     (False, True) ->
-      player |> addAcceleration (playerAccelX, 0)
+      player |> Mover.addAcceleration (playerAccelX, 0)
 
     -- left
     (True, False) ->
-      player |> addAcceleration (-1 * playerAccelX, 0)
+      player |> Mover.addAcceleration (-1 * playerAccelX, 0)
 
     (True, True) ->
       player
@@ -334,59 +294,6 @@ applyJump player =
     { player | velocity = player.velocity |> V2.setY jumpSpeed }
   else
     player
-
-clampX : Float -> Float -> Float2 -> Float2
-clampX low high vector =
-  let
-    newX =
-      vector
-        |> V2.getX
-        |> clamp low high
-  in
-    vector
-      |> V2.setX newX
-
-handleFloor : Float -> Mover a -> Mover a
-handleFloor floorY mover =
-  let
-    (x, y) = mover.position
-    (ax, ay) = mover.acceleration
-    (vx, vy) = mover.velocity
-    upperBoundY = floorY - mover.size
-  in
-    if y >= upperBoundY then
-      { mover
-        | position = (x, upperBoundY)
-        , velocity = (vx, Basics.min 0 vy)
-        , acceleration = (ax, Basics.min 0 ay)
-        , onGround = True
-      }
-    else
-      mover
-
-handleWalls : Mover a -> Mover a
-handleWalls mover =
-  let
-    (x, y) = mover.position
-    (ax, ay) = mover.acceleration
-    (vx, vy) = mover.velocity
-    leftBoundX = mover.leftWallX + mover.size
-    rightBoundX = mover.rightWallX - mover.size
-  in
-    if x >= rightBoundX then
-      { mover
-        | position = (rightBoundX, y)
-        , velocity = (Basics.min 0 vx, vy)
-        , acceleration = (Basics.min 0 ax, ay)
-      }
-    else if x <= leftBoundX then
-      { mover
-        | position = (leftBoundX, y)
-        , velocity = (Basics.max 0 vx, vy)
-        , acceleration = (Basics.max 0 ax, ay)
-      }
-    else
-      mover
 
 {-
 Split the screen into 3 regions based on the net position,
@@ -431,38 +338,6 @@ adjustBallBounds {screenWidth, screenHeight, netWidth, netHeight} ball =
     { ball
       | leftWallX = newLeftWall
       , rightWallX = newRightWall
-    }
-
-
-{- Calculate change in position, velocity, and acceleration for this frame.
-   Acceleration is zeroed after it is applied.
--}
-updatePosition : Float -> Time -> Mover a -> Mover a
-updatePosition screenHeight dt player =
-  let
-    -- v = v0 + a * t
-    newVelocity =
-      player.acceleration
-        |> V2.scale dt
-        |> V2.add player.velocity
-        |> clampX (-1 * player.maxVx) player.maxVx
-
-    -- r = r0 + 0.5 * t * (v + v0)
-    newPosition =
-      player.velocity
-        |> V2.add newVelocity
-        |> V2.scale (0.5 * dt)
-        |> V2.add player.position
-
-    newOnGround = (V2.getY player.position) + player.size >= screenHeight
-
-    newAcceleration = (0, 0)
-  in
-    { player
-      | position = newPosition
-      , velocity = newVelocity
-      , acceleration = newAcceleration
-      , onGround = newOnGround
     }
 
 updateCountdown : Time -> Explosive a -> Explosive a
