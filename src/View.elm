@@ -99,8 +99,8 @@ titleView : Model -> Svg Msg
 titleView model =
   Svg.g
     []
-    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" Left model.screenWidth
-    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" Left model.screenWidth
+    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" model.screenWidth Left
+    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" model.screenWidth Left
     ]
 
 filter : String -> Svg Msg -> Svg Msg
@@ -128,10 +128,10 @@ gameView model =
     , svgButton (pauseMenuX model) 80 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
-    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left model.screenWidth
-    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Right model.screenWidth
-    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left model.screenWidth
-    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right model.screenWidth
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Left
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Right
+    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Left
+    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Right
     , drawControlToggle model "S" "E" "F" 200 0 120 55 Left
     , drawControlToggle model "J" "I" "L" 200 0 120 55 Right
     ]
@@ -238,8 +238,8 @@ drawScore {player1, player2, screenWidth} =
     Svg.g
       [
       ]
-      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing offset 0 90 60 "lightcoral" Left screenWidth
-      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" Right screenWidth
+      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Left
+      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Right
       ]
 
 drawControlToggle : Model -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
@@ -261,9 +261,9 @@ drawControlToggle model leftKey jumpKey rightKey sideOffset topOffset w h side =
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" side model.screenWidth
-      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill side model.screenWidth
-      , drawUiBlock (drawKeyboardControls) (Just aiToggleMsg) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill side model.screenWidth
+      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" model.screenWidth side
+      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill model.screenWidth side
+      , drawUiBlock (drawKeyboardControls) (Just aiToggleMsg) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill model.screenWidth side
       ]
 
 getToggleColor : Bool -> String
@@ -297,8 +297,8 @@ parallelogramPoints x y w h =
 Draws a parallelogram, and takes a callback function to draw its contents.
 Most of the UI is made up of these blocks.
 -}
-drawUiBlock : (Float -> Float -> Svg Msg) -> Maybe Msg -> Float -> Float -> Float -> Float -> String -> Side -> Float -> Svg Msg
-drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill side screenWidth =
+drawUiBlock : (Float -> Float -> Svg Msg) -> Maybe Msg -> Float -> Float -> Float -> Float -> String -> Float -> Side -> Svg Msg
+drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill screenWidth side =
   let
     points =
       parallelogramPoints sideOffset topOffset baseWidth height
