@@ -10,14 +10,16 @@ import Animation exposing (animation, from, to, duration)
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
 
+gravity = 0.001
+friction = 0.6
+playerAccelX = 0.05
+
 -- calculated based on screen dimensions and gravity value
 speedLimit = 0.41739935579996074
 jumpSpeed = -0.6708203932499369
 ballVxLimit = 0.514142842854285
 ballVyLimit = 0.714142842854285
 
-friction = 0.6
-playerAccelX = 0.05
 
 warmupLength : Time
 warmupLength = 3 * Time.second
@@ -236,16 +238,11 @@ addAcceleration a player =
 
 applyGravity : Mover a -> Mover a
 applyGravity player =
-  let
-    -- choice of g is essentially arbitrary and should be set
-    -- to whatever makes falling look good
-    g = (0, 0.001)
-  in
-    if not player.onGround then
-      player
-        |> addAcceleration g
-    else
-      player
+  if not player.onGround then
+    player
+      |> addAcceleration (0, gravity)
+  else
+    player
 
 bounce : Float -> Float -> Mover a -> Mover a
 bounce screenHeight bounciness ball =
