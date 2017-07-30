@@ -125,32 +125,14 @@ update msg model =
       )
 
     TogglePlayer1Ai ->
-      let
-        p = model.player1
-      in
-        ({ model
-          | player1 =
-            { p
-            | ai = not p.ai
-            , leftPressed = False
-            , rightPressed = False
-            , jumpPressed = False
-            }
-         }, Cmd.none)
+      ( { model | player1 = toggleAi model.player1 }
+      , Cmd.none
+      )
 
     TogglePlayer2Ai ->
-      let
-        p = model.player2
-      in
-        ({ model
-          | player2 =
-            { p
-            | ai = not p.ai
-            , leftPressed = False
-            , rightPressed = False
-            , jumpPressed = False
-            }
-         }, Cmd.none)
+      ( { model | player2 = toggleAi model.player2 }
+      , Cmd.none
+      )
 
     TogglePause ->
       ({ model | paused = not model.paused }, Cmd.none)
@@ -494,6 +476,15 @@ aiMovement ball player =
       }
   else
     player
+
+toggleAi : Player -> Player
+toggleAi player =
+  { player
+    | ai = not player.ai
+    , leftPressed = False
+    , rightPressed = False
+    , jumpPressed = False
+  }
 
 velocityGenerator : Random.Generator Float2
 velocityGenerator =
