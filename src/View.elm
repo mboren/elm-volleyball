@@ -124,7 +124,11 @@ gameView model =
     , drawNet model
     , drawPlayer model.player1
     , drawPlayer model.player2
-    , drawBall model.ball
+    , if model.warmupTimer > 0 then
+        drawTimer (model.warmupTimer + Time.second) (0.5 * model.screenWidth) 140 120
+      else
+        drawBall model.ball
+
     , svgButton (pauseMenuX model) 80 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80

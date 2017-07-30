@@ -42,6 +42,7 @@ type alias Model =
   { paused : Bool
   , page : Page
   , time : Time
+  , warmupTimer : Time
   , screenWidth : Float
   , screenHeight : Float
   , netWidth : Float

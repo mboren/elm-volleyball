@@ -19,6 +19,9 @@ ballVyLimit = 0.714142842854285
 friction = 0.6
 playerAccelX = 0.05
 
+warmupLength : Time
+warmupLength = 3 * Time.second
+
 
 defaultBall : Explosive (Mover {})
 defaultBall =
@@ -72,7 +75,7 @@ init =
       , ai = True
       }
   in
-    ( (Model False Title 0 1000 600 10 250 p1 p2 defaultBall)
+    ( (Model False Title 0 warmupLength 1000 600 10 250 p1 p2 defaultBall)
     , Random.generate NewBallVelocity velocityGenerator
     )
 
@@ -103,6 +106,7 @@ update msg model =
           , player2 = playerStep dt model.screenHeight (aiMovement model model.player2)
           , ball = ballStep dt model model.ball
           , time = model.time + dt
+          , warmupTimer = max 0 (model.warmupTimer - dt)
         }
         |> handleExplosionCasualties
         |> resetAtEndOfRound
@@ -190,15 +194,19 @@ ballStep : Time -> Model -> Explosive (Mover {}) -> Explosive (Mover {})
 ballStep dt model ball =
   case ball.status of
     Safe ->
-      ball
-        |> adjustBallBounds model
-        |> applyGravity
-        |> bounce model.screenHeight 0.9
-        |> applyPlayerCollision model.screenWidth model.player1
-        |> applyPlayerCollision model.screenWidth model.player2
-        |> updatePosition model.screenHeight dt
-        |> updateCountdown dt
-        |> detectDetonation model.time
+      if model.warmupTimer <= 0 then
+        ball
+          |> adjustBallBounds model
+          |> applyGravity
+          |> bounce model.screenHeight 0.9
+          |> applyPlayerCollision model.screenWidth model.player1
+          |> applyPlayerCollision model.screenWidth model.player2
+          |> updatePosition model.screenHeight dt
+          |> updateCountdown dt
+          |> detectDetonation model.time
+      else
+        ball
+
     Exploding ->
       model.ball
         |> handleExplosionAnimation model.time
@@ -588,7 +596,7 @@ resetAtEndOfRound : Model -> (Model, Cmd Msg)
 resetAtEndOfRound model =
   case model.ball.status of
     Exploded ->
-      (model
+      ({ model | warmupTimer = warmupLength }
         |> updateScores
         |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
     _ ->
