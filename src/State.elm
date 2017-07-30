@@ -505,8 +505,7 @@ checkCollision center1 radius1 center2 radius2 =
   in
     distance <= minimumDistance
 
-{- Kill player if they are within explosion radius,
-   otherwise, increment their score
+{- Kill player if they are within explosion radius
 -}
 explosionCasualtyHelper : Mover a -> Player -> Player
 explosionCasualtyHelper {position, size} player =
