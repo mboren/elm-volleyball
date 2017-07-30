@@ -90,13 +90,9 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     StartGame ->
-      let
-        p1 = model.player1
-        p2 = model.player2
-        p1Reset = { p1 | score = 0, alive = True }
-        p2Reset = { p2 | score = 0, alive = True }
-      in
-        ( { model | page = Game, paused = False, player1 = p1Reset, player2 = p2Reset }
+        ( { model | page = Game, paused = False }
+            |> mapPlayers revive
+            |> mapPlayers resetScore
         , Random.generate NewBallVelocity velocityGenerator
         )
 
@@ -107,38 +103,24 @@ update msg model =
         ({ model | ball = newBall }, Cmd.none)
 
     Tick dt ->
-      let
-        newPlayer1 =
-          model.player1
-            |> playerStep dt model.screenHeight model.ball
-        newPlayer2 =
-          model.player2
-            |> playerStep dt model.screenHeight model.ball
-      in
-        { model
-          | player1 = newPlayer1
-          , player2 = newPlayer2
-          , ball = ballStep dt model model.ball
-          , time = model.time + dt
-          , warmupTimer = max 0 (model.warmupTimer - dt)
-        }
-          |> handleExplosionCasualties
-          |> resetAtEndOfRound
+      { model
+        | ball = ballStep dt model model.ball
+        , time = model.time + dt
+        , warmupTimer = max 0 (model.warmupTimer - dt)
+      }
+        |> mapPlayers (playerStep dt model.screenHeight model.ball)
+        |> handleExplosionCasualties
+        |> resetAtEndOfRound
 
     Press key ->
-      ( { model
-          | player1 = handleKey True key model.player1
-          , player2 = handleKey True key model.player2
-        }
+      ( model
+        |> mapPlayers (handleKey True key)
       , Cmd.none
       )
 
     Release key ->
-      ( { model
-          | player1 = handleKey False key model.player1
-          , player2 = handleKey False key model.player2
-          , paused = (xor model.paused (key == 32))
-        }
+      ( { model | paused = (xor model.paused (key == 32)) }
+          |> mapPlayers (handleKey False key)
       , Cmd.none
       )
 
@@ -551,11 +533,8 @@ handleExplosionCasualties model =
 
         newBall = { ball | status = newStatus }
       in
-        { model
-          | player1 = explosionCasualtyHelper ball model.player1
-          , player2 = explosionCasualtyHelper ball model.player2
-          , ball = newBall
-        }
+        { model | ball = newBall }
+          |> mapPlayers (explosionCasualtyHelper ball)
 
     _ ->
       model
@@ -574,12 +553,9 @@ revive : Player -> Player
 revive player =
   { player | alive = True }
 
-revivePlayers : Model -> Model
-revivePlayers model =
-  { model
-    | player1 = revive model.player1
-    , player2 = revive model.player2
-  }
+resetScore : Player -> Player
+resetScore player =
+  { player | score = 0 }
 
 addPoints : Int -> Player -> Player
 addPoints points player =
@@ -611,8 +587,17 @@ resetAtEndOfRound : Model -> (Model, Cmd Msg)
 resetAtEndOfRound model =
   case model.ball.status of
     Exploded ->
-      ({ model | warmupTimer = warmupLength }
-        |> updateScores
-        |> revivePlayers, Random.generate NewBallVelocity velocityGenerator)
+      ( { model | warmupTimer = warmupLength }
+          |> updateScores
+          |> mapPlayers (revive)
+      , Random.generate NewBallVelocity velocityGenerator
+      )
     _ ->
       (model, Cmd.none)
+
+mapPlayers : (Player -> Player) -> Players a -> Players a
+mapPlayers f players =
+  { players
+    | player1 = f players.player1
+    , player2 = f players.player2
+  }

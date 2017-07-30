@@ -45,6 +45,12 @@ type alias Explosive a =
 
 type Page = Title | Game
 
+type alias Players a =
+  { a
+  | player1 : Player
+  , player2 : Player
+  }
+
 type alias Model =
   { paused : Bool
   , page : Page
