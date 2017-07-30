@@ -128,12 +128,12 @@ gameView model =
     , svgButton (pauseMenuX model) 80 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
-    , drawUiBlock (drawCenteredText "" 0) Nothing (-60) 30 180 95 "gray" Right (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left (toFloat model.screenWidth)
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Right (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
     , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
     , drawControlToggle model "S" "E" "F" 200 0 120 55 Left
-    , drawControlToggle model "J" "I" "L" (-15) 60 130 60 Right
+    , drawControlToggle model "J" "I" "L" 200 0 120 55 Right
     ]
 
 drawNet : Model -> Svg Msg
@@ -239,7 +239,7 @@ drawScore {player1, player2, screenWidth} =
       [
       ]
       [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing (toFloat (offset)) 0 90 60 "lightcoral" Left (toFloat screenWidth)
-      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing (toFloat (190)) 0 90 60 "lightcoral" Right (toFloat screenWidth)
+      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing (toFloat (offset)) 0 90 60 "lightcoral" Right (toFloat screenWidth)
       ]
 
 drawControlToggle : Model -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
