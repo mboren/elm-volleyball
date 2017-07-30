@@ -109,7 +109,6 @@ update msg model =
         , warmupTimer = max 0 (model.warmupTimer - dt)
       }
         |> mapPlayers (playerStep dt model.screenHeight model.ball)
-        |> handleExplosionCasualties
         |> resetAtEndOfRound
 
     Press key ->
@@ -158,7 +157,7 @@ subscriptions model =
             , Keyboard.ups Release
             ]
 
-playerStep : Time -> Float -> Mover b -> Controlled (Mover a) -> Controlled (Mover a)
+playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
 playerStep dt screenHeight ball player =
   player
     |> applyGravity
@@ -168,6 +167,7 @@ playerStep dt screenHeight ball player =
     |> updatePosition screenHeight dt
     |> handleWalls
     |> handleFloor screenHeight
+    |> killIfInExplosion ball
 
 ballStep : Time -> Model -> Explosive (Mover {}) -> Explosive (Mover {})
 ballStep dt model ball =
@@ -503,24 +503,12 @@ checkCollision center1 radius1 center2 radius2 =
   in
     distance <= minimumDistance
 
-{- Kill player if they are within explosion radius
--}
-explosionCasualtyHelper : Mover a -> Player -> Player
-explosionCasualtyHelper {position, size} player =
-  if checkCollision player.position player.size position size then
+killIfInExplosion : Explosive (Mover a) -> Player -> Player
+killIfInExplosion {position, size, status} player =
+  if status == Exploding && checkCollision player.position player.size position size then
     kill player
   else
     player
-
-handleExplosionCasualties : Model -> Model
-handleExplosionCasualties model =
-  case model.ball.status of
-    Exploding ->
-      model
-        |> mapPlayers (explosionCasualtyHelper model.ball)
-
-    _ ->
-      model
 
 updateStatus : Time -> Explosive (Mover a) -> Explosive (Mover a)
 updateStatus time ball =
