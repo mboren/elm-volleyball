@@ -393,7 +393,7 @@ the ball is in
           |right | left |
           |______|______|
 -}
-adjustBallBounds : Model -> Explosive (Mover {}) -> Explosive (Mover {})
+adjustBallBounds : Layout a -> Explosive (Mover {}) -> Explosive (Mover {})
 adjustBallBounds {screenWidth, screenHeight, netWidth, netHeight} ball =
   let
     (x, y) = ball.position

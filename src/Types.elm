@@ -43,6 +43,14 @@ type alias Explosive a =
   , animation : Animation
   }
 
+type alias Layout a =
+  { a
+  | screenWidth : Float
+  , screenHeight : Float
+  , netWidth : Float
+  , netHeight : Float
+  }
+
 type Page = Title | Game
 
 type alias Players a =

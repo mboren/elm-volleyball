@@ -84,23 +84,23 @@ view model =
       ]
     ]
 
-pauseMenuX : Model -> Float
+pauseMenuX : Layout a -> Float
 pauseMenuX {screenWidth} =
   0.5 * screenWidth - 70
 
-pauseMenu : Model -> Svg Msg
-pauseMenu model =
+pauseMenu : Layout a -> Svg Msg
+pauseMenu layout =
   Svg.g
     []
-    [ svgButton (pauseMenuX model) 80 140 50 "Play" TogglePause
+    [ svgButton (pauseMenuX layout) 80 140 50 "Play" TogglePause
     ]
 
-titleView : Model -> Svg Msg
-titleView model =
+titleView : Layout a -> Svg Msg
+titleView {screenWidth} =
   Svg.g
     []
-    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" model.screenWidth Left
-    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" model.screenWidth Left
+    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" screenWidth Left
+    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" screenWidth Left
     ]
 
 filter : String -> Svg Msg -> Svg Msg
@@ -140,7 +140,7 @@ gameView model =
     , drawControlToggle model "J" "I" "L" 200 0 120 55 Right
     ]
 
-drawNet : Model -> Svg Msg
+drawNet : Layout a -> Svg Msg
 drawNet {screenWidth, screenHeight, netWidth, netHeight} =
   Svg.rect
     [ Svg.Attributes.x (toString ((screenWidth - netWidth) / 2))
@@ -233,7 +233,7 @@ svgButton x y w h text onClickEvent =
         ]
       ]
 
-drawScore : Model -> Svg Msg
+drawScore : Layout (Players a) -> Svg Msg
 drawScore {player1, player2, screenWidth} =
   let
     size = 60
@@ -246,7 +246,7 @@ drawScore {player1, player2, screenWidth} =
       , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Right
       ]
 
-drawControlToggle : Model -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
+drawControlToggle : Layout (Players a) -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
 drawControlToggle model leftKey jumpKey rightKey sideOffset topOffset w h side =
   let
     labelX = sideOffset + (h / 2) / uiSlope
