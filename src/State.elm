@@ -566,7 +566,7 @@ Increment each player's score if they are the sole survivor
 of a round.
 If both are dead or both are alive, nobody gets a point
 -}
-updateScores : Model -> Model
+updateScores : Players a -> Players a
 updateScores model =
   let
     (p1Points, p2Points) =
