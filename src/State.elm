@@ -189,6 +189,8 @@ ballStep dt model ball =
     Exploding ->
       model.ball
         |> handleExplosionAnimation model.time
+        |> updateStatus model.time
+
     Exploded ->
       model.ball
 
@@ -514,21 +516,23 @@ handleExplosionCasualties : Model -> Model
 handleExplosionCasualties model =
   case model.ball.status of
     Exploding ->
-      let
-        ball = model.ball
-        newStatus =
-          if Animation.isDone model.time model.ball.animation then
-            Exploded
-          else
-            Exploding
-
-        newBall = { ball | status = newStatus }
-      in
-        { model | ball = newBall }
-          |> mapPlayers (explosionCasualtyHelper ball)
+      model
+        |> mapPlayers (explosionCasualtyHelper model.ball)
 
     _ ->
       model
+
+updateStatus : Time -> Explosive (Mover a) -> Explosive (Mover a)
+updateStatus time ball =
+  case ball.status of
+    Exploding ->
+        if Animation.isDone time ball.animation then
+          { ball | status = Exploded }
+        else
+          { ball | status = Exploding }
+    _ ->
+      ball
+
 handleExplosionAnimation : Time -> Explosive (Mover a) -> Explosive (Mover a)
 handleExplosionAnimation time ball =
   { ball | size = Animation.animate time ball.animation }
