@@ -117,15 +117,15 @@ update msg model =
             |> aiMovement model.ball
             |> playerStep dt model.screenHeight
       in
-      { model
+        { model
           | player1 = newPlayer1
           , player2 = newPlayer2
           , ball = ballStep dt model model.ball
           , time = model.time + dt
           , warmupTimer = max 0 (model.warmupTimer - dt)
         }
-        |> handleExplosionCasualties
-        |> resetAtEndOfRound
+          |> handleExplosionCasualties
+          |> resetAtEndOfRound
 
     Press key ->
       ( { model
