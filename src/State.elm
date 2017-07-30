@@ -110,12 +110,10 @@ update msg model =
       let
         newPlayer1 =
           model.player1
-            |> aiMovement model.ball
-            |> playerStep dt model.screenHeight
+            |> playerStep dt model.screenHeight model.ball
         newPlayer2 =
           model.player2
-            |> aiMovement model.ball
-            |> playerStep dt model.screenHeight
+            |> playerStep dt model.screenHeight model.ball
       in
         { model
           | player1 = newPlayer1
@@ -196,11 +194,12 @@ subscriptions model =
             , Keyboard.ups Release
             ]
 
-playerStep : Time -> Float -> Controlled (Mover a) -> Controlled (Mover a)
-playerStep dt screenHeight player =
+playerStep : Time -> Float -> Mover b -> Controlled (Mover a) -> Controlled (Mover a)
+playerStep dt screenHeight ball player =
   player
     |> applyGravity
     |> applyMovementKeys
+    |> aiMovement ball
     |> applyJump
     |> updatePosition screenHeight dt
     |> handleWalls
