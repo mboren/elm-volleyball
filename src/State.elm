@@ -101,9 +101,19 @@ update msg model =
         ({ model | ball = newBall }, Cmd.none)
 
     Tick dt ->
+      let
+        newPlayer1 =
+          model.player1
+            |> aiMovement model.ball
+            |> playerStep dt model.screenHeight
+        newPlayer2 =
+          model.player2
+            |> aiMovement model.ball
+            |> playerStep dt model.screenHeight
+      in
       { model
-          | player1 = playerStep dt model.screenHeight (aiMovement model model.player1)
-          , player2 = playerStep dt model.screenHeight (aiMovement model model.player2)
+          | player1 = newPlayer1
+          , player2 = newPlayer2
           , ball = ballStep dt model model.ball
           , time = model.time + dt
           , warmupTimer = max 0 (model.warmupTimer - dt)
@@ -483,8 +493,8 @@ detectDetonation time ball =
   else
     ball
 
-aiMovement : Model -> Controlled (Mover a) -> Controlled (Mover a)
-aiMovement {ball} player =
+aiMovement : Mover b -> Controlled (Mover a) -> Controlled (Mover a)
+aiMovement ball player =
   if player.ai then
     let
       (px, py) = player.position
