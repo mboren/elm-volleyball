@@ -386,9 +386,10 @@ toggleAi player =
 velocityGenerator : Random.Generator Float2
 velocityGenerator =
   let
-    component = float (-speedLimit) speedLimit
+    vx = float (-ballVxLimit) ballVxLimit
+    vy = float (-ballVyLimit) ballVyLimit
   in
-    (pair component component)
+    (pair vx vy)
 
 checkCollision : Float2 -> Float -> Float2 -> Float -> Bool
 checkCollision center1 radius1 center2 radius2 =
