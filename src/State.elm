@@ -22,6 +22,17 @@ playerAccelX = 0.05
 warmupLength : Time
 warmupLength = 3 * Time.second
 
+defaultPlayer1Controls =
+  { leftKey = 83
+  , rightKey = 70
+  , jumpKey = 69
+  }
+
+defaultPlayer2Controls =
+  { leftKey = 74
+  , rightKey = 76
+  , jumpKey = 73
+  }
 
 defaultBall : Explosive (Mover {})
 defaultBall =
@@ -39,52 +50,64 @@ defaultBall =
   , animation = Animation.static 20
   }
 
+constructPlayer : Layout a -> MovementKeys a -> Bool -> Side -> Player
+constructPlayer {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai side =
+  let
+    (leftWallX, rightWallX) =
+      case side of
+        Left ->
+          (0, (screenWidth - netWidth) / 2)
+        Right ->
+          ((screenWidth + netWidth) / 2, screenWidth)
+
+    x = (leftWallX + rightWallX) / 2
+    y = screenHeight / 3
+  in
+    { position = (x, y)
+    , velocity = (0, 0)
+    , maxVx = speedLimit
+    , acceleration = (0, 0)
+    , size = 50
+    , onGround = False
+    , leftWallX = leftWallX
+    , rightWallX = rightWallX
+    , leftPressed = False
+    , rightPressed = False
+    , jumpPressed = False
+    , leftKey = leftKey
+    , rightKey = rightKey
+    , jumpKey = jumpKey
+    , alive = True
+    , score = 0
+    , ai = ai
+    }
+
 init : (Model, Cmd Msg)
 init =
   let
-    p1 =
-      { position = (1000/4, 600/3)
-      , velocity = (0, 0)
-      , maxVx = speedLimit
-      , acceleration = (0, 0)
-      , size = 50
-      , onGround = False
-      , leftWallX = 0
-      , rightWallX = 1000/2
-      , leftPressed = False
-      , rightPressed = False
-      , jumpPressed = False
-      , leftKey = 83
-      , rightKey = 70
-      , jumpKey = 69
-      , alive = True
-      , score = 0
-      , ai = False
+    layout =
+      { screenWidth = 1000
+      , screenHeight = 600
+      , netWidth = 10
+      , netHeight = 250
       }
-    p2 =
-      { position = (3*1000/4, 600/3)
-      , velocity = (0, 0)
-      , maxVx = speedLimit
-      , acceleration = (0, 0)
-      , size = 50
-      , onGround = False
-      , leftWallX = 1000/2
-      , rightWallX = 1000
-      , leftPressed = False
-      , rightPressed = False
-      , jumpPressed = False
-      , leftKey = 74
-      , rightKey = 76
-      , jumpKey = 73
-      , alive = True
-      , score = 0
-      , ai = True
-      }
+    p1 = constructPlayer layout defaultPlayer1Controls False Left
+    p2 = constructPlayer layout defaultPlayer2Controls True Right
   in
-    ( (Model False Title 0 warmupLength 1000 600 10 250 p1 p2 defaultBall)
+    ( ( Model
+        False
+        Title
+        0
+        warmupLength
+        layout.screenWidth
+        layout.screenHeight
+        layout.netWidth
+        layout.netHeight
+        p1 p2
+        defaultBall
+      )
     , Random.generate NewBallVelocity velocityGenerator
     )
-
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
