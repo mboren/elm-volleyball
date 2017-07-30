@@ -99,8 +99,8 @@ update msg model =
 
     Tick dt ->
       { model
-          | player1 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player1)
-          , player2 = playerStep dt (toFloat model.screenHeight) (aiMovement model model.player2)
+          | player1 = playerStep dt model.screenHeight (aiMovement model model.player1)
+          , player2 = playerStep dt model.screenHeight (aiMovement model model.player2)
           , ball = ballStep dt model model.ball
           , time = model.time + dt
         }
@@ -182,7 +182,7 @@ playerStep dt screenHeight player =
     |> applyGravity
     |> applyMovementKeys
     |> applyJump
-    |> updatePosition (floor screenHeight) dt
+    |> updatePosition screenHeight dt
     |> handleWalls
     |> handleFloor screenHeight
 
@@ -193,9 +193,9 @@ ballStep dt model ball =
       ball
         |> adjustBallBounds model
         |> applyGravity
-        |> bounce (toFloat model.screenHeight) 0.9
-        |> applyPlayerCollision (toFloat model.screenWidth) model.player1
-        |> applyPlayerCollision (toFloat model.screenWidth) model.player2
+        |> bounce model.screenHeight 0.9
+        |> applyPlayerCollision model.screenWidth model.player1
+        |> applyPlayerCollision model.screenWidth model.player2
         |> updatePosition model.screenHeight dt
         |> updateCountdown dt
         |> detectDetonation model.time
@@ -394,30 +394,30 @@ adjustBallBounds {screenWidth, screenHeight, netWidth, netHeight} ball =
     (x, y) = ball.position
 
     netX =
-      if x < (toFloat screenWidth) / 2 then
-        toFloat ((screenWidth // 2) - (netWidth // 2))
+      if x < screenWidth / 2 then
+        (screenWidth / 2) - (netWidth / 2)
       else
-        toFloat ((screenWidth // 2) + (netWidth // 2))
+        (screenWidth / 2) + (netWidth / 2)
 
-    netY = toFloat (screenHeight - netHeight)
+    netY = screenHeight - netHeight
 
     (newLeftWall, newRightWall) =
       if (y + ball.size) < netY then
         -- above net
-        (0, toFloat screenWidth)
+        (0, screenWidth)
       else
-        if x < (toFloat screenWidth) / 2 then
+        if x < screenWidth / 2 then
           -- left of net
           (0, netX)
         else
-          if x > (toFloat screenWidth) / 2 then
+          if x > screenWidth / 2 then
             -- right of net
-            (netX, toFloat screenWidth)
+            (netX, screenWidth)
           else
             -- if we're precisely in the middle, crash.
             -- I want to see how common this case is to determine
             -- how much effort to put into resolving it nicely.
-            Debug.crash "ball in middle" (0, toFloat screenWidth)
+            Debug.crash "ball in middle" (0, screenWidth)
   in
     { ball
       | leftWallX = newLeftWall
@@ -428,7 +428,7 @@ adjustBallBounds {screenWidth, screenHeight, netWidth, netHeight} ball =
 {- Calculate change in position, velocity, and acceleration for this frame.
    Acceleration is zeroed after it is applied.
 -}
-updatePosition : Int -> Time -> Mover a -> Mover a
+updatePosition : Float -> Time -> Mover a -> Mover a
 updatePosition screenHeight dt player =
   let
     -- v = v0 + a * t
@@ -445,7 +445,7 @@ updatePosition screenHeight dt player =
         |> V2.scale (0.5 * dt)
         |> V2.add player.position
 
-    newOnGround = (V2.getY player.position) + player.size >= toFloat screenHeight
+    newOnGround = (V2.getY player.position) + player.size >= screenHeight
 
     newAcceleration = (0, 0)
   in

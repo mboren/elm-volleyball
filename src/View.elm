@@ -86,7 +86,7 @@ view model =
 
 pauseMenuX : Model -> Float
 pauseMenuX {screenWidth} =
-  0.5 * (toFloat screenWidth) - 70
+  0.5 * screenWidth - 70
 
 pauseMenu : Model -> Svg Msg
 pauseMenu model =
@@ -99,8 +99,8 @@ titleView : Model -> Svg Msg
 titleView model =
   Svg.g
     []
-    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" Left (toFloat model.screenWidth)
-    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" Left (toFloat model.screenWidth)
+    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" Left model.screenWidth
+    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" Left model.screenWidth
     ]
 
 filter : String -> Svg Msg -> Svg Msg
@@ -127,11 +127,11 @@ gameView model =
     , drawBall model.ball
     , svgButton (pauseMenuX model) 80 140 50 "Pause" TogglePause
     , drawScore model
-    , drawTimer model.ball.countdown (toFloat model.screenWidth/2) 0 80
-    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left (toFloat model.screenWidth)
-    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Right (toFloat model.screenWidth)
-    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left (toFloat model.screenWidth)
-    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right (toFloat model.screenWidth)
+    , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Left model.screenWidth
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" Right model.screenWidth
+    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Left model.screenWidth
+    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" Right model.screenWidth
     , drawControlToggle model "S" "E" "F" 200 0 120 55 Left
     , drawControlToggle model "J" "I" "L" 200 0 120 55 Right
     ]
@@ -139,7 +139,7 @@ gameView model =
 drawNet : Model -> Svg Msg
 drawNet {screenWidth, screenHeight, netWidth, netHeight} =
   Svg.rect
-    [ Svg.Attributes.x (toString ((screenWidth // 2) - (netWidth // 2)))
+    [ Svg.Attributes.x (toString ((screenWidth - netWidth) / 2))
     , Svg.Attributes.y (toString (screenHeight - netHeight))
     , Svg.Attributes.width (toString netWidth)
     , Svg.Attributes.height (toString netHeight)
@@ -238,8 +238,8 @@ drawScore {player1, player2, screenWidth} =
     Svg.g
       [
       ]
-      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing (toFloat (offset)) 0 90 60 "lightcoral" Left (toFloat screenWidth)
-      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing (toFloat (offset)) 0 90 60 "lightcoral" Right (toFloat screenWidth)
+      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing offset 0 90 60 "lightcoral" Left screenWidth
+      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" Right screenWidth
       ]
 
 drawControlToggle : Model -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
@@ -261,9 +261,9 @@ drawControlToggle model leftKey jumpKey rightKey sideOffset topOffset w h side =
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" side (toFloat model.screenWidth)
-      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill side (toFloat model.screenWidth)
-      , drawUiBlock (drawKeyboardControls) (Just aiToggleMsg) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill side (toFloat model.screenWidth)
+      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" side model.screenWidth
+      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill side model.screenWidth
+      , drawUiBlock (drawKeyboardControls) (Just aiToggleMsg) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill side model.screenWidth
       ]
 
 getToggleColor : Bool -> String

@@ -42,10 +42,10 @@ type alias Model =
   { paused : Bool
   , page : Page
   , time : Time
-  , screenWidth : Int
-  , screenHeight : Int
-  , netWidth : Int
-  , netHeight : Int
+  , screenWidth : Float
+  , screenHeight : Float
+  , netWidth : Float
+  , netHeight : Float
   , player1 : Player
   , player2 : Player
   , ball : Explosive (Mover {})
