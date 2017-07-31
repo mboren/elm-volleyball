@@ -10,13 +10,9 @@ import Animation exposing (animation, from, to, duration)
 import Vector2 as V2 exposing (Vec2, Float2)
 import Types exposing (..)
 import Mover
-
-friction = 0.6
-playerAccelX = 0.05
+import Player
 
 -- calculated based on screen dimensions and gravity value
-speedLimit = 0.41739935579996074
-jumpSpeed = -0.6708203932499369
 ballVxLimit = 0.514142842854285
 ballVyLimit = 0.714142842854285
 
@@ -52,37 +48,6 @@ defaultBall =
   , animation = Animation.static 20
   }
 
-constructPlayer : Layout a -> MovementKeys a -> Bool -> Side -> Player
-constructPlayer {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai side =
-  let
-    (leftWallX, rightWallX) =
-      case side of
-        Left ->
-          (0, (screenWidth - netWidth) / 2)
-        Right ->
-          ((screenWidth + netWidth) / 2, screenWidth)
-
-    x = (leftWallX + rightWallX) / 2
-    y = screenHeight / 3
-  in
-    { position = (x, y)
-    , velocity = (0, 0)
-    , maxVx = speedLimit
-    , acceleration = (0, 0)
-    , size = 50
-    , onGround = False
-    , leftWallX = leftWallX
-    , rightWallX = rightWallX
-    , leftPressed = False
-    , rightPressed = False
-    , jumpPressed = False
-    , leftKey = leftKey
-    , rightKey = rightKey
-    , jumpKey = jumpKey
-    , alive = True
-    , score = 0
-    , ai = ai
-    }
 
 init : (Model, Cmd Msg)
 init =
@@ -93,8 +58,8 @@ init =
       , netWidth = 10
       , netHeight = 250
       }
-    p1 = constructPlayer layout defaultPlayer1Controls False Left
-    p2 = constructPlayer layout defaultPlayer2Controls True Right
+    p1 = Player.create layout defaultPlayer1Controls False Left
+    p2 = Player.create layout defaultPlayer2Controls True Right
   in
     ( ( Model
         False
@@ -116,8 +81,8 @@ update msg model =
   case msg of
     StartGame ->
         ( { model | page = Game, paused = False }
-            |> mapPlayers revive
-            |> mapPlayers resetScore
+            |> mapPlayers (Player.revive)
+            |> mapPlayers (Player.resetScore)
         , Random.generate NewBallVelocity velocityGenerator
         )
 
@@ -138,23 +103,23 @@ update msg model =
 
     Press key ->
       ( model
-        |> mapPlayers (handleKey True key)
+        |> mapPlayers (Player.handleKey True key)
       , Cmd.none
       )
 
     Release key ->
       ( { model | paused = (xor model.paused (key == 32)) }
-          |> mapPlayers (handleKey False key)
+          |> mapPlayers (Player.handleKey False key)
       , Cmd.none
       )
 
     TogglePlayer1Ai ->
-      ( { model | player1 = toggleAi model.player1 }
+      ( { model | player1 = Player.toggleAi model.player1 }
       , Cmd.none
       )
 
     TogglePlayer2Ai ->
-      ( { model | player2 = toggleAi model.player2 }
+      ( { model | player2 = Player.toggleAi model.player2 }
       , Cmd.none
       )
 
@@ -186,9 +151,9 @@ playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
 playerStep dt screenHeight ball player =
   player
     |> Mover.applyGravity
-    |> applyMovementKeys
-    |> aiMovement ball
-    |> applyJump
+    |> Player.applyMovementKeys
+    |> Player.aiMovement ball
+    |> Player.applyJump
     |> Mover.updatePosition screenHeight dt
     |> Mover.stopAtWalls
     |> Mover.stopAtFloor screenHeight
@@ -218,18 +183,6 @@ ballStep dt model ball =
 
     Exploded ->
       model.ball
-
-handleKey : Bool -> Keyboard.KeyCode -> MovementKeys (Controlled a) -> MovementKeys (Controlled a)
-handleKey pressed key player =
-  if key == player.leftKey then
-    { player | leftPressed = pressed }
-  else if key == player.rightKey then
-    { player | rightPressed = pressed }
-  else if key == player.jumpKey then
-    { player | jumpPressed = pressed }
-  else
-    player
-
 
 {-
 When the ball collides with a player, we take the player's velocity, change
@@ -262,38 +215,6 @@ applyPlayerCollision screenWidth player ball =
         ball.velocity
   in
     { ball | velocity = newVelocity }
-
-applyMovementKeys : Controlled (Mover a) -> Controlled (Mover a)
-applyMovementKeys player =
-  case (player.leftPressed, player.rightPressed) of
-    (False, False) ->
-      -- if left/right are not pressed, then we apply friction
-      -- to x velocity
-      if player.onGround then
-        let
-          (vx, vy) = player.velocity
-        in
-          { player | velocity = (friction * vx, vy) }
-      else
-        player
-
-    -- right
-    (False, True) ->
-      player |> Mover.addAcceleration (playerAccelX, 0)
-
-    -- left
-    (True, False) ->
-      player |> Mover.addAcceleration (-1 * playerAccelX, 0)
-
-    (True, True) ->
-      player
-
-applyJump : Controlled (Mover a) -> Controlled (Mover a)
-applyJump player =
-  if player.onGround && player.jumpPressed then
-    { player | velocity = player.velocity |> V2.setY jumpSpeed }
-  else
-    player
 
 {-
 Split the screen into 3 regions based on the net position,
@@ -344,7 +265,6 @@ updateCountdown : Time -> Explosive a -> Explosive a
 updateCountdown dt ball =
   { ball | countdown = max 0 (ball.countdown - dt) }
 
-
 detectDetonation : Time -> Explosive (Mover a) -> Explosive (Mover a)
 detectDetonation time ball =
   if ball.status == Safe && ((ball.countdown <= 0) || ball.onGround) then
@@ -358,30 +278,6 @@ detectDetonation time ball =
     }
   else
     ball
-
-aiMovement : Mover b -> Controlled (Mover a) -> Controlled (Mover a)
-aiMovement ball player =
-  if player.ai then
-    let
-      (px, py) = player.position
-      (bx, by) = ball.position
-    in
-      { player
-        | leftPressed = px > bx
-        , rightPressed = px < bx
-        , jumpPressed = py < by
-      }
-  else
-    player
-
-toggleAi : Player -> Player
-toggleAi player =
-  { player
-    | ai = not player.ai
-    , leftPressed = False
-    , rightPressed = False
-    , jumpPressed = False
-  }
 
 velocityGenerator : Random.Generator Float2
 velocityGenerator =
@@ -402,7 +298,7 @@ checkCollision center1 radius1 center2 radius2 =
 killIfInExplosion : Explosive (Mover a) -> Player -> Player
 killIfInExplosion {position, size, status} player =
   if status == Exploding && checkCollision player.position player.size position size then
-    kill player
+    Player.kill player
   else
     player
 
@@ -420,25 +316,6 @@ updateStatus time ball =
 handleExplosionAnimation : Time -> Explosive (Mover a) -> Explosive (Mover a)
 handleExplosionAnimation time ball =
   { ball | size = Animation.animate time ball.animation }
-
-kill : Player -> Player
-kill player =
-  if player.alive then
-    { player | alive = False }
-  else
-    player
-
-revive : Player -> Player
-revive player =
-  { player | alive = True }
-
-resetScore : Player -> Player
-resetScore player =
-  { player | score = 0 }
-
-addPoints : Int -> Player -> Player
-addPoints points player =
-  { player | score = player.score + points }
 
 {-
 Increment each player's score if they are the sole survivor
@@ -458,8 +335,8 @@ updateScores model =
           (0, 0)
   in
     { model
-      | player1 = (addPoints p1Points model.player1)
-      , player2 = (addPoints p2Points model.player2)
+      | player1 = (Player.addPoints p1Points model.player1)
+      , player2 = (Player.addPoints p2Points model.player2)
     }
 
 resetAtEndOfRound : Model -> (Model, Cmd Msg)
@@ -468,7 +345,7 @@ resetAtEndOfRound model =
     Exploded ->
       ( { model | warmupTimer = warmupLength }
           |> updateScores
-          |> mapPlayers (revive)
+          |> mapPlayers (Player.revive)
       , Random.generate NewBallVelocity velocityGenerator
       )
     _ ->
