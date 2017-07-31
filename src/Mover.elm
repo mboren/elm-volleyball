@@ -56,7 +56,7 @@ bounceOffWalls screenHeight bounciness mover =
       else
         (vx, x)
   in
-    { mover | velocity = (bounceVx, bounceVy), position = (newX, y) }
+    { mover | velocity = (bounceVx, vy), position = (newX, y) }
 
 stopAtWalls : Mover a -> Mover a
 stopAtWalls mover =
