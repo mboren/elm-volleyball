@@ -80,11 +80,11 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     StartGame ->
-        ( { model | page = Game, paused = False }
-            |> mapPlayers (Player.revive)
-            |> mapPlayers (Player.resetScore)
-        , Random.generate NewBallVelocity velocityGenerator
-        )
+      ( { model | page = Game, paused = False }
+          |> mapPlayers (Player.revive)
+          |> mapPlayers (Player.resetScore)
+      , Random.generate NewBallVelocity velocityGenerator
+      )
 
     EndGame ->
       ( { model | page = Title }
