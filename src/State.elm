@@ -86,6 +86,11 @@ update msg model =
         , Random.generate NewBallVelocity velocityGenerator
         )
 
+    EndGame ->
+      ( { model | page = Title }
+      , Cmd.none
+      )
+
     NewBallVelocity v ->
       let
         newBall = { defaultBall | velocity = v }

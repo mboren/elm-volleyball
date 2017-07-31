@@ -90,10 +90,16 @@ pauseMenuX {screenWidth} =
 
 pauseMenu : Layout a -> Svg Msg
 pauseMenu layout =
-  Svg.g
-    []
-    [ svgButton (pauseMenuX layout) 80 140 50 "Play" TogglePause
-    ]
+  let
+    height = 50
+    padding = 10
+    y i = 80 + i * (height + padding)
+  in
+    Svg.g
+      []
+      [ svgButton (pauseMenuX layout) (y 0) 140 50 "Play" TogglePause
+      , svgButton (pauseMenuX layout) (y 1) 220 50 "End Game" EndGame
+      ]
 
 titleView : Layout a -> Svg Msg
 titleView {screenWidth} =

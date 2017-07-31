@@ -76,6 +76,7 @@ type alias Model =
 type Msg
   = Tick Time
   | StartGame
+  | EndGame
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
   | NewBallVelocity Float2
