@@ -68,8 +68,8 @@ view model =
           []
         ]
       , case model.page of
-          Title ->
-            titleView model
+          Title maybeMenu ->
+            titleView model maybeMenu
           Game ->
             if model.paused then
               Svg.g
@@ -101,8 +101,8 @@ pauseMenu layout =
       , svgButton (pauseMenuX layout) (y 1) 220 50 "End Game" EndGame
       ]
 
-titleView : Layout a -> Svg Msg
-titleView {screenWidth} =
+titleView : Layout a -> Maybe SubMenu -> Svg Msg
+titleView {screenWidth} maybeSubMenu =
   let
     startOffset = 60
     rowHeight = 95
@@ -117,13 +117,22 @@ titleView {screenWidth} =
     width i =
       startWidth - (((y (i - 1)) - startOffset) / uiSlope)
 
+    subMenuSideOffset =
+      (width 3) - 60 + padding
+    subMenuWidth =
+      900 - (width 1) - (rowHeight / 2) - (3/2) * padding
+
     drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
     drawTitleScreenButton i (text, msg) =
       drawUiBlock (drawCenteredText text 80) msg (-60) (y (i + 1)) (width (i + 1)) rowHeight "black" screenWidth Left
 
+    drawTitleScreenSubMenuBackground : String -> String -> Svg Msg
+    drawTitleScreenSubMenuBackground text fillColor =
+      drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) (subMenuWidth) (3 * rowHeight + 2 * padding) fillColor screenWidth Left
+
     buttons =
-      [ ("instructions", Nothing)
-      , ("controls", Nothing)
+      [ ("instructions", Just (ToggleSubMenu Instructions))
+      , ("controls", Just (ToggleSubMenu Controls))
       , ("play", Just StartGame)
       ]
   in
@@ -133,6 +142,16 @@ titleView {screenWidth} =
       , Svg.g
         []
         (List.indexedMap (drawTitleScreenButton) buttons)
+      , case maybeSubMenu of
+          Nothing ->
+            Svg.g [] []
+
+          Just Instructions ->
+            drawTitleScreenSubMenuBackground "Instructions" "black"
+
+          Just Controls ->
+            drawTitleScreenSubMenuBackground "Controls" "black"
+
       ]
 
 filter : String -> Svg Msg -> Svg Msg

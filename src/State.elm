@@ -63,7 +63,7 @@ init =
   in
     ( ( Model
         False
-        Title
+        (Title Nothing)
         0
         warmupLength
         layout.screenWidth
@@ -87,9 +87,34 @@ update msg model =
       )
 
     EndGame ->
-      ( { model | page = Title }
+      ( { model | page = (Title Nothing) }
       , Cmd.none
       )
+
+    ToggleSubMenu subMenu ->
+      let
+        -- if this subMenu is already open, then we close it
+        -- otherwise, switch to Title subMenu
+        newPage =
+          case model.page of
+            Title maybeCurrentMenu ->
+              case maybeCurrentMenu of
+                Nothing ->
+                  Title (Just subMenu)
+
+                Just currentMenu ->
+                  if currentMenu == subMenu then
+                    Title Nothing
+                  else
+                    Title (Just subMenu)
+
+            _ ->
+              Title (Just subMenu)
+
+      in
+        ( { model | page = newPage }
+        , Cmd.none
+        )
 
     NewBallVelocity v ->
       let
@@ -134,7 +159,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   case model.page of
-    Title ->
+    Title _ ->
       Sub.none
 
     Game ->
