@@ -103,11 +103,37 @@ pauseMenu layout =
 
 titleView : Layout a -> Svg Msg
 titleView {screenWidth} =
-  Svg.g
-    []
-    [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (60) 900 95 "gray" screenWidth Left
-    , drawUiBlock (drawCenteredText "play" 80) (Just StartGame) (-60) (170) 250 95 "black" screenWidth Left
-    ]
+  let
+    startOffset = 60
+    rowHeight = 95
+    padding = 15
+    startWidth = 500
+
+    y : Int -> Float
+    y i =
+      startOffset + (toFloat i) * (rowHeight + padding)
+
+    width : Int -> Float
+    width i =
+      startWidth - (((y (i - 1)) - startOffset) / uiSlope)
+
+    drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
+    drawTitleScreenButton i (text, msg) =
+      drawUiBlock (drawCenteredText text 80) msg (-60) (y (i + 1)) (width (i + 1)) rowHeight "black" screenWidth Left
+
+    buttons =
+      [ ("instructions", Nothing)
+      , ("controls", Nothing)
+      , ("play", Just StartGame)
+      ]
+  in
+    Svg.g
+      []
+      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (y 0) 900 95 "gray" screenWidth Left
+      , Svg.g
+        []
+        (List.indexedMap (drawTitleScreenButton) buttons)
+      ]
 
 filter : String -> Svg Msg -> Svg Msg
 filter filterId svg =
