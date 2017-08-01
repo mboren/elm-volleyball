@@ -83,7 +83,7 @@ aiMovement ball player =
       { player
         | leftPressed = px > bx
         , rightPressed = px < bx
-        , jumpPressed = py < by
+        , jumpPressed = True
       }
   else
     player
