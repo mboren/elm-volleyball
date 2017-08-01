@@ -104,6 +104,9 @@ pauseMenu layout =
 titleView : Layout a -> Maybe SubMenu -> Svg Msg
 titleView {screenWidth} maybeSubMenu =
   let
+    titleOffset = 60
+    titleWidth = screenWidth + titleOffset - rowHeight / 2
+
     startOffset = 60
     rowHeight = 95
     padding = 15
@@ -120,7 +123,7 @@ titleView {screenWidth} maybeSubMenu =
     subMenuSideOffset =
       (width 3) - 60 + padding
     subMenuWidth =
-      900 - (width 1) - (rowHeight / 2) - (3/2) * padding
+      titleWidth - (width 1) - (rowHeight / 2) - (3/2) * padding
 
     drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
     drawTitleScreenButton i (text, msg) =
@@ -138,7 +141,7 @@ titleView {screenWidth} maybeSubMenu =
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-60) (y 0) 900 95 "gray" screenWidth Left
+      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-1*titleOffset) (y 0) (titleWidth) 95 "gray" screenWidth Left
       , Svg.g
         []
         (List.indexedMap (drawTitleScreenButton) buttons)
