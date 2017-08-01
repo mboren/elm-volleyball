@@ -288,7 +288,7 @@ velocityGenerator : Random.Generator Float2
 velocityGenerator =
   let
     vx = float (-ballVxLimit) ballVxLimit
-    vy = float (-ballVyLimit) ballVyLimit
+    vy = float (-ballVyLimit) 0
   in
     (pair vx vy)
 
