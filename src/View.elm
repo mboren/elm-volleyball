@@ -308,8 +308,8 @@ gameView model =
     , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Right
     , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Left
     , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Right
-    , drawControlToggle model "S" "E" "F" 200 0 120 55 Left
-    , drawControlToggle model "J" "I" "L" 200 0 120 55 Right
+    , drawControlToggle model 200 0 120 55 Left
+    , drawControlToggle model 200 0 120 55 Right
     ]
 
 drawNet : Layout a -> Svg Msg
@@ -418,20 +418,23 @@ drawScore {player1, player2, screenWidth} =
       , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Right
       ]
 
-drawControlToggle : Layout (Players a) -> String -> String -> String -> Float -> Float -> Float -> Float -> Side -> Svg Msg
-drawControlToggle model leftKey jumpKey rightKey sideOffset topOffset w h side =
+drawControlToggle : Layout (Players a) -> Float -> Float -> Float -> Float -> Side -> Svg Msg
+drawControlToggle model sideOffset topOffset w h side =
   let
     labelX = sideOffset + (h / 2) / uiSlope
 
-    (ai, aiToggleMsg) =
+    (player, aiToggleMsg) =
       case side of
         Left ->
-          (model.player1.ai, TogglePlayer1Ai)
+          (model.player1, TogglePlayer1Ai)
         Right ->
-          (model.player2.ai, TogglePlayer2Ai)
+          (model.player2, TogglePlayer2Ai)
 
-    aiFill = getToggleColor ai
-    keyboardFill = getToggleColor (not ai)
+    aiFill = getToggleColor player.ai
+    keyboardFill = getToggleColor (not player.ai)
+    leftKey = keyToString player.leftKey
+    rightKey = keyToString player.rightKey
+    jumpKey = keyToString player.jumpKey
 
     drawKeyboardControls = (drawControls leftKey jumpKey rightKey (h/2))
   in
