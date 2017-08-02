@@ -1,5 +1,6 @@
 module View exposing (view)
 
+import Char
 import Html exposing (Html, div)
 import Html.Attributes
 import Svg exposing (Svg)
@@ -88,6 +89,14 @@ pauseMenuX : Layout a -> Float
 pauseMenuX {screenWidth} =
   0.5 * screenWidth - 70
 
+parallelogramSideOffset : Float -> Float -> Int -> Float -> Int -> Int -> Float
+parallelogramSideOffset width height numRows colWidth row col =
+  (toFloat (numRows - row - 1)) * height / (uiSlope * (toFloat numRows)) + (toFloat col) * colWidth
+
+parallelogramTopOffset : Float -> Int -> Int -> Float
+parallelogramTopOffset height numRows row =
+  (toFloat row) * height / (toFloat numRows)
+
 pauseMenu : Layout a -> Svg Msg
 pauseMenu layout =
   let
@@ -101,8 +110,59 @@ pauseMenu layout =
       , svgButton (pauseMenuX layout) (y 1) 220 50 "End Game" EndGame
       ]
 
-titleView : Layout a -> Maybe SubMenu -> Svg Msg
-titleView {screenWidth} maybeSubMenu =
+keyToString : Int -> String
+keyToString key =
+  key
+    |> Char.fromCode
+    |> toString
+    |> String.dropLeft 1
+    |> String.dropRight 1
+
+drawControlsMenu : Float -> Float -> Float -> Float -> Float -> MovementKeys a -> MovementKeys b -> Svg Msg
+drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys =
+  let
+    numRows = 4
+    actionColWidth = width / 2
+    keyColWidth = width / 4
+    rowHeight = height / numRows
+
+    calcTopOffset row =
+       topOffset + parallelogramTopOffset height numRows row
+
+    calcSideOffset colWidth row col =
+      sideOffset + (parallelogramSideOffset (width) (height) numRows colWidth row col)
+
+    subMenuCell : (Int, Int, Float, Float, String, String) -> Svg Msg
+    subMenuCell (row, col, width, padding, color, text) =
+      let
+        textView = drawCenteredText text (rowHeight*(5/6))
+        cellSideOffset = calcSideOffset width row col
+        cellTopOffset = calcTopOffset row
+        paddedWidth = width - padding
+        paddedHeight = rowHeight - padding
+      in
+        drawUiBlock textView Nothing cellSideOffset cellTopOffset paddedWidth paddedHeight color screenWidth Left
+
+    cells =
+      [ (0, 2, keyColWidth, 5, "black", "P1")
+      , (0, 3, keyColWidth, 5, "black", "P2")
+      , (1, 0, actionColWidth, 0, "black", "left")
+      , (2, 0, actionColWidth, 0, "black", "right")
+      , (3, 0, actionColWidth, 0, "black", "jump")
+      , (1, 2, keyColWidth, 5, "gray", keyToString p1Keys.leftKey)
+      , (2, 2, keyColWidth, 5, "gray", keyToString p1Keys.rightKey)
+      , (3, 2, keyColWidth, 5, "gray", keyToString p1Keys.jumpKey)
+      , (1, 3, keyColWidth, 5, "gray", keyToString p2Keys.leftKey)
+      , (2, 3, keyColWidth, 5, "gray", keyToString p2Keys.rightKey)
+      , (3, 3, keyColWidth, 5, "gray", keyToString p2Keys.jumpKey)
+      ]
+  in
+    Svg.g
+      []
+      (List.map (subMenuCell) cells)
+
+titleView : Players (Layout a) -> Maybe SubMenu -> Svg Msg
+titleView {screenWidth, player1, player2} maybeSubMenu =
   let
     titleOffset = 60
     titleWidth = screenWidth + titleOffset - rowHeight / 2
@@ -122,8 +182,12 @@ titleView {screenWidth} maybeSubMenu =
 
     subMenuSideOffset =
       (width 3) - 60 + padding
+
     subMenuWidth =
       titleWidth - (width 1) - (rowHeight / 2) - (3/2) * padding
+
+    subMenuHeight =
+      3 * rowHeight + 2 * padding
 
     drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
     drawTitleScreenButton i (text, msg) =
@@ -131,7 +195,7 @@ titleView {screenWidth} maybeSubMenu =
 
     drawTitleScreenSubMenuBackground : String -> String -> Svg Msg
     drawTitleScreenSubMenuBackground text fillColor =
-      drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) (subMenuWidth) (3 * rowHeight + 2 * padding) fillColor screenWidth Left
+      drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) subMenuWidth subMenuHeight fillColor screenWidth Left
 
     buttons =
       [ ("instructions", Just (ToggleSubMenu Instructions))
@@ -153,7 +217,11 @@ titleView {screenWidth} maybeSubMenu =
             drawTitleScreenSubMenuBackground "Instructions" "black"
 
           Just Controls ->
-            drawTitleScreenSubMenuBackground "Controls" "black"
+            Svg.g
+              []
+              [ drawTitleScreenSubMenuBackground "" "black"
+              , drawControlsMenu screenWidth (subMenuWidth - padding) (subMenuHeight - padding) (subMenuSideOffset + (padding / uiSlope)) (y 1) player1 player2
+              ]
 
       ]
 
