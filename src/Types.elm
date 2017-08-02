@@ -56,6 +56,7 @@ type SubMenu = Instructions | Controls
 type Page
   = Title (Maybe SubMenu)
   | Game
+  | KeyInput Side MovementKey
 
 type alias Players a =
   { a
@@ -88,5 +89,9 @@ type Msg
   | TogglePlayer1Ai
   | TogglePlayer2Ai
   | TogglePause
+  | PrepareToChangePlayerKey Side MovementKey
+  | ChangePlayerKey Side MovementKey Keyboard.KeyCode
+
+type MovementKey = LeftKey | RightKey | JumpKey
 
 type Side = Left | Right

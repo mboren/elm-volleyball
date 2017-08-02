@@ -156,6 +156,36 @@ update msg model =
     TogglePause ->
       ({ model | paused = not model.paused }, Cmd.none)
 
+    PrepareToChangePlayerKey side movementKey ->
+      ({ model | page = KeyInput side movementKey }, Cmd.none)
+
+    ChangePlayerKey side movementKey keyCode ->
+      let
+        player =
+          case side of
+            Left ->
+              model.player1
+            Right ->
+              model.player2
+
+        newPlayer =
+          case movementKey of
+            LeftKey ->
+              { player | leftKey = keyCode }
+            RightKey ->
+              { player | rightKey = keyCode }
+            JumpKey ->
+              { player | jumpKey = keyCode }
+
+        newModel =
+          case side of
+            Left ->
+              { model | player1 = newPlayer }
+            Right ->
+              { model | player2 = newPlayer }
+      in
+        (newModel, Cmd.none)
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
   case model.page of
@@ -176,6 +206,12 @@ subscriptions model =
             , Keyboard.downs Press
             , Keyboard.ups Release
             ]
+
+    KeyInput side movementKey ->
+      Sub.batch
+        [ Keyboard.ups (ChangePlayerKey side movementKey)
+        ]
+
 
 playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
 playerStep dt screenHeight ball player =

@@ -70,7 +70,8 @@ view model =
         ]
       , case model.page of
           Title maybeMenu ->
-            titleView model maybeMenu
+            titleView model maybeMenu Nothing
+
           Game ->
             if model.paused then
               Svg.g
@@ -82,8 +83,10 @@ view model =
             else
               gameView model
 
-      ]
+          KeyInput side key ->
+            titleView model (Just Controls) (Just (side, key))
     ]
+  ]
 
 pauseMenuX : Layout a -> Float
 pauseMenuX {screenWidth} =
@@ -130,8 +133,8 @@ keyToString key =
   else
     toString key
 
-drawControlsMenu : Float -> Float -> Float -> Float -> Float -> MovementKeys a -> MovementKeys b -> Svg Msg
-drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys =
+drawControlsMenu : Float -> Float -> Float -> Float -> Float -> MovementKeys a -> MovementKeys a -> Maybe (Side, MovementKey) -> Svg Msg
+drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys maybeSelectedKey =
   let
     numRows = 4
     actionColWidth = width / 2
@@ -144,8 +147,8 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys =
     calcSideOffset colWidth row col =
       sideOffset + (parallelogramSideOffset (width) (height) numRows colWidth row col)
 
-    subMenuCell : (Int, Int, Float, Float, String, String) -> Svg Msg
-    subMenuCell (row, col, width, padding, color, text) =
+    subMenuCell : (Int, Int, Maybe Msg, Float, Float, String, String) -> Svg Msg
+    subMenuCell (row, col, msg, width, padding, color, text) =
       let
         textView = drawCenteredText text (rowHeight*(5/6))
         cellSideOffset = calcSideOffset width row col
@@ -153,28 +156,63 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys =
         paddedWidth = width - padding
         paddedHeight = rowHeight - padding
       in
-        drawUiBlock textView Nothing cellSideOffset cellTopOffset paddedWidth paddedHeight color screenWidth Left
+        drawUiBlock textView msg cellSideOffset cellTopOffset paddedWidth paddedHeight color screenWidth Left
+
+    keyCell (side, movementKey) =
+      let
+        keyText = keyToString keyCode
+        msg = PrepareToChangePlayerKey side movementKey
+        colWidth = keyColWidth
+        padding = 5
+
+        (col, playerKeys) =
+          case side of
+            Left ->
+              (2, p1Keys)
+            Right ->
+              (3, p2Keys)
+
+        (row, keyCode) =
+          case movementKey of
+            LeftKey ->
+              (1, playerKeys.leftKey)
+            RightKey ->
+              (2, playerKeys.rightKey)
+            JumpKey ->
+              (3, playerKeys.jumpKey)
+
+        color =
+          case maybeSelectedKey of
+            Nothing ->
+              "gray"
+            Just selectedKey ->
+              if selectedKey == (side, movementKey) then
+                "lightcoral"
+              else
+                "gray"
+      in
+        (row, col, Just msg, colWidth, padding, color, keyText)
 
     cells =
-      [ (0, 2, keyColWidth, 5, "black", "P1")
-      , (0, 3, keyColWidth, 5, "black", "P2")
-      , (1, 0, actionColWidth, 0, "black", "left")
-      , (2, 0, actionColWidth, 0, "black", "right")
-      , (3, 0, actionColWidth, 0, "black", "jump")
-      , (1, 2, keyColWidth, 5, "gray", keyToString p1Keys.leftKey)
-      , (2, 2, keyColWidth, 5, "gray", keyToString p1Keys.rightKey)
-      , (3, 2, keyColWidth, 5, "gray", keyToString p1Keys.jumpKey)
-      , (1, 3, keyColWidth, 5, "gray", keyToString p2Keys.leftKey)
-      , (2, 3, keyColWidth, 5, "gray", keyToString p2Keys.rightKey)
-      , (3, 3, keyColWidth, 5, "gray", keyToString p2Keys.jumpKey)
+      [ (0, 2, Nothing, keyColWidth, 5, "black", "P1")
+      , (0, 3, Nothing, keyColWidth, 5, "black", "P2")
+      , (1, 0, Nothing, actionColWidth, 0, "black", "left")
+      , (2, 0, Nothing, actionColWidth, 0, "black", "right")
+      , (3, 0, Nothing, actionColWidth, 0, "black", "jump")
+      , keyCell (Left, LeftKey)
+      , keyCell (Left, RightKey)
+      , keyCell (Left, JumpKey)
+      , keyCell (Right, LeftKey)
+      , keyCell (Right, RightKey)
+      , keyCell (Right, JumpKey)
       ]
   in
     Svg.g
       []
       (List.map (subMenuCell) cells)
 
-titleView : Players (Layout a) -> Maybe SubMenu -> Svg Msg
-titleView {screenWidth, player1, player2} maybeSubMenu =
+titleView : Players (Layout a) -> Maybe SubMenu -> Maybe (Side, MovementKey) -> Svg Msg
+titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey =
   let
     titleOffset = 60
     titleWidth = screenWidth + titleOffset - rowHeight / 2
@@ -232,7 +270,7 @@ titleView {screenWidth, player1, player2} maybeSubMenu =
             Svg.g
               []
               [ drawTitleScreenSubMenuBackground "" "black"
-              , drawControlsMenu screenWidth (subMenuWidth - padding) (subMenuHeight - padding) (subMenuSideOffset + (padding / uiSlope)) (y 1) player1 player2
+              , drawControlsMenu screenWidth (subMenuWidth - padding) (subMenuHeight - padding) (subMenuSideOffset + (padding / uiSlope)) (y 1) player1 player2 maybeChangingKey
               ]
 
       ]
