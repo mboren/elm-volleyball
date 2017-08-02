@@ -110,13 +110,25 @@ pauseMenu layout =
       , svgButton (pauseMenuX layout) (y 1) 220 50 "End Game" EndGame
       ]
 
-keyToString : Int -> String
+{-
+Convert a keycode into a string.
+
+The only key codes that map directly to the correct unicode symbol
+are the letter and digit keys, so for everything else, we just
+show the stringified keycode.
+-}
+keyToString : Char.KeyCode -> String
 keyToString key =
-  key
-    |> Char.fromCode
-    |> toString
-    |> String.dropLeft 1
-    |> String.dropRight 1
+  if (key >= Char.toCode 'A' && key <= Char.toCode 'Z')
+  || (key >= Char.toCode '0' && key <= Char.toCode '9')
+ then
+    key
+      |> Char.fromCode
+      |> toString
+      |> String.dropLeft 1
+      |> String.dropRight 1
+  else
+    toString key
 
 drawControlsMenu : Float -> Float -> Float -> Float -> Float -> MovementKeys a -> MovementKeys b -> Svg Msg
 drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys =
