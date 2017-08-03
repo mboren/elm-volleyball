@@ -2,7 +2,6 @@ module State exposing (init, update, subscriptions)
 
 import Time exposing (Time)
 import AnimationFrame
-import Task
 import Keyboard
 import Random exposing (pair, float)
 import Animation exposing (animation, from, to, duration)
