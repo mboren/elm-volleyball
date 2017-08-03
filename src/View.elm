@@ -391,8 +391,18 @@ drawBall {position, size, status} =
           , ("a", [size, 2*size, 0, 0, 1, size, -10])
           ]
 
+        -- degrees per horizontal distance unit
+        angularSpeed = 3 * 360 / 1000
+
+        -- Angle is determined completely by the X value.
+        -- This looks pretty convincing. It appears to change rotational
+        -- direction when it bounces, and rotation appears to slow down
+        -- or speed up as the ball itself does.
+        angle = x * angularSpeed
+
         transform =
           "translate(" ++ (toString x) ++ "," ++ (toString y) ++ ")"
+          ++ " rotate(" ++ (toString angle) ++ ")"
       in
         Svg.g
           [ Svg.Attributes.transform transform ]
