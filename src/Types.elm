@@ -6,7 +6,19 @@ import Vector2 as V2 exposing (Vec2, Float2)
 import Animation exposing (Animation)
 
 type alias Player =
-  Controlled (Mover (MovementKeys ({ alive: Bool, score: Int })))
+  Controlled
+    ( Mover
+      ( MovementKeys
+        ( { alive: Bool
+          , score: Int
+          , waistY : Float
+          , legHeight : Float
+          , fixedLegX : Float
+          , freeLegX : Float
+          }
+        )
+      )
+    )
 
 type alias MovementKeys a =
   { a

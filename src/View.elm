@@ -323,23 +323,56 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     ]
     []
 
+drawLegs : String -> Player -> Svg Msg
+drawLegs strokeColor player =
+  let
+    radius = player.size
+
+    -- sweep is an svg arc parameter that affects curvature.
+    -- 0 makes legs bend like an open paren: '('
+    -- 1 makes legs bend like a close paren: ')'
+    sweep =
+      if V2.getX player.velocity < 0 then
+        0 -- player is moving left
+      else
+        1 -- player is moving right
+
+    (px, py) = player.position
+
+    footY = py + player.waistY + player.legHeight
+
+    moveToWaist = ("M", [px, py + player.waistY])
+
+    legPath =
+      [ moveToWaist
+      , ("A", [radius, radius, 1, 0, sweep, player.fixedLegX, footY])
+      , moveToWaist
+      , ("A", [radius, radius, 1, 0, sweep, player.freeLegX, footY])
+      ]
+  in
+    Svg.path
+      [ Svg.Attributes.d (pathString legPath)
+      , Svg.Attributes.stroke strokeColor
+      , Svg.Attributes.fillOpacity "0.0"
+      , Svg.Attributes.strokeWidth "20"
+      ]
+      []
+
 drawPlayer : Player -> Svg Msg
-drawPlayer {position, size, alive} =
+drawPlayer player =
   let
     fillColor =
-      case alive of
+      case player.alive of
         True ->
           "green"
         False ->
           "blue"
   in
-  Svg.circle
-    [ Svg.Attributes.cx (toString (V2.getX position))
-    , Svg.Attributes.cy (toString (V2.getY position))
-    , Svg.Attributes.r (toString size)
-    , Svg.Attributes.fill fillColor
-    ]
-    []
+    Svg.g
+      []
+      [ drawCircle player.position player.size fillColor
+      , drawLegs fillColor player
+      ]
 
 drawTimer : Time -> Float -> Float -> Float -> Svg Msg
 drawTimer time x y height =

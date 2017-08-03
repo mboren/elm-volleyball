@@ -24,12 +24,14 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
 
     x = (leftWallX + rightWallX) / 2
     y = screenHeight / 3
+    playerSize = 50
+    waistYOffset = playerSize
   in  
     { position = (x, y)
     , velocity = (0, 0)
     , maxVx = speedLimit
     , acceleration = (0, 0)
-    , size = 50
+    , size = playerSize
     , onGround= False
     , leftWallX = leftWallX
     , rightWallX = rightWallX
@@ -42,6 +44,10 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
     , alive = True
     , score = 0
     , ai = ai
+    , waistY = waistYOffset
+    , legHeight = playerSize / 2
+    , fixedLegX = 0
+    , freeLegX = 0
     }
 
 kill : Player -> Player
@@ -133,3 +139,43 @@ applyJump player =
     { player | velocity = player.velocity |> V2.setY jumpSpeed }
   else
     player
+
+{-
+Update leg X positions based on current player position
+-}
+updateLegs : Player -> Player
+updateLegs player =
+  let
+    (px, _) = player.position
+
+    wallToWallDistance = player.rightWallX - player.leftWallX
+    numStridesFromWallToWall = 4
+    strideLength = wallToWallDistance / numStridesFromWallToWall
+
+    -- The player will only put their foot down at multiples of strideLength
+    previousStrideX =
+      strideLength * (toFloat (floor (px / strideLength)))
+
+    nextStrideX =
+      strideLength * (toFloat (ceiling (px / strideLength)))
+
+    previousDistance = px - previousStrideX
+    nextDistance = nextStrideX - px
+
+    -- The fixed leg sticks to the closest X value which is a
+    -- multiple of strideLength,
+    -- and the free leg moves proportionally to the distance from
+    -- this X value.
+    (newFixedLegX, newFreeLegX) =
+      if player.onGround then
+        if previousDistance < nextDistance then
+          (previousStrideX, previousStrideX + 2 * previousDistance)
+        else
+          (nextStrideX, nextStrideX - 2 * nextDistance)
+      else
+        (px - strideLength/2, px + strideLength/2)
+  in
+    { player
+      | fixedLegX = newFixedLegX
+      , freeLegX = newFreeLegX
+    }
