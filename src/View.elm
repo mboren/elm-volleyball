@@ -355,6 +355,20 @@ drawTimer time x y height =
     [ Svg.text (toString (floor (Time.inSeconds time)))
     ]
 
+{-
+Stringify everything and stick it all together in a string
+that we can use for attribute "d" of Svg.path
+example:
+    [(M,50,50),(L,100,100)] -> "M50 50 L100 100"
+-}
+pathString : List (String, List number) -> String
+pathString list =
+  list
+    |> List.map (Tuple.mapSecond (List.map (toString)))
+    |> List.map (Tuple.mapSecond (String.join " "))
+    |> List.map (uncurry (++))
+    |> String.join " "
+
 drawBall : Explosive (Mover a) -> Svg Msg
 drawBall {position, size, status} =
   case status of
@@ -364,7 +378,41 @@ drawBall {position, size, status} =
       drawCircle position size "red"
         |> filter turbulenceId
     Safe ->
-      drawCircle position size "black"
+      let
+        (x, y) = position
+
+        stemW = size
+        stemH = 0.7 * size
+        stemX =  -0.5 * stemW
+        stemY = -1 * (size + stemH / 2)
+
+        wickPath =
+          [ ("M", [0, stemY])
+          , ("a", [size, 2*size, 0, 0, 1, size, -10])
+          ]
+
+        transform =
+          "translate(" ++ (toString x) ++ "," ++ (toString y) ++ ")"
+      in
+        Svg.g
+          [ Svg.Attributes.transform transform ]
+          [ drawCircle (0,0) size "black"
+          , Svg.rect
+            [ Svg.Attributes.width (toString stemW)
+            , Svg.Attributes.height (toString stemH)
+            , Svg.Attributes.fill "black"
+            , Svg.Attributes.x (toString stemX)
+            , Svg.Attributes.y (toString stemY)
+            ]
+            []
+          , Svg.path
+            [ Svg.Attributes.d (pathString wickPath)
+            , Svg.Attributes.stroke "chocolate"
+            , Svg.Attributes.fillOpacity "0.0"
+            , Svg.Attributes.strokeWidth "3"
+            ]
+            []
+          ]
 
 drawCircle : Float2 -> Float -> String -> Svg Msg
 drawCircle position radius color =
