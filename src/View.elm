@@ -261,7 +261,7 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey =
         (List.indexedMap (drawTitleScreenButton) buttons)
       , case maybeSubMenu of
           Nothing ->
-            Svg.g [] []
+            drawBomb (2 * screenWidth / 3, 350) 120 30
 
           Just Instructions ->
             drawTitleScreenSubMenuBackground "Instructions" "black"
@@ -369,6 +369,45 @@ pathString list =
     |> List.map (uncurry (++))
     |> String.join " "
 
+drawBomb : Float2 -> Float -> Float -> Svg Msg
+drawBomb position size rotation =
+  let
+    (x, y) = position
+
+    stemW = size
+    stemH = 0.7 * size
+    stemX =  -0.5 * stemW
+    stemY = -1 * (size + stemH / 2)
+
+    wickPath =
+      [ ("M", [0, stemY])
+      , ("a", [size, 2*size, 0, 0, 1, size, -10])
+      ]
+
+    transform =
+      "translate(" ++ (toString x) ++ "," ++ (toString y) ++ ")"
+      ++ " rotate(" ++ (toString rotation) ++ ")"
+  in
+    Svg.g
+      [ Svg.Attributes.transform transform ]
+      [ drawCircle (0,0) size "black"
+      , Svg.rect
+        [ Svg.Attributes.width (toString stemW)
+        , Svg.Attributes.height (toString stemH)
+        , Svg.Attributes.fill "black"
+        , Svg.Attributes.x (toString stemX)
+        , Svg.Attributes.y (toString stemY)
+        ]
+        []
+      , Svg.path
+        [ Svg.Attributes.d (pathString wickPath)
+        , Svg.Attributes.stroke "chocolate"
+        , Svg.Attributes.fillOpacity "0.0"
+        , Svg.Attributes.strokeWidth "3"
+        ]
+        []
+      ]
+
 drawBall : Explosive (Mover a) -> Svg Msg
 drawBall {position, size, status} =
   case status of
@@ -379,18 +418,6 @@ drawBall {position, size, status} =
         |> filter turbulenceId
     Safe ->
       let
-        (x, y) = position
-
-        stemW = size
-        stemH = 0.7 * size
-        stemX =  -0.5 * stemW
-        stemY = -1 * (size + stemH / 2)
-
-        wickPath =
-          [ ("M", [0, stemY])
-          , ("a", [size, 2*size, 0, 0, 1, size, -10])
-          ]
-
         -- degrees per horizontal distance unit
         angularSpeed = 3 * 360 / 1000
 
@@ -398,31 +425,9 @@ drawBall {position, size, status} =
         -- This looks pretty convincing. It appears to change rotational
         -- direction when it bounces, and rotation appears to slow down
         -- or speed up as the ball itself does.
-        angle = x * angularSpeed
-
-        transform =
-          "translate(" ++ (toString x) ++ "," ++ (toString y) ++ ")"
-          ++ " rotate(" ++ (toString angle) ++ ")"
+        angle = (V2.getX position) * angularSpeed
       in
-        Svg.g
-          [ Svg.Attributes.transform transform ]
-          [ drawCircle (0,0) size "black"
-          , Svg.rect
-            [ Svg.Attributes.width (toString stemW)
-            , Svg.Attributes.height (toString stemH)
-            , Svg.Attributes.fill "black"
-            , Svg.Attributes.x (toString stemX)
-            , Svg.Attributes.y (toString stemY)
-            ]
-            []
-          , Svg.path
-            [ Svg.Attributes.d (pathString wickPath)
-            , Svg.Attributes.stroke "chocolate"
-            , Svg.Attributes.fillOpacity "0.0"
-            , Svg.Attributes.strokeWidth "3"
-            ]
-            []
-          ]
+        drawBomb position size angle
 
 drawCircle : Float2 -> Float -> String -> Svg Msg
 drawCircle position radius color =
