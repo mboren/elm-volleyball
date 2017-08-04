@@ -85,9 +85,9 @@ addPoints : Int -> Player -> Player
 addPoints points player =
   { player | score = player.score + points }
 
-toggleAi : Player -> Player 
+toggleAi : Player -> Player
 toggleAi player =
-  { player 
+  { player
     | ai = not player.ai
     , leftPressed = False
     , rightPressed = False

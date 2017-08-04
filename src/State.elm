@@ -211,7 +211,6 @@ subscriptions model =
         [ Keyboard.ups (ChangePlayerKey side movementKey)
         ]
 
-
 playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
 playerStep dt screenHeight ball player =
   player
