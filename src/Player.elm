@@ -60,8 +60,8 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
     , ai = ai
     , waistY = waistYOffset
     , legHeight = 3*50 / 4
-    , fixedLegX = 0
-    , freeLegX = 0
+    , fixedLegX = x
+    , freeLegX = x
     , leftArm = defaultLeftArm
     , rightArm = defaultRightArm
     }
