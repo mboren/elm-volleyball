@@ -85,11 +85,6 @@ update msg model =
       , Random.generate NewBallVelocity velocityGenerator
       )
 
-    EndGame ->
-      ( { model | page = (Title Nothing) }
-      , Cmd.none
-      )
-
     GoToPage page ->
       ( { model | page = page }
       , Cmd.none

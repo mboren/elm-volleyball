@@ -104,7 +104,6 @@ type alias Model =
 type Msg
   = Tick Time
   | StartGame
-  | EndGame
   | GoToPage Page
   | ToggleSubMenu SubMenu
   | Press Keyboard.KeyCode

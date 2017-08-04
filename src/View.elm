@@ -237,7 +237,7 @@ pauseMenu layout =
     Svg.g
       []
       [ svgButton (pauseMenuX layout) (y 0) 140 50 "Play" TogglePause
-      , svgButton (pauseMenuX layout) (y 1) 220 50 "End Game" EndGame
+      , svgButton (pauseMenuX layout) (y 1) 220 50 "Main menu" (GoToPage (Title Nothing))
       ]
 
 {-
