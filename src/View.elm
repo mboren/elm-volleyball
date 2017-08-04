@@ -73,7 +73,7 @@ view model =
             titleView model maybeMenu Nothing
 
           Instructions ->
-            instructionsView
+            instructionsView model model.player1
 
           Game ->
             if model.paused then
@@ -91,9 +91,129 @@ view model =
     ]
   ]
 
-instructionsView : Svg Msg
-instructionsView =
-  svgButton 10 10 240 50 "Main menu" (GoToPage (Title Nothing))
+drawAnchoredText : number -> number -> number -> String -> String -> Svg Msg
+drawAnchoredText x y height textAnchor text =
+    Svg.text_
+      [ Svg.Attributes.x (toString x)
+      , Svg.Attributes.y (toString y)
+      , Svg.Attributes.style
+        ( "text-anchor: " ++ textAnchor ++ "; "
+        ++ "font-family: sans-serif; "
+        ++ "font-size: " ++ (toString height) ++ "px; "
+        ++ "alignment-baseline: before-edge")
+      , Svg.Attributes.fill "black"
+      ]
+      [ Svg.text text
+      ]
+
+instructionsView : Layout a -> Player -> Svg Msg
+instructionsView layout player =
+  let
+    textHeight = 30
+    (playerX, playerY) = (90, 210)
+    (bombX, bombY) = (770, 120)
+    (explodeX, explodeY) = (770, 300)
+    (controlsX, controlsY) = (10, playerY + 100)
+
+    mainText =
+      [ ( playerX + 90
+        , """
+          Players will hit the bomb toward the
+          other side of the screen when it comes
+          near them.
+          """
+        )
+      , ( playerX + 90
+        , """
+          The bomb will explode when it touches
+          the ground or when the time runs out.
+          """
+        )
+      , ( playerX + 90
+        , """
+          ⇦ Click this to switch between AI
+          and keyboard control for either
+          player during a match
+          """
+        )
+      , ( 10
+        , """
+          You gain points by killing the other player, but the points don't matter
+          and there is no end condition. This is probably a metaphor for war
+          or something rather than sloppy game design.
+          """
+        )
+      ]
+
+    mainTextTspans =
+      mainText
+        |> List.map (Tuple.mapSecond (makeLines))
+        |> List.concatMap (\(x,lines)-> (makeTspans x lines))
+
+    makeLines : String -> List String
+    makeLines str =
+      str
+        |> String.lines
+        |> List.map (String.trim)
+        |> List.filter (\s -> (String.length s) > 1)
+
+    makeTspans : Float -> List String -> List (Svg Msg)
+    makeTspans x strings =
+      strings
+        -- give first line of each section a bigger dy multiplier
+        -- in order to space them out more
+        |> List.indexedMap (\i s->(if i == 0 then 2.3 else 1.0, s))
+        |> List.map (Tuple.mapFirst ((*) textHeight))
+        |> List.map (uncurry (makeTspan x))
+
+    makeTspan : Float -> Float -> String -> Svg Msg
+    makeTspan x0 height text =
+      Svg.tspan
+        [ Svg.Attributes.x (toString x0)
+        , Svg.Attributes.dy (toString height)
+        ]
+        [ Svg.text text ]
+
+    leftArm = player.leftArm
+    rightArm = player.rightArm
+    movedPlayer =
+      { player
+        | position = (playerX, playerY)
+        , leftArm = {  leftArm | hand = (-50, 0)}
+        , rightArm = { rightArm | hand = (50, 0)}
+        , fixedLegX = playerX - 30
+        , freeLegX = playerX + 30
+      }
+  in
+    Svg.g
+      []
+      [ svgButton 10 10 240 50 "Main menu" (GoToPage (Title Nothing))
+
+      , drawPlayer movedPlayer
+      , drawAnchoredText playerX (playerY + 50) 20 "middle" "Fig 1: you"
+
+      , drawBomb (bombX, bombY) 50 20
+      , drawAnchoredText bombX (bombY + 60) 20 "middle" "Fig 2: a bomb"
+
+      , drawCircle (explodeX, explodeY) 80 "red"
+        |> filter turbulenceId
+      , drawAnchoredText explodeX (explodeY+100) 20 "middle" "Fig 3: an explosion"
+
+      , drawControlToggle layout player Nothing (controlsX) controlsY 120 55 Left
+      , drawAnchoredText (controlsX ) (controlsY+60) (textHeight-10) "start" "Fig 4: AI toggle" -- , "switch"]
+      , drawAnchoredText (controlsX + 65) (controlsY+60+20) (textHeight-10) "start" "switch"
+
+      , Svg.text_
+        [ Svg.Attributes.x (toString 0)
+        , Svg.Attributes.y (toString 20)
+        , Svg.Attributes.style
+          ( "text-anchor: start; font-family: sans-serif; "
+          ++ "font-size: " ++ (toString textHeight) ++ "px; "
+          ++ "alignment-baseline: before-edge")
+        , Svg.Attributes.fill "black"
+        ]
+        mainTextTspans
+      ]
 
 pauseMenuX : Layout a -> Float
 pauseMenuX {screenWidth} =
