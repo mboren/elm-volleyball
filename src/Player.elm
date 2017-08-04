@@ -215,7 +215,13 @@ updateHandPosition target player arm =
         |> V2.add arm.shoulder
         |> V2.sub target
 
-    distance = V2.length shoulderToTarget
+    restingPositionToTarget =
+      player.position
+        |> V2.add arm.shoulder
+        |> V2.add arm.resting
+        |> V2.sub target
+
+    distance = V2.length restingPositionToTarget
 
     targetDelta = V2.sub target player.position
 
