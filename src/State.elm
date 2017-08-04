@@ -91,10 +91,7 @@ update msg model =
       )
 
     GoToPage page ->
-      ( { model
-          | page = page
-          , paused = page /= Game
-        }
+      ( { model | page = page }
       , Cmd.none
       )
 
