@@ -257,11 +257,28 @@ to the ball's velocity.
 I like the way this feels a lot. It's intuitive, and it makes a wide variety of
 shots possible. Feels a lot better than just normal collision.
 -}
-applyPlayerCollision : Float -> Controlled (Mover a) -> Explosive (Mover b) -> Explosive (Mover b)
+applyPlayerCollision : Float -> Player -> Explosive (Mover b) -> Explosive (Mover b)
 applyPlayerCollision screenWidth player ball =
   let
-    minimumDistance = player.size + ball.size
-    distance = V2.distance player.position ball.position
+    -- This is the butterfingers constant
+    -- Smaller values make the player appear to fumble the
+    -- ball more frequently.
+    -- Large values make it hard to miss.
+    handRadius = 13
+
+    leftDistance =
+      player.position
+        |> V2.add player.leftArm.shoulder
+        |> V2.add player.leftArm.hand
+        |> V2.distance ball.position
+
+    rightDistance =
+      player.position
+        |> V2.add player.rightArm.shoulder
+        |> V2.add player.rightArm.hand
+        |> V2.distance ball.position
+
+    distance = min leftDistance rightDistance
 
     horizontalSign =
       if (V2.getX player.position) < screenWidth / 2 then
@@ -270,10 +287,11 @@ applyPlayerCollision screenWidth player ball =
         -1.0
 
     newVelocity =
-      if distance <= minimumDistance then
+      if distance <= handRadius then
         V2.map abs player.velocity
           |> Tuple.mapFirst ((*) horizontalSign) -- X should point to other side
           |> Tuple.mapSecond ((*) -1.0) -- Y should always point up or level
+          |> Tuple.mapSecond (min -0.5)
           |> V2.scale 1.6
           |> V2.add ball.velocity
           |> \(vx,vy)->(vx, clamp (-ballVyLimit) ballVyLimit vy)
