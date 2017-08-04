@@ -578,11 +578,8 @@ drawControlToggle model sideOffset topOffset w h side =
 
     aiFill = getToggleColor player.ai
     keyboardFill = getToggleColor (not player.ai)
-    leftKey = keyToString player.leftKey
-    rightKey = keyToString player.rightKey
-    jumpKey = keyToString player.jumpKey
 
-    drawKeyboardControls = (drawControls leftKey jumpKey rightKey (h/2))
+    drawKeyboardControls = (drawControls player (h/2))
   in
     Svg.g
       []
@@ -691,8 +688,8 @@ looks like this:
      W
     A D
 -}
-drawControls : String -> String -> String -> Float -> Float -> Float -> Svg Msg
-drawControls leftKey jumpKey rightKey h x y =
+drawControls : MovementKeys a -> Float -> Float -> Float -> Svg Msg
+drawControls {leftKey, rightKey, jumpKey} h x y =
   Svg.g
     []
     [ Svg.text_
@@ -704,7 +701,7 @@ drawControls leftKey jumpKey rightKey h x y =
         ++ "px; alignment-baseline: after-edge")
       , Svg.Attributes.fill "white"
       ]
-      [ Svg.text jumpKey
+      [ Svg.text (keyToString jumpKey)
       ]
     , Svg.text_
       [ Svg.Attributes.x (toString x)
@@ -715,6 +712,6 @@ drawControls leftKey jumpKey rightKey h x y =
         ++ "px; alignment-baseline: before-edge")
       , Svg.Attributes.fill "white"
       ]
-      [ Svg.text (leftKey ++ " " ++ rightKey)
+      [ Svg.text ((keyToString leftKey) ++ " " ++ (keyToString rightKey))
       ]
     ]
