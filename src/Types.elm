@@ -15,6 +15,8 @@ type alias Player =
           , legHeight : Float
           , fixedLegX : Float
           , freeLegX : Float
+          , leftArm : Arm
+          , rightArm : Arm
           }
         )
       )
@@ -25,6 +27,14 @@ type alias MovementKeys a =
   | leftKey : Keyboard.KeyCode
   , rightKey : Keyboard.KeyCode
   , jumpKey : Keyboard.KeyCode
+  }
+
+type alias Arm =
+  { shoulder : Float2
+  , hand : Float2
+  , resting : Float2
+  , length : Float
+  , activationRange : Float
   }
 
 type alias Controlled a =

@@ -26,7 +26,21 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
     y = screenHeight / 3
     playerSize = 50
     waistYOffset = playerSize
-  in  
+
+    defaultLeftArm =
+      { shoulder = (-0.7 * playerSize, 0)
+      , resting = (-playerSize, playerSize / 2)
+      , hand = (0,0)
+      , length = 1.5 * playerSize
+      , activationRange = 3 * playerSize
+      }
+
+    defaultRightArm =
+      { defaultLeftArm
+        | shoulder = (0.7 * playerSize, 0)
+        , resting = (playerSize, playerSize / 2)
+      }
+  in
     { position = (x, y)
     , velocity = (0, 0)
     , maxVx = speedLimit
@@ -48,6 +62,8 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
     , legHeight = playerSize / 2
     , fixedLegX = 0
     , freeLegX = 0
+    , leftArm = defaultLeftArm
+    , rightArm = defaultRightArm
     }
 
 kill : Player -> Player
@@ -179,3 +195,66 @@ updateLegs player =
       | fixedLegX = newFixedLegX
       , freeLegX = newFreeLegX
     }
+
+updateArms : Float2 -> Player -> Player
+updateArms target player =
+  let
+    newLeft = updateHandPosition target player player.leftArm
+    newRight = updateHandPosition target player player.rightArm
+  in
+    { player
+      | leftArm = newLeft
+      , rightArm = newRight
+    }
+
+updateHandPosition : Float2 -> Player -> Arm -> Arm
+updateHandPosition target player arm =
+  let
+    shoulderToTarget =
+      player.position
+        |> V2.add arm.shoulder
+        |> V2.sub target
+
+    distance = V2.length shoulderToTarget
+
+    targetDelta = V2.sub target player.position
+
+    (absoluteHandX, absoluteHandY) =
+      if distance < arm.length then
+        target
+      else
+        {- We move the arm toward the ball before the ball gets close enough
+           to hit, because otherwise the movement appears really abrupt.
+           An alternative approach would be to give the hands velocity/acceleration
+           toward the ball, but this is much simpler and looks pretty good
+           (and by good i mean really goofy)
+        -}
+        if distance < arm.activationRange then
+          shoulderToTarget
+            |> V2.normalize
+            |> V2.scale arm.length
+            |> V2.add arm.shoulder
+            |> V2.add player.position
+        else
+          player.position
+            |> V2.add arm.shoulder
+            |> V2.add arm.resting
+
+    -- when the player moves next to a wall, this makes the hand scoot up the wall
+    -- a bit instead of just disappearing. Makes the player feel more lively.
+    wallCompensatedHandPosition =
+      if absoluteHandX <= player.leftWallX then
+        (player.leftWallX + 5, absoluteHandY - 2 * (player.leftWallX - absoluteHandX))
+      else
+        if absoluteHandX >= player.rightWallX then
+          (player.rightWallX + 5, absoluteHandY - 2 * (absoluteHandX - player.rightWallX))
+        else
+          (absoluteHandX, absoluteHandY)
+
+    absoluteShoulderPosition =
+      V2.add arm.shoulder player.position
+
+    shoulderToHand =
+      V2.sub wallCompensatedHandPosition absoluteShoulderPosition
+  in
+    { arm | hand = shoulderToHand }

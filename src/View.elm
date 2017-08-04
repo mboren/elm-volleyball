@@ -323,6 +323,35 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     ]
     []
 
+drawArm : String -> Side -> Float2 -> Arm -> Svg Msg
+drawArm strokeColor side playerPosition arm  =
+  let
+    radius = 50
+    (sx, sy) = arm.shoulder
+    (hx, hy) = arm.hand
+    (px, py) = playerPosition
+
+    sweep =
+      case side of
+        Left ->
+          1
+        Right ->
+          0
+
+    armPath =
+      [ ("M", [px, py])
+      , ("m", [sx, sy])
+      , ("a", [radius, radius, 1, 0, sweep, hx, hy])
+      ]
+  in
+    Svg.path
+      [ Svg.Attributes.d (pathString armPath)
+      , Svg.Attributes.stroke "green"
+      , Svg.Attributes.fillOpacity "0.0"
+      , Svg.Attributes.strokeWidth "20"
+      ]
+      []
+
 drawLegs : String -> Player -> Svg Msg
 drawLegs strokeColor player =
   let
@@ -370,8 +399,10 @@ drawPlayer player =
   in
     Svg.g
       []
-      [ drawCircle player.position player.size fillColor
-      , drawLegs fillColor player
+      [ drawLegs fillColor player
+      , drawArm "green" Left player.position player.leftArm
+      , drawArm "green" Right player.position player.rightArm
+      , drawCircle player.position player.size fillColor
       ]
 
 drawTimer : Time -> Float -> Float -> Float -> Svg Msg
