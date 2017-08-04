@@ -346,7 +346,7 @@ drawArm strokeColor side playerPosition arm  =
   in
     Svg.path
       [ Svg.Attributes.d (pathString armPath)
-      , Svg.Attributes.stroke "green"
+      , Svg.Attributes.stroke strokeColor
       , Svg.Attributes.fillOpacity "0.0"
       , Svg.Attributes.strokeWidth "20"
       ]
