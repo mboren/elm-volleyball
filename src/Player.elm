@@ -24,21 +24,21 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
 
     x = (leftWallX + rightWallX) / 2
     y = screenHeight / 3
-    playerSize = 50
-    waistYOffset = playerSize
+    playerSize = 20
+    waistYOffset = -20
 
     defaultLeftArm =
-      { shoulder = (-0.7 * playerSize, 0)
-      , resting = (-playerSize, playerSize / 2)
+      { shoulder = (-0.4 * 50, -1.4*50)
+      , resting = (-50, 0)
       , hand = (0,0)
-      , length = 1.5 * playerSize
-      , activationRange = 3 * playerSize
+      , length = 1.5 * 50
+      , activationRange = 4 * 50
       }
 
     defaultRightArm =
       { defaultLeftArm
-        | shoulder = (0.7 * playerSize, 0)
-        , resting = (playerSize, playerSize / 2)
+        | shoulder = (0.4 * 50, -1.4*50)
+        , resting = (50, 0)
       }
   in
     { position = (x, y)
@@ -59,7 +59,7 @@ create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai sid
     , score = 0
     , ai = ai
     , waistY = waistYOffset
-    , legHeight = playerSize / 2
+    , legHeight = 3*50 / 4
     , fixedLegX = 0
     , freeLegX = 0
     , leftArm = defaultLeftArm
@@ -166,7 +166,7 @@ updateLegs player =
     (px, _) = player.position
 
     wallToWallDistance = player.rightWallX - player.leftWallX
-    numStridesFromWallToWall = 4
+    numStridesFromWallToWall = 6
     strideLength = wallToWallDistance / numStridesFromWallToWall
 
     -- The player will only put their foot down at multiples of strideLength

@@ -341,12 +341,13 @@ drawArm strokeColor side playerPosition arm  =
     armPath =
       [ ("M", [px, py])
       , ("m", [sx, sy])
-      , ("a", [radius, radius, 1, 0, sweep, hx, hy])
+      , ("a", [radius, 2*radius, 1, 0, sweep, hx, hy])
       ]
   in
     Svg.path
       [ Svg.Attributes.d (pathString armPath)
       , Svg.Attributes.stroke strokeColor
+      , Svg.Attributes.strokeLinecap "round"
       , Svg.Attributes.fillOpacity "0.0"
       , Svg.Attributes.strokeWidth "20"
       ]
@@ -355,7 +356,7 @@ drawArm strokeColor side playerPosition arm  =
 drawLegs : String -> Player -> Svg Msg
 drawLegs strokeColor player =
   let
-    radius = player.size
+    radius = 50
 
     -- sweep is an svg arc parameter that affects curvature.
     -- 0 makes legs bend like an open paren: '('
@@ -384,6 +385,7 @@ drawLegs strokeColor player =
       , Svg.Attributes.stroke strokeColor
       , Svg.Attributes.fillOpacity "0.0"
       , Svg.Attributes.strokeWidth "20"
+      , Svg.Attributes.strokeLinecap "round"
       ]
       []
 
@@ -396,13 +398,26 @@ drawPlayer player =
           "green"
         False ->
           "blue"
+    (px, py) = player.position
+    torsoY = py - 50
+    torsoHeight = 70
+    headRadius = 25
+    headY = -0.8*headRadius + torsoY - torsoHeight / 2
   in
     Svg.g
       []
-      [ drawLegs fillColor player
-      , drawArm "green" Left player.position player.leftArm
-      , drawArm "green" Right player.position player.rightArm
-      , drawCircle player.position player.size fillColor
+      [ drawCircle (px, headY) headRadius fillColor
+      , drawLegs fillColor player
+      , drawArm fillColor Left player.position player.leftArm
+      , drawArm fillColor Right player.position player.rightArm
+      , Svg.ellipse
+        [ Svg.Attributes.cx (toString (px))
+        , Svg.Attributes.cy (toString torsoY)
+        , Svg.Attributes.rx (toString (player.size))
+        , Svg.Attributes.ry (toString (torsoHeight/2))
+        , Svg.Attributes.fill fillColor
+        ]
+        []
       ]
 
 drawTimer : Time -> Float -> Float -> Float -> Svg Msg

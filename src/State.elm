@@ -220,7 +220,7 @@ playerStep dt screenHeight ball player =
     |> Player.applyJump
     |> Mover.updatePosition screenHeight dt
     |> Mover.stopAtWalls
-    |> Mover.stopAtFloor (screenHeight - player.legHeight)
+    |> Mover.stopAtFloor screenHeight
     |> Player.updateLegs
     |> Player.updateArms ball.position
     |> killIfInExplosion ball
