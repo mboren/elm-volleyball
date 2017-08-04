@@ -101,11 +101,12 @@ aiMovement ball player =
     let
       (px, py) = player.position
       (bx, by) = ball.position
+      dist = abs (px - bx)
     in
       { player
-        | leftPressed = px > bx
-        , rightPressed = px < bx
-        , jumpPressed = True
+        | leftPressed = px > bx && dist > player.size
+        , rightPressed = px < bx && dist > player.size
+        , jumpPressed = dist < 200 && by < 200
       }
   else
     player
