@@ -312,8 +312,8 @@ gameView model =
     , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Right
     , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Left
     , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Right
-    , drawControlToggle model 200 0 120 55 Left
-    , drawControlToggle model 200 0 120 55 Right
+    , drawControlToggle model model.player1 (Just TogglePlayer1Ai) 200 0 120 55 Left
+    , drawControlToggle model model.player2 (Just TogglePlayer2Ai) 200 0 120 55 Right
     ]
 
 drawNet : Layout a -> Svg Msg
@@ -564,17 +564,10 @@ drawScore {player1, player2, screenWidth} =
       , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Right
       ]
 
-drawControlToggle : Layout (Players a) -> Float -> Float -> Float -> Float -> Side -> Svg Msg
-drawControlToggle model sideOffset topOffset w h side =
+drawControlToggle : Layout a -> MovementKeys { b | ai : Bool} -> Maybe Msg -> Float -> Float -> Float -> Float -> Side -> Svg Msg
+drawControlToggle layout player clickEvent sideOffset topOffset w h side =
   let
     labelX = sideOffset + (h / 2) / uiSlope
-
-    (player, aiToggleMsg) =
-      case side of
-        Left ->
-          (model.player1, TogglePlayer1Ai)
-        Right ->
-          (model.player2, TogglePlayer2Ai)
 
     aiFill = getToggleColor player.ai
     keyboardFill = getToggleColor (not player.ai)
@@ -583,9 +576,9 @@ drawControlToggle model sideOffset topOffset w h side =
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" model.screenWidth side
-      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (Just aiToggleMsg) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill model.screenWidth side
-      , drawUiBlock (drawKeyboardControls) (Just aiToggleMsg) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill model.screenWidth side
+      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" layout.screenWidth side
+      , drawUiBlock (drawCenteredText "AI" (h/2-5)) (clickEvent) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill layout.screenWidth side
+      , drawUiBlock (drawKeyboardControls) (clickEvent) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill layout.screenWidth side
       ]
 
 getToggleColor : Bool -> String
