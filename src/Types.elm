@@ -73,10 +73,11 @@ type alias Layout a =
   , netHeight : Float
   }
 
-type SubMenu = Instructions | Controls
+type SubMenu = Controls
 
 type Page
   = Title (Maybe SubMenu)
+  | Instructions
   | Game
   | KeyInput Side MovementKey
 
@@ -104,6 +105,7 @@ type Msg
   = Tick Time
   | StartGame
   | EndGame
+  | GoToPage Page
   | ToggleSubMenu SubMenu
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode

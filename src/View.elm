@@ -72,6 +72,9 @@ view model =
           Title maybeMenu ->
             titleView model maybeMenu Nothing
 
+          Instructions ->
+            instructionsView
+
           Game ->
             if model.paused then
               Svg.g
@@ -87,6 +90,10 @@ view model =
             titleView model (Just Controls) (Just (side, key))
     ]
   ]
+
+instructionsView : Svg Msg
+instructionsView =
+  svgButton 10 10 240 50 "Main menu" (GoToPage (Title Nothing))
 
 pauseMenuX : Layout a -> Float
 pauseMenuX {screenWidth} =
@@ -248,7 +255,7 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey =
       drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) subMenuWidth subMenuHeight fillColor screenWidth Left
 
     buttons =
-      [ ("instructions", Just (ToggleSubMenu Instructions))
+      [ ("instructions", Just (GoToPage Instructions))
       , ("controls", Just (ToggleSubMenu Controls))
       , ("play", Just StartGame)
       ]
@@ -262,9 +269,6 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey =
       , case maybeSubMenu of
           Nothing ->
             drawBomb (2 * screenWidth / 3, 350) 120 30
-
-          Just Instructions ->
-            drawTitleScreenSubMenuBackground "Instructions" "black"
 
           Just Controls ->
             Svg.g

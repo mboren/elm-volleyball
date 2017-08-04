@@ -90,6 +90,14 @@ update msg model =
       , Cmd.none
       )
 
+    GoToPage page ->
+      ( { model
+          | page = page
+          , paused = page /= Game
+        }
+      , Cmd.none
+      )
+
     ToggleSubMenu subMenu ->
       let
         -- if this subMenu is already open, then we close it
@@ -189,6 +197,9 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   case model.page of
     Title _ ->
+      Sub.none
+
+    Instructions ->
       Sub.none
 
     Game ->
