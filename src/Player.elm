@@ -254,7 +254,7 @@ updateHandPosition target player arm =
         (player.leftWallX + 5, absoluteHandY - 2 * (player.leftWallX - absoluteHandX))
       else
         if absoluteHandX >= player.rightWallX then
-          (player.rightWallX + 5, absoluteHandY - 2 * (absoluteHandX - player.rightWallX))
+          (player.rightWallX - 5, absoluteHandY - 2 * (absoluteHandX - player.rightWallX))
         else
           (absoluteHandX, absoluteHandY)
 
