@@ -217,7 +217,7 @@ instructionsView layout player =
 
 pauseMenuX : Layout a -> Float
 pauseMenuX {screenWidth} =
-  0.5 * screenWidth - 70
+  10
 
 parallelogramSideOffset : Float -> Float -> Int -> Float -> Int -> Int -> Float
 parallelogramSideOffset width height numRows colWidth row col =
@@ -232,7 +232,7 @@ pauseMenu layout =
   let
     height = 50
     padding = 10
-    y i = 80 + i * (height + padding)
+    y i = 70 + i * (height + padding)
   in
     Svg.g
       []
@@ -432,7 +432,7 @@ gameView model =
       else
         drawBall model.ball
 
-    , svgButton (pauseMenuX model) 80 140 50 "Pause" TogglePause
+    , svgButton (pauseMenuX model) 70 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
     , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Left
