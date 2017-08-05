@@ -133,7 +133,7 @@ instructionsView layout player =
         , """
           ⇦ Click this to switch between AI
           and keyboard control for either
-          player during a match
+          player during a match.
           """
         )
       , ( 10
