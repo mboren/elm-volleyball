@@ -70,7 +70,7 @@ view model =
         ]
       , case model.page of
           Title maybeMenu ->
-            titleView model maybeMenu Nothing
+            titleView model maybeMenu Nothing model.gameStarted
 
           Instructions ->
             instructionsView model model.player1
@@ -87,7 +87,7 @@ view model =
               gameView model
 
           KeyInput side key ->
-            titleView model (Just Controls) (Just (side, key))
+            titleView model (Just Controls) (Just (side, key)) model.gameStarted
     ]
   ]
 
@@ -338,8 +338,8 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys may
       []
       (List.map (subMenuCell) cells)
 
-titleView : Players (Layout a) -> Maybe SubMenu -> Maybe (Side, MovementKey) -> Svg Msg
-titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey =
+titleView : Players (Layout a) -> Maybe SubMenu -> Maybe (Side, MovementKey) -> Bool -> Svg Msg
+titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStarted =
   let
     titleOffset = 60
     titleWidth = screenWidth + titleOffset - rowHeight / 2
@@ -375,9 +375,16 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey =
       drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) subMenuWidth subMenuHeight fillColor screenWidth Left
 
     buttons =
-      [ ("instructions", Just (GoToPage Instructions))
+      ( case gameStarted of
+          True ->
+            [ ("continue", Just (GoToPage Game)) ]
+          False ->
+            []
+      )
+      ++
+      [ ("new game", Just StartGame)
       , ("controls", Just (ToggleSubMenu Controls))
-      , ("play", Just StartGame)
+      , ("help", Just (GoToPage Instructions))
       ]
   in
     Svg.g

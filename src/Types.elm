@@ -89,6 +89,7 @@ type alias Players a =
 
 type alias Model =
   { paused : Bool
+  , gameStarted : Bool
   , page : Page
   , time : Time
   , warmupTimer : Time

@@ -62,6 +62,7 @@ init =
   in
     ( ( Model
         False
+        False
         (Title Nothing)
         0
         warmupLength
@@ -72,23 +73,34 @@ init =
         p1 p2
         defaultBall
       )
-    , Random.generate NewBallVelocity velocityGenerator
+    , Cmd.none
     )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     StartGame ->
-      ( { model | page = Game, paused = False }
-          |> mapPlayers (Player.revive)
-          |> mapPlayers (Player.resetScore)
-      , Random.generate NewBallVelocity velocityGenerator
-      )
+     ( { model
+         | page = Game
+         , paused = False
+         , gameStarted = True
+         , warmupTimer = warmupLength
+         , player1 = Player.create model model.player1 model.player1.ai Left
+         , player2 = Player.create model model.player2 model.player2.ai Right
+       }
+     , Random.generate NewBallVelocity velocityGenerator
+     )
 
     GoToPage page ->
-      ( { model | page = page }
-      , Cmd.none
-      )
+      let
+        cannotGoToPage = (page == Game) && (not model.gameStarted)
+      in
+        if cannotGoToPage then
+          (model, Cmd.none)
+        else
+          ( { model | page = page }
+          , Cmd.none
+          )
 
     ToggleSubMenu subMenu ->
       let
