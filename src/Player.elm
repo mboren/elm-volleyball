@@ -12,7 +12,7 @@ speedLimit = 0.41739935579996074
 jumpSpeed = -0.6708203932499369
 
 
-create : Layout a -> MovementKeys a -> Bool -> Side -> Player
+create : Layout a -> MovementKeys b -> Bool -> Side -> Player
 create {screenWidth, screenHeight, netWidth} {leftKey, rightKey, jumpKey} ai side =
   let
     (leftWallX, rightWallX) =
