@@ -211,57 +211,58 @@ updateArms target player =
 updateHandPosition : Float2 -> Player -> Arm -> Arm
 updateHandPosition target player arm =
   let
-    shoulderToTarget =
-      player.position
-        |> V2.add arm.shoulder
-        |> V2.sub target
+    absoluteShoulderPosition =
+      V2.add arm.shoulder player.position
+
+    targetDirection =
+      V2.sub target absoluteShoulderPosition
 
     restingPositionToTarget =
-      player.position
-        |> V2.add arm.shoulder
+      absoluteShoulderPosition
         |> V2.add arm.resting
         |> V2.sub target
 
     distance = V2.length restingPositionToTarget
 
-    targetDelta = V2.sub target player.position
+    {- We move the arm toward the ball before the ball gets close enough
+       to hit, because otherwise the movement appears really abrupt.
+       An alternative approach would be to give the hands velocity/acceleration
+       toward the ball, but this is much simpler and looks pretty good
+    -}
+    newHandDirection =
+      if distance < arm.activationRange then
+        targetDirection
+      else
+        arm.resting
+
+    (hx, hy) =
+      if newHandDirection /= (0,0) then
+        newHandDirection
+          |> V2.normalize
+          |> V2.scale arm.length
+      else
+        arm.resting
 
     (absoluteHandX, absoluteHandY) =
-      if distance < arm.length then
-        target
-      else
-        {- We move the arm toward the ball before the ball gets close enough
-           to hit, because otherwise the movement appears really abrupt.
-           An alternative approach would be to give the hands velocity/acceleration
-           toward the ball, but this is much simpler and looks pretty good
-           (and by good i mean really goofy)
-        -}
-        if distance < arm.activationRange then
-          shoulderToTarget
-            |> V2.normalize
-            |> V2.scale arm.length
-            |> V2.add arm.shoulder
-            |> V2.add player.position
-        else
-          player.position
-            |> V2.add arm.shoulder
-            |> V2.add arm.resting
+        V2.add (hx, hy) absoluteShoulderPosition
 
     -- when the player moves next to a wall, this makes the hand scoot up the wall
     -- a bit instead of just disappearing. Makes the player feel more lively.
+    wallCompensatedPosition wallX =
+      let
+        dx = wallX - (V2.getX absoluteShoulderPosition)
+        radical = max 0 (arm.length * arm.length - dx * dx)
+        dy = -1 * (sqrt radical)
+      in
+        (dx, dy)
+
     wallCompensatedHandPosition =
       if absoluteHandX <= player.leftWallX then
-        (player.leftWallX + 5, absoluteHandY - 2 * (player.leftWallX - absoluteHandX))
+        wallCompensatedPosition player.leftWallX
       else
         if absoluteHandX >= player.rightWallX then
-          (player.rightWallX - 5, absoluteHandY - 2 * (absoluteHandX - player.rightWallX))
-        else
-          (absoluteHandX, absoluteHandY)
-
-    absoluteShoulderPosition =
-      V2.add arm.shoulder player.position
-
-    shoulderToHand =
-      V2.sub wallCompensatedHandPosition absoluteShoulderPosition
+          wallCompensatedPosition player.rightWallX
+      else
+        (hx, hy)
   in
-    { arm | hand = shoulderToHand }
+    { arm | hand = wallCompensatedHandPosition }
