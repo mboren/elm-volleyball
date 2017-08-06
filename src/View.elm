@@ -16,6 +16,7 @@ uiSlope = 2
 pauseBlurId = "pauseBlur"
 turbulenceId = "turbulenceFilter"
 explosionGradientId = "explosionGradient"
+explosionGradientFill = "url(#" ++ explosionGradientId ++ ")"
 
 
 view : Model -> Svg Msg
@@ -223,10 +224,9 @@ instructionsView layout player =
       , drawBomb (bombX, bombY) 50 20
       , drawAnchoredText bombX (bombY + 60) 20 "middle" "Fig 2: a bomb"
 
-      , drawCircle (explodeX, explodeY) 80 "red"
+      , drawCircle (explodeX, explodeY) 80 explosionGradientFill
         |> filter turbulenceId
       , drawAnchoredText explodeX (explodeY+100) 20 "middle" "Fig 3: an explosion"
-
       , drawControlToggle layout player Nothing (controlsX) controlsY 120 55 Left
       , drawAnchoredText (controlsX ) (controlsY+60) (textHeight-10) "start" "Fig 4: AI toggle" -- , "switch"]
       , drawAnchoredText (controlsX + 65) (controlsY+60+20) (textHeight-10) "start" "switch"
@@ -243,10 +243,6 @@ instructionsView layout player =
         mainTextTspans
       ]
 
-pauseMenuX : Layout a -> Float
-pauseMenuX {screenWidth} =
-  10
-
 parallelogramSideOffset : Float -> Float -> Int -> Float -> Int -> Int -> Float
 parallelogramSideOffset width height numRows colWidth row col =
   (toFloat (numRows - row - 1)) * height / (uiSlope * (toFloat numRows)) + (toFloat col) * colWidth
@@ -255,8 +251,12 @@ parallelogramTopOffset : Float -> Int -> Int -> Float
 parallelogramTopOffset height numRows row =
   (toFloat row) * height / (toFloat numRows)
 
-pauseMenu : Layout a -> Svg Msg
-pauseMenu layout =
+pauseMenuX : Float
+pauseMenuX  =
+  10
+
+pauseMenu : Settings (Layout a) -> Svg Msg
+pauseMenu {useFancyExplosion} =
   let
     height = 50
     padding = 10
@@ -264,8 +264,9 @@ pauseMenu layout =
   in
     Svg.g
       []
-      [ svgButton (pauseMenuX layout) (y 0) 140 50 "Play" TogglePause
-      , svgButton (pauseMenuX layout) (y 1) 220 50 "Main menu" (GoToPage (Title Nothing))
+      [ svgButton pauseMenuX (y 0) 140 50 "Play" TogglePause
+      , svgButton pauseMenuX (y 1) 220 50 "Main menu" (GoToPage (Title Nothing))
+      , svgButton pauseMenuX (y 2) 450 50 ("Fancy graphics: " ++ (toString useFancyExplosion)) (ChangeSetting ToggleFancyExplosion)
       ]
 
 {-
@@ -460,9 +461,9 @@ gameView model =
     , if model.warmupTimer > 0 then
         drawTimer (model.warmupTimer + Time.second) (0.5 * model.screenWidth) 140 120
       else
-        drawBall model.ball
+        drawBall model model.ball
 
-    , svgButton (pauseMenuX model) 70 140 50 "Pause" TogglePause
+    , svgButton (pauseMenuX) 70 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
     , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Left
@@ -648,14 +649,19 @@ drawBomb position size rotation =
         []
       ]
 
-drawBall : Explosive (Mover a) -> Svg Msg
-drawBall {position, size, status} =
+drawBall : Settings a -> Explosive (Mover b) -> Svg Msg
+drawBall {useFancyExplosion} {position, size, status} =
   case status of
     Exploded ->
       Svg.g [] []
+
     Exploding ->
-      drawCircle position size ("url(#" ++ explosionGradientId ++ ")")
-        |> filter turbulenceId
+      if useFancyExplosion then
+        drawCircle position size explosionGradientFill
+          |> filter turbulenceId
+      else
+        drawCircle position size explosionGradientFill
+
     Safe ->
       let
         -- degrees per horizontal distance unit

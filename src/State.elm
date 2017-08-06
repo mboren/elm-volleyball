@@ -72,6 +72,7 @@ init =
         layout.netHeight
         p1 p2
         defaultBall
+        False
       )
     , Cmd.none
     )
@@ -196,6 +197,12 @@ update msg model =
               { model | player2 = newPlayer }
       in
         (newModel, Cmd.none)
+    ChangeSetting settingsMsg ->
+      case settingsMsg of
+        ToggleFancyExplosion ->
+          ( { model | useFancyExplosion = not model.useFancyExplosion }
+          , Cmd.none
+          )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

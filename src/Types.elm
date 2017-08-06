@@ -87,6 +87,11 @@ type alias Players a =
   , player2 : Player
   }
 
+type alias Settings a =
+  { a
+  | useFancyExplosion : Bool
+  }
+
 type alias Model =
   { paused : Bool
   , gameStarted : Bool
@@ -100,7 +105,10 @@ type alias Model =
   , player1 : Player
   , player2 : Player
   , ball : Explosive (Mover {})
+  , useFancyExplosion : Bool
   }
+
+type SettingsMsg = ToggleFancyExplosion
 
 type Msg
   = Tick Time
@@ -115,6 +123,7 @@ type Msg
   | TogglePause
   | PrepareToChangePlayerKey Side MovementKey
   | ChangePlayerKey Side MovementKey Keyboard.KeyCode
+  | ChangeSetting SettingsMsg
 
 type MovementKey = LeftKey | RightKey | JumpKey
 
