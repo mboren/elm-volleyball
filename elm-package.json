@@ -2,7 +2,7 @@
     "version": "1.0.0",
     "summary": "Two player volleyball game with an exploding ball.",
     "repository": "https://github.com/mboren/exploding-volleyball.git",
-    "license": "WTFPL",
+    "license": "CC0",
     "source-directories": [
         "src"
     ],
