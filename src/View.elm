@@ -15,6 +15,7 @@ import Types exposing (..)
 uiSlope = 2
 pauseBlurId = "pauseBlur"
 turbulenceId = "turbulenceFilter"
+explosionGradientId = "explosionGradient"
 
 
 view : Model -> Svg Msg
@@ -42,7 +43,34 @@ view model =
         , ("user-select", "none")
         ]
       ]
-      [ Svg.filter
+      [ Svg.defs
+        []
+        [ Svg.radialGradient
+          [ Svg.Attributes.id explosionGradientId ]
+          [ Svg.stop
+            [ Svg.Attributes.offset "0%"
+            , Svg.Attributes.stopColor "white"
+            ]
+            []
+          , Svg.stop
+            [ Svg.Attributes.offset "70%"
+            , Svg.Attributes.stopColor "yellow"
+            ]
+            []
+          , Svg.stop
+            [ Svg.Attributes.offset "90%"
+            , Svg.Attributes.stopColor "red"
+            ]
+            []
+          , Svg.stop
+            [ Svg.Attributes.offset "100%"
+            , Svg.Attributes.stopColor "red"
+            , Svg.Attributes.stopOpacity "0.1"
+            ]
+            []
+          ]
+        ]
+      , Svg.filter
         [ Svg.Attributes.id pauseBlurId ]
         [ Svg.feGaussianBlur
           [ Svg.Attributes.in_ "SourceGraphic"
@@ -624,7 +652,7 @@ drawBall {position, size, status} =
     Exploded ->
       Svg.g [] []
     Exploding ->
-      drawCircle position size "red"
+      drawCircle position size ("url(#" ++ explosionGradientId ++ ")")
         |> filter turbulenceId
     Safe ->
       let
