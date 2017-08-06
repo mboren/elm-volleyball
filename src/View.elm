@@ -55,7 +55,7 @@ view model =
         [ Svg.feTurbulence
           [ Svg.Attributes.type_ "turbulence"
           , Svg.Attributes.baseFrequency "0.05"
-          , Svg.Attributes.numOctaves "2"
+          , Svg.Attributes.numOctaves "1"
           , Svg.Attributes.result "turbulence"
           ]
           []
