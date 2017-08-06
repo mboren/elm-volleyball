@@ -373,9 +373,10 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
     titleWidth = screenWidth + titleOffset - rowHeight / 2
 
     startOffset = 60
-    rowHeight = 95
+    rowHeight = 90
     padding = 15
     startWidth = 500
+    textHeight = rowHeight - 15
 
     y : Int -> Float
     y i =
@@ -385,18 +386,20 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
     width i =
       startWidth - (((y (i - 1)) - startOffset) / uiSlope)
 
+    subMenuRows = 3
+
     subMenuSideOffset =
-      (width 3) - 60 + padding
+      (width subMenuRows) - titleOffset + padding
 
     subMenuWidth =
       titleWidth - (width 1) - (rowHeight / 2) - (3/2) * padding
 
     subMenuHeight =
-      3 * rowHeight + 2 * padding
+      subMenuRows * rowHeight + (subMenuRows - 1) * padding
 
     drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
     drawTitleScreenButton i (text, msg) =
-      drawUiBlock (drawCenteredText text 80) msg (-60) (y (i + 1)) (width (i + 1)) rowHeight "black" screenWidth Left
+      drawUiBlock (drawCenteredText text textHeight) msg (-titleOffset) (y (i + 1)) (width (i + 1)) rowHeight "black" screenWidth Left
 
     drawTitleScreenSubMenuBackground : String -> String -> Svg Msg
     drawTitleScreenSubMenuBackground text fillColor =
@@ -417,7 +420,7 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" 80) Nothing (-1*titleOffset) (y 0) (titleWidth) 95 "gray" screenWidth Left
+      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" textHeight) Nothing (-titleOffset) (y 0) (titleWidth) rowHeight "gray" screenWidth Left
       , Svg.g
         []
         (List.indexedMap (drawTitleScreenButton) buttons)
@@ -431,7 +434,6 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
               [ drawTitleScreenSubMenuBackground "" "black"
               , drawControlsMenu screenWidth (subMenuWidth - padding) (subMenuHeight - padding) (subMenuSideOffset + (padding / uiSlope)) (y 1) player1 player2 maybeChangingKey
               ]
-
       ]
 
 filter : String -> Svg Msg -> Svg Msg
