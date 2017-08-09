@@ -401,8 +401,8 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys may
       []
       (List.map (subMenuCell) cells)
 
-titleView : Players (Layout a) -> Bool -> Svg Msg
-titleView {screenWidth, player1, player2} gameStarted =
+titleView : Layout a -> Bool -> Svg Msg
+titleView {screenWidth} gameStarted =
   let
     titleOffset = 60
     titleWidth = screenWidth + titleOffset - rowHeight / 2
