@@ -150,8 +150,9 @@ optionsView : Model -> Maybe (Side, MovementKey) -> Svg Msg
 optionsView model maybeChangingKey =
   Svg.g
     []
-    [ svgButton 50 50 100 50 "back" (GoToPage Title)
+    [ svgButton 10 50 100 50 "back" (GoToPage Title)
     , drawControlsMenu model.screenWidth 600 400 100 50 model.player1 model.player2 maybeChangingKey
+    , svgButton 10 500 450 50 ("Fancy graphics: " ++ (toString model.useFancyExplosion)) (ChangeSetting ToggleFancyExplosion)
     ]
 
 drawAnchoredText : number -> number -> number -> String -> String -> Svg Msg
@@ -300,7 +301,6 @@ pauseMenu {useFancyExplosion} =
       []
       [ svgButton pauseMenuX (y 0) 140 50 "Play" TogglePause
       , svgButton pauseMenuX (y 1) 220 50 "Main menu" (GoToPage Title)
-      , svgButton pauseMenuX (y 2) 450 50 ("Fancy graphics: " ++ (toString useFancyExplosion)) (ChangeSetting ToggleFancyExplosion)
       ]
 
 {-
