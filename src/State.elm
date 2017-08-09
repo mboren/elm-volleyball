@@ -196,7 +196,12 @@ update msg model =
             Right ->
               { model | player2 = newPlayer }
       in
-        (newModel, Cmd.none)
+        (
+          { newModel
+            | page = Title (Just Controls)
+          }
+        , Cmd.none
+        )
     ChangeSetting settingsMsg ->
       case settingsMsg of
         ToggleFancyExplosion ->
