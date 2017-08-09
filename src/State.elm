@@ -135,11 +135,22 @@ update msg model =
         ({ model | ball = newBall }, Cmd.none)
 
     Tick dt ->
-      { model
-        | ball = ballStep dt model model.ball
-        , time = model.time + dt
-        , warmupTimer = max 0 (model.warmupTimer - dt)
-      }
+      let
+        roundStart =
+          model.warmupTimer > 0 && model.warmupTimer <= dt
+
+        revivePlayersOnRoundStart =
+          if roundStart then
+            mapPlayers (Player.revive)
+          else
+            identity
+      in
+        { model
+          | ball = ballStep dt model model.ball
+          , time = model.time + dt
+          , warmupTimer = max 0 (model.warmupTimer - dt)
+        }
+        |> revivePlayersOnRoundStart
         |> mapPlayers (playerStep dt model.screenHeight model.ball)
         |> resetAtEndOfRound
 
@@ -456,7 +467,6 @@ resetAtEndOfRound model =
     Exploded ->
       ( { model | warmupTimer = warmupLength }
           |> updateScores
-          |> mapPlayers (Player.revive)
       , Random.generate NewBallVelocity velocityGenerator
       )
     _ ->
