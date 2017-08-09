@@ -1,5 +1,6 @@
 module Player exposing (..)
 
+import Time exposing (Time)
 import Keyboard
 import Vector2 as V2 exposing (Float2)
 
@@ -95,17 +96,19 @@ toggleAi player =
   }
 
 -- MOVEMENT
-aiMovement : Mover a -> Player -> Player
+aiMovement : Explosive (Mover a) -> Player -> Player
 aiMovement ball player =
   if player.ai then
     let
       (px, py) = player.position
       (bx, by) = ball.position
+
       dist = abs (px - bx)
+      explodingSoon = ball.countdown <= 0.5 * Time.second
     in
       { player
-        | leftPressed = px > bx && dist > player.size
-        , rightPressed = px < bx && dist > player.size
+        | leftPressed = xor explodingSoon (px > bx && dist > player.size)
+        , rightPressed = xor explodingSoon (px < bx && dist > player.size)
         , jumpPressed = dist < 200 && by < 200
       }
   else
