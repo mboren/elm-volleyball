@@ -124,8 +124,8 @@ view model =
           []
         ]
       , case model.page of
-          Title maybeMenu ->
-            titleView model maybeMenu Nothing model.gameStarted
+          Title ->
+            titleView model model.gameStarted
 
           Instructions ->
             instructionsView model model.player1
@@ -141,10 +141,18 @@ view model =
             else
               gameView model
 
-          KeyInput side key ->
-            titleView model (Just Controls) (Just (side, key)) model.gameStarted
+          Options maybeChangingKey ->
+            optionsView model maybeChangingKey
     ]
   ]
+
+optionsView : Model -> Maybe (Side, MovementKey) -> Svg Msg
+optionsView model maybeChangingKey =
+  Svg.g
+    []
+    [ svgButton 50 50 100 50 "back" (GoToPage Title)
+    , drawControlsMenu model.screenWidth 600 400 100 50 model.player1 model.player2 maybeChangingKey
+    ]
 
 drawAnchoredText : number -> number -> number -> String -> String -> Svg Msg
 drawAnchoredText x y height textAnchor text =
@@ -242,7 +250,7 @@ instructionsView layout player =
   in
     Svg.g
       []
-      [ svgButton 10 10 240 50 "Main menu" (GoToPage (Title Nothing))
+      [ svgButton 10 10 240 50 "Main menu" (GoToPage Title)
 
       , drawPlayer movedPlayer
       , drawAnchoredText playerX (playerY + 50) 20 "middle" "Fig 1: you"
@@ -291,7 +299,7 @@ pauseMenu {useFancyExplosion} =
     Svg.g
       []
       [ svgButton pauseMenuX (y 0) 140 50 "Play" TogglePause
-      , svgButton pauseMenuX (y 1) 220 50 "Main menu" (GoToPage (Title Nothing))
+      , svgButton pauseMenuX (y 1) 220 50 "Main menu" (GoToPage Title)
       , svgButton pauseMenuX (y 2) 450 50 ("Fancy graphics: " ++ (toString useFancyExplosion)) (ChangeSetting ToggleFancyExplosion)
       ]
 
@@ -393,8 +401,8 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys may
       []
       (List.map (subMenuCell) cells)
 
-titleView : Players (Layout a) -> Maybe SubMenu -> Maybe (Side, MovementKey) -> Bool -> Svg Msg
-titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStarted =
+titleView : Players (Layout a) -> Bool -> Svg Msg
+titleView {screenWidth, player1, player2} gameStarted =
   let
     titleOffset = 60
     titleWidth = screenWidth + titleOffset - rowHeight / 2
@@ -413,24 +421,9 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
     width i =
       startWidth - (((y (i - 1)) - startOffset) / uiSlope)
 
-    subMenuRows = 3
-
-    subMenuSideOffset =
-      (width subMenuRows) - titleOffset + padding
-
-    subMenuWidth =
-      titleWidth - (width 1) - (rowHeight / 2) - (3/2) * padding
-
-    subMenuHeight =
-      subMenuRows * rowHeight + (subMenuRows - 1) * padding
-
     drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
     drawTitleScreenButton i (text, msg) =
       drawUiBlock (drawCenteredText text textHeight) msg (-titleOffset) (y (i + 1)) (width (i + 1)) rowHeight uiColor.menuTextBackground screenWidth Left
-
-    drawTitleScreenSubMenuBackground : String -> Color -> Svg Msg
-    drawTitleScreenSubMenuBackground text fillColor =
-      drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) subMenuWidth subMenuHeight fillColor screenWidth Left
 
     buttons =
       ( case gameStarted of
@@ -441,26 +434,15 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
       )
       ++
       [ ("new game", Just StartGame)
-      , ("controls", Just (ToggleSubMenu Controls))
+      , ("options", Just (GoToPage (Options Nothing)))
       , ("help", Just (GoToPage Instructions))
       ]
   in
     Svg.g
       []
       [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" textHeight) Nothing (-titleOffset) (y 0) (titleWidth) rowHeight uiColor.titleBackground screenWidth Left
-      , Svg.g
-        []
-        (List.indexedMap (drawTitleScreenButton) buttons)
-      , case maybeSubMenu of
-          Nothing ->
-            drawBomb (2 * screenWidth / 3, 350) 120 30
-
-          Just Controls ->
-            Svg.g
-              []
-              [ drawTitleScreenSubMenuBackground "" uiColor.menuTextBackground
-              , drawControlsMenu screenWidth (subMenuWidth - padding) (subMenuHeight - padding) (subMenuSideOffset + (padding / uiSlope)) (y 1) player1 player2 maybeChangingKey
-              ]
+      , Svg.g [] (List.indexedMap (drawTitleScreenButton) buttons)
+      , drawBomb (2 * screenWidth / 3, 350) 120 30
       ]
 
 filter : String -> Svg Msg -> Svg Msg

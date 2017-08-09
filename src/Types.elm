@@ -73,13 +73,12 @@ type alias Layout a =
   , netHeight : Float
   }
 
-type SubMenu = Controls
 
 type Page
-  = Title (Maybe SubMenu)
+  = Title
   | Instructions
   | Game
-  | KeyInput Side MovementKey
+  | Options (Maybe (Side, MovementKey))
 
 type alias Players a =
   { a
@@ -114,7 +113,6 @@ type Msg
   = Tick Time
   | StartGame
   | GoToPage Page
-  | ToggleSubMenu SubMenu
   | Press Keyboard.KeyCode
   | Release Keyboard.KeyCode
   | NewBallVelocity Float2

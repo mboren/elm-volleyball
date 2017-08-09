@@ -63,7 +63,7 @@ init =
     ( ( Model
         False
         False
-        (Title Nothing)
+        Title
         0
         warmupLength
         layout.screenWidth
@@ -102,31 +102,6 @@ update msg model =
           ( { model | page = page }
           , Cmd.none
           )
-
-    ToggleSubMenu subMenu ->
-      let
-        -- if this subMenu is already open, then we close it
-        -- otherwise, switch to Title subMenu
-        newPage =
-          case model.page of
-            Title maybeCurrentMenu ->
-              case maybeCurrentMenu of
-                Nothing ->
-                  Title (Just subMenu)
-
-                Just currentMenu ->
-                  if currentMenu == subMenu then
-                    Title Nothing
-                  else
-                    Title (Just subMenu)
-
-            _ ->
-              Title (Just subMenu)
-
-      in
-        ( { model | page = newPage }
-        , Cmd.none
-        )
 
     NewBallVelocity v ->
       let
@@ -180,7 +155,7 @@ update msg model =
       ({ model | paused = not model.paused }, Cmd.none)
 
     PrepareToChangePlayerKey side movementKey ->
-      ({ model | page = KeyInput side movementKey }, Cmd.none)
+      ({ model | page = Options (Just (side, movementKey)) }, Cmd.none)
 
     ChangePlayerKey side movementKey keyCode ->
       let
@@ -209,7 +184,7 @@ update msg model =
       in
         (
           { newModel
-            | page = Title (Just Controls)
+            | page = Options Nothing
           }
         , Cmd.none
         )
@@ -223,7 +198,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   case model.page of
-    Title _ ->
+    Title ->
       Sub.none
 
     Instructions ->
@@ -244,10 +219,15 @@ subscriptions model =
             , Keyboard.ups Release
             ]
 
-    KeyInput side movementKey ->
-      Sub.batch
-        [ Keyboard.ups (ChangePlayerKey side movementKey)
-        ]
+    Options opt ->
+      case opt of
+        Just (side, movementKey) ->
+          Sub.batch
+            [ Keyboard.ups (ChangePlayerKey side movementKey)
+            ]
+
+        Nothing ->
+          Sub.none
 
 playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
 playerStep dt screenHeight ball player =
