@@ -7,6 +7,8 @@ import Svg exposing (Svg)
 import Svg.Attributes
 import Svg.Events
 import Time exposing (Time)
+import Color exposing (Color)
+import Color.Convert exposing (colorToHex)
 
 import Vector2 as V2 exposing (Vec2, Float2)
 
@@ -17,6 +19,30 @@ pauseBlurId = "pauseBlur"
 turbulenceId = "turbulenceFilter"
 explosionGradientId = "explosionGradient"
 explosionGradientFill = "url(#" ++ explosionGradientId ++ ")"
+
+-- named CSS colors
+gray = Color.rgb 128 128 128
+green = Color.rgb 0 128 0
+lightSkyBlue = Color.rgb 135 206 250
+lightCoral = Color.rgb 240 128 128
+chocolate = Color.rgb 210 105 30
+darkSlateGray = Color.rgb 47 79 79
+
+uiColor =
+  { text = Color.white
+  , sky = lightSkyBlue
+  , player = green
+  , dead = Color.black
+  , menuTextBackground = Color.black
+  , hudSecondaryBackground = gray
+  , hudTertiaryBackground = lightCoral
+  , titleBackground = gray
+  , bomb = Color.black
+  , wick = chocolate
+  , net = Color.black
+  , toggleSelected = darkSlateGray
+  , toggleNotSelected = lightSkyBlue
+  }
 
 
 view : Model -> Svg Msg
@@ -130,7 +156,7 @@ drawAnchoredText x y height textAnchor text =
         ++ "font-family: sans-serif; "
         ++ "font-size: " ++ (toString height) ++ "px; "
         ++ "alignment-baseline: before-edge")
-      , Svg.Attributes.fill "black"
+      , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
       ]
       [ Svg.text text
       ]
@@ -238,7 +264,7 @@ instructionsView layout player =
           ( "text-anchor: start; font-family: sans-serif; "
           ++ "font-size: " ++ (toString textHeight) ++ "px; "
           ++ "alignment-baseline: before-edge")
-        , Svg.Attributes.fill "black"
+        , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
         ]
         mainTextTspans
       ]
@@ -303,7 +329,7 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys may
     calcSideOffset colWidth row col =
       sideOffset + (parallelogramSideOffset (width) (height) numRows colWidth row col)
 
-    subMenuCell : (Int, Int, Maybe Msg, Float, Float, String, String) -> Svg Msg
+    subMenuCell : (Int, Int, Maybe Msg, Float, Float, Color, String) -> Svg Msg
     subMenuCell (row, col, msg, width, padding, color, text) =
       let
         textView = drawCenteredText text (rowHeight*(5/6))
@@ -340,21 +366,21 @@ drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys may
         color =
           case maybeSelectedKey of
             Nothing ->
-              "gray"
+              uiColor.hudSecondaryBackground
             Just selectedKey ->
               if selectedKey == (side, movementKey) then
-                "lightcoral"
+                uiColor.hudTertiaryBackground
               else
-                "gray"
+                uiColor.hudSecondaryBackground
       in
         (row, col, Just msg, colWidth, padding, color, keyText)
 
     cells =
-      [ (0, 2, Nothing, keyColWidth, 5, "black", "P1")
-      , (0, 3, Nothing, keyColWidth, 5, "black", "P2")
-      , (1, 0, Nothing, actionColWidth, 0, "black", "left")
-      , (2, 0, Nothing, actionColWidth, 0, "black", "right")
-      , (3, 0, Nothing, actionColWidth, 0, "black", "jump")
+      [ (0, 2, Nothing, keyColWidth, 5, uiColor.menuTextBackground, "P1")
+      , (0, 3, Nothing, keyColWidth, 5, uiColor.menuTextBackground, "P2")
+      , (1, 0, Nothing, actionColWidth, 0, uiColor.menuTextBackground, "left")
+      , (2, 0, Nothing, actionColWidth, 0, uiColor.menuTextBackground, "right")
+      , (3, 0, Nothing, actionColWidth, 0, uiColor.menuTextBackground, "jump")
       , keyCell (Left, LeftKey)
       , keyCell (Left, RightKey)
       , keyCell (Left, JumpKey)
@@ -400,9 +426,9 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
 
     drawTitleScreenButton : Int -> (String, Maybe Msg) -> Svg Msg
     drawTitleScreenButton i (text, msg) =
-      drawUiBlock (drawCenteredText text textHeight) msg (-titleOffset) (y (i + 1)) (width (i + 1)) rowHeight "black" screenWidth Left
+      drawUiBlock (drawCenteredText text textHeight) msg (-titleOffset) (y (i + 1)) (width (i + 1)) rowHeight uiColor.menuTextBackground screenWidth Left
 
-    drawTitleScreenSubMenuBackground : String -> String -> Svg Msg
+    drawTitleScreenSubMenuBackground : String -> Color -> Svg Msg
     drawTitleScreenSubMenuBackground text fillColor =
       drawUiBlock (drawCenteredText text 10) Nothing (subMenuSideOffset) (y 1) subMenuWidth subMenuHeight fillColor screenWidth Left
 
@@ -421,7 +447,7 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" textHeight) Nothing (-titleOffset) (y 0) (titleWidth) rowHeight "gray" screenWidth Left
+      [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" textHeight) Nothing (-titleOffset) (y 0) (titleWidth) rowHeight uiColor.titleBackground screenWidth Left
       , Svg.g
         []
         (List.indexedMap (drawTitleScreenButton) buttons)
@@ -432,7 +458,7 @@ titleView {screenWidth, player1, player2} maybeSubMenu maybeChangingKey gameStar
           Just Controls ->
             Svg.g
               []
-              [ drawTitleScreenSubMenuBackground "" "black"
+              [ drawTitleScreenSubMenuBackground "" uiColor.menuTextBackground
               , drawControlsMenu screenWidth (subMenuWidth - padding) (subMenuHeight - padding) (subMenuSideOffset + (padding / uiSlope)) (y 1) player1 player2 maybeChangingKey
               ]
       ]
@@ -452,7 +478,7 @@ gameView model =
     [ Svg.rect
       [ Svg.Attributes.width "100%"
       , Svg.Attributes.height "100%"
-      , Svg.Attributes.fill "lightskyblue"
+      , Svg.Attributes.fill (colorToHex uiColor.sky)
       ]
       []
     , drawNet model
@@ -466,10 +492,10 @@ gameView model =
     , svgButton (pauseMenuX) 70 140 50 "Pause" TogglePause
     , drawScore model
     , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
-    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Left
-    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 "gray" model.screenWidth Right
-    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Left
-    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 "black" model.screenWidth Right
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Left
+    , drawUiBlock (drawCenteredText "" 0) Nothing (190) 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Right
+    , drawUiBlock (drawCenteredText "Player 1" (60*5/6)) Nothing (-60/2) 0 220 60 uiColor.menuTextBackground model.screenWidth Left
+    , drawUiBlock (drawCenteredText "Player 2" (60*5/6)) Nothing (-60/2) 0 220 60 uiColor.menuTextBackground model.screenWidth Right
     , drawControlToggle model model.player1 (Just TogglePlayer1Ai) 200 0 120 55 Left
     , drawControlToggle model model.player2 (Just TogglePlayer2Ai) 200 0 120 55 Right
     ]
@@ -481,11 +507,11 @@ drawNet {screenWidth, screenHeight, netWidth, netHeight} =
     , Svg.Attributes.y (toString (screenHeight - netHeight))
     , Svg.Attributes.width (toString netWidth)
     , Svg.Attributes.height (toString netHeight)
-    , Svg.Attributes.fill "black"
+    , Svg.Attributes.fill (colorToHex uiColor.net)
     ]
     []
 
-drawArm : String -> Side -> Float2 -> Arm -> Svg Msg
+drawArm : Color -> Side -> Float2 -> Arm -> Svg Msg
 drawArm strokeColor side playerPosition arm  =
   let
     radius = 50
@@ -508,14 +534,14 @@ drawArm strokeColor side playerPosition arm  =
   in
     Svg.path
       [ Svg.Attributes.d (pathString armPath)
-      , Svg.Attributes.stroke strokeColor
+      , Svg.Attributes.stroke (colorToHex strokeColor)
       , Svg.Attributes.strokeLinecap "round"
       , Svg.Attributes.fillOpacity "0.0"
       , Svg.Attributes.strokeWidth "20"
       ]
       []
 
-drawLegs : String -> Player -> Svg Msg
+drawLegs : Color -> Player -> Svg Msg
 drawLegs strokeColor player =
   let
     radius = 50
@@ -544,7 +570,7 @@ drawLegs strokeColor player =
   in
     Svg.path
       [ Svg.Attributes.d (pathString legPath)
-      , Svg.Attributes.stroke strokeColor
+      , Svg.Attributes.stroke (colorToHex strokeColor)
       , Svg.Attributes.fillOpacity "0.0"
       , Svg.Attributes.strokeWidth "20"
       , Svg.Attributes.strokeLinecap "round"
@@ -557,9 +583,9 @@ drawPlayer player =
     fillColor =
       case player.alive of
         True ->
-          "green"
+          uiColor.player
         False ->
-          "blue"
+          uiColor.dead
     (px, py) = player.position
     torsoY = py - 50
     torsoHeight = 70
@@ -568,7 +594,7 @@ drawPlayer player =
   in
     Svg.g
       []
-      [ drawCircle (px, headY) headRadius fillColor
+      [ drawCircle (px, headY) headRadius (colorToHex fillColor)
       , drawLegs fillColor player
       , drawArm fillColor Left player.position player.leftArm
       , drawArm fillColor Right player.position player.rightArm
@@ -577,7 +603,7 @@ drawPlayer player =
         , Svg.Attributes.cy (toString torsoY)
         , Svg.Attributes.rx (toString (player.size))
         , Svg.Attributes.ry (toString (torsoHeight/2))
-        , Svg.Attributes.fill fillColor
+        , Svg.Attributes.fill (colorToHex fillColor)
         ]
         []
       ]
@@ -631,18 +657,18 @@ drawBomb position size rotation =
   in
     Svg.g
       [ Svg.Attributes.transform transform ]
-      [ drawCircle (0,0) size "black"
+      [ drawCircle (0,0) size (colorToHex uiColor.bomb)
       , Svg.rect
         [ Svg.Attributes.width (toString stemW)
         , Svg.Attributes.height (toString stemH)
-        , Svg.Attributes.fill "black"
+        , Svg.Attributes.fill (colorToHex uiColor.bomb)
         , Svg.Attributes.x (toString stemX)
         , Svg.Attributes.y (toString stemY)
         ]
         []
       , Svg.path
         [ Svg.Attributes.d (pathString wickPath)
-        , Svg.Attributes.stroke "chocolate"
+        , Svg.Attributes.stroke (colorToHex uiColor.wick)
         , Svg.Attributes.fillOpacity "0.0"
         , Svg.Attributes.strokeWidth "3"
         ]
@@ -676,12 +702,12 @@ drawBall {useFancyExplosion} {position, size, status} =
         drawBomb position size angle
 
 drawCircle : Float2 -> Float -> String -> Svg Msg
-drawCircle position radius color =
+drawCircle position radius fill =
   Svg.circle
     [ Svg.Attributes.cx (toString (V2.getX position))
     , Svg.Attributes.cy (toString (V2.getY position))
     , Svg.Attributes.r (toString radius)
-    , Svg.Attributes.fill color
+    , Svg.Attributes.fill fill
     ]
     []
 
@@ -698,7 +724,7 @@ svgButton x y w h text onClickEvent =
       [ Svg.rect
         [ Svg.Attributes.width (toString w)
         , Svg.Attributes.height (toString h)
-        , Svg.Attributes.fill "black"
+        , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
         ]
         []
       , Svg.text_
@@ -723,8 +749,8 @@ drawScore {player1, player2, screenWidth} =
     Svg.g
       [
       ]
-      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Left
-      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 "lightcoral" screenWidth Right
+      [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing offset 0 90 60 uiColor.hudTertiaryBackground screenWidth Left
+      , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 uiColor.hudTertiaryBackground screenWidth Right
       ]
 
 drawControlToggle : Layout a -> MovementKeys { b | ai : Bool} -> Maybe Msg -> Float -> Float -> Float -> Float -> Side -> Svg Msg
@@ -739,17 +765,17 @@ drawControlToggle layout player clickEvent sideOffset topOffset w h side =
   in
     Svg.g
       []
-      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) "gray" layout.screenWidth side
+      [ drawUiBlock (drawCenteredText "Controls" (h/2-5)) Nothing  labelX topOffset w (h/2) uiColor.hudSecondaryBackground layout.screenWidth side
       , drawUiBlock (drawCenteredText "AI" (h/2-5)) (clickEvent) sideOffset (topOffset + h/2) (w/2) (h/2) aiFill layout.screenWidth side
       , drawUiBlock (drawKeyboardControls) (clickEvent) (sideOffset + w/2) (topOffset + h/2) (w/2) (h/2) keyboardFill layout.screenWidth side
       ]
 
-getToggleColor : Bool -> String
+getToggleColor : Bool -> Color
 getToggleColor selected =
   if selected then
-    "darkslategray"
+    uiColor.toggleSelected
   else
-    "lightskyblue"
+    uiColor.toggleNotSelected
 
 {-
 Convert list of ordered pairs into a string suitable for Svg.Attributes.points
@@ -775,7 +801,7 @@ parallelogramPoints x y w h =
 Draws a parallelogram, and takes a callback function to draw its contents.
 Most of the UI is made up of these blocks.
 -}
-drawUiBlock : (Float -> Float -> Svg Msg) -> Maybe Msg -> Float -> Float -> Float -> Float -> String -> Float -> Side -> Svg Msg
+drawUiBlock : (Float -> Float -> Svg Msg) -> Maybe Msg -> Float -> Float -> Float -> Float -> Color -> Float -> Side -> Svg Msg
 drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill screenWidth side =
   let
     points =
@@ -815,7 +841,7 @@ drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill scree
       )
       [ Svg.polygon
         [ Svg.Attributes.points points
-        , Svg.Attributes.fill fill
+        , Svg.Attributes.fill (colorToHex fill)
         , transform
         ]
         []
@@ -855,7 +881,7 @@ drawControls {leftKey, rightKey, jumpKey} h x y =
         ( "text-anchor: middle; font-family: monospace; font-size: "
         ++ (toString ((h-4)/2))
         ++ "px; alignment-baseline: after-edge")
-      , Svg.Attributes.fill "white"
+      , Svg.Attributes.fill (colorToHex uiColor.text)
       ]
       [ Svg.text (keyToString jumpKey)
       ]
@@ -866,7 +892,7 @@ drawControls {leftKey, rightKey, jumpKey} h x y =
         ( "text-anchor: middle; font-family: monospace; font-size: "
         ++ (toString ((h-4)/2))
         ++ "px; alignment-baseline: before-edge")
-      , Svg.Attributes.fill "white"
+      , Svg.Attributes.fill (colorToHex uiColor.text)
       ]
       [ Svg.text ((keyToString leftKey) ++ " " ++ (keyToString rightKey))
       ]
