@@ -303,7 +303,7 @@ pauseMenu {useFancyExplosion} =
       , svgButton pauseMenuX (y 1) 220 50 "Main menu" (GoToPage Title)
       ]
 
-{-
+{-|
 Convert a keycode into a string.
 
 The only key codes that map directly to the correct unicode symbol
@@ -604,7 +604,7 @@ drawTimer time x y height =
     [ Svg.text (toString (floor (Time.inSeconds time)))
     ]
 
-{-
+{-|
 Stringify everything and stick it all together in a string
 that we can use for attribute "d" of Svg.path
 example:
@@ -759,7 +759,7 @@ getToggleColor selected =
   else
     uiColor.toggleNotSelected
 
-{-
+{-|
 Convert list of ordered pairs into a string suitable for Svg.Attributes.points
 -}
 pointsListToString : List (number, number) -> String
@@ -779,7 +779,7 @@ parallelogramPoints x y w h =
     , (x + xoffset, y)
     ]
 
-{-
+{-|
 Draws a parallelogram, and takes a callback function to draw its contents.
 Most of the UI is made up of these blocks.
 -}
@@ -844,7 +844,7 @@ drawCenteredText text size x y =
     [ Svg.text text
     ]
 
-{-
+{-|
 Compact display of movement keys that is horizontally and vertically
 centered on (x,y).
 

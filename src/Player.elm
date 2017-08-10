@@ -160,7 +160,7 @@ applyJump player =
   else
     player
 
-{-
+{-|
 Update leg X positions based on current player position
 -}
 updateLegs : Player -> Player

@@ -93,8 +93,8 @@ clampX low high vector =
     vector
       |> V2.setX newX
 
-{- Calculate change in position, velocity, and acceleration for this frame.
-   Acceleration is zeroed after it is applied.
+{-| Calculate change in position, velocity, and acceleration for this frame.
+Acceleration is zeroed after it is applied.
 -}
 updatePosition : Float -> Time -> Mover a -> Mover a
 updatePosition screenHeight dt player =

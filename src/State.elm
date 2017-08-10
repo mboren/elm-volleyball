@@ -268,7 +268,7 @@ ballStep dt model ball =
     Exploded ->
       model.ball
 
-{-
+{-|
 When the ball collides with a player, we take the player's velocity, change
 the signs of its components so it points toward the other side, then add
 to the ball's velocity.
@@ -318,7 +318,7 @@ applyPlayerCollision screenWidth player ball =
   in
     { ball | velocity = newVelocity }
 
-{-
+{-|
 Split the screen into 3 regions based on the net position,
 and change leftWallX and rightWallX depending on which region
 the ball is in
@@ -419,7 +419,7 @@ handleExplosionAnimation : Time -> Explosive (Mover a) -> Explosive (Mover a)
 handleExplosionAnimation time ball =
   { ball | size = Animation.animate time ball.animation }
 
-{-
+{-|
 Increment each player's score if they are the sole survivor
 of a round.
 If both are dead or both are alive, nobody gets a point
