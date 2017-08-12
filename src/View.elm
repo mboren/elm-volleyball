@@ -351,14 +351,14 @@ polygonPoints path =
         |> String.join ", "
 
 
-drawAnchoredText : number -> number -> number -> String -> String -> Svg Msg
-drawAnchoredText x y height textAnchor text =
+drawAnchoredText : number -> number -> number -> TextAnchor -> Color -> String -> Svg Msg
+drawAnchoredText x y height textAnchor color text =
     Svg.text_
         [ Svg.Attributes.x (toString x)
         , Svg.Attributes.y (toString y)
         , Svg.Attributes.style
             ("text-anchor: "
-                ++ textAnchor
+                ++ textAnchorToString textAnchor
                 ++ "; "
                 ++ "font-family: sans-serif; "
                 ++ "font-size: "
@@ -366,7 +366,7 @@ drawAnchoredText x y height textAnchor text =
                 ++ "px; "
                 ++ "alignment-baseline: before-edge"
             )
-        , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
+        , Svg.Attributes.fill (colorToHex color)
         ]
         [ Svg.text text
         ]
@@ -476,15 +476,15 @@ instructionsView layout player =
         []
         [ svgButton 10 10 240 50 "Main menu" (GoToPage Title)
         , drawPlayer movedPlayer
-        , drawAnchoredText playerX (playerY + 50) 20 "middle" "Fig 1: you"
+        , drawAnchoredText playerX (playerY + 50) 20 Middle Color.black "Fig 1: you"
         , drawBomb ( bombX, bombY ) 50 20
-        , drawAnchoredText bombX (bombY + 60) 20 "middle" "Fig 2: a bomb"
+        , drawAnchoredText bombX (bombY + 60) 20 Middle Color.black "Fig 2: a bomb"
         , drawCircle ( explodeX, explodeY ) 80 explosionGradientFill
             |> filter turbulenceId
-        , drawAnchoredText explodeX (explodeY + 100) 20 "middle" "Fig 3: an explosion"
+        , drawAnchoredText explodeX (explodeY + 100) 20 Middle Color.black "Fig 3: an explosion"
         , drawControlToggle layout player Nothing controlsX controlsY 120 55 Left
-        , drawAnchoredText controlsX (controlsY + 60) (textHeight - 10) "start" "Fig 4: AI toggle" -- , "switch"]
-        , drawAnchoredText (controlsX + 65) (controlsY + 60 + 20) (textHeight - 10) "start" "switch"
+        , drawAnchoredText controlsX (controlsY + 60) (textHeight - 10) Start Color.black "Fig 4: AI toggle" -- , "switch"]
+        , drawAnchoredText (controlsX + 65) (controlsY + 60 + 20) (textHeight - 10) Start Color.black "switch"
         , Svg.text_
             [ Svg.Attributes.x (toString 0)
             , Svg.Attributes.y (toString 20)

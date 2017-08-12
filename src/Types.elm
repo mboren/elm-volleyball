@@ -161,3 +161,22 @@ type alias GridData =
 type Side
     = Left
     | Right
+
+
+type TextAnchor
+    = Start
+    | Middle
+    | End
+
+
+textAnchorToString : TextAnchor -> String
+textAnchorToString textAnchor =
+    case textAnchor of
+        Start ->
+            "start"
+
+        Middle ->
+            "middle"
+
+        End ->
+            "end"
