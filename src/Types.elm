@@ -148,6 +148,16 @@ type MovementKey
     | JumpKey
 
 
+type UiSettingState
+    = Label
+    | Selected
+    | NotSelected
+
+
+type alias GridData =
+    ( String, UiSettingState, Maybe Msg )
+
+
 type Side
     = Left
     | Right

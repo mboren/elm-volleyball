@@ -3,6 +3,7 @@ module View exposing (view)
 import Char
 import Color exposing (Color)
 import Color.Convert exposing (colorToHex)
+import Grid exposing (Grid, insert, markAsStartCol, nextRow, nextSection, setHeight, setWidth)
 import Html exposing (Html, div)
 import Html.Attributes
 import Svg exposing (Svg)
@@ -182,12 +183,172 @@ view model =
 
 optionsView : Model -> Maybe ( Side, MovementKey ) -> Svg Msg
 optionsView model maybeChangingKey =
+    let
+        getUiSettingState : Side -> MovementKey -> UiSettingState
+        getUiSettingState side key =
+            case maybeChangingKey of
+                Nothing ->
+                    NotSelected
+
+                Just ( selectedSide, selectedKey ) ->
+                    if side == selectedSide && key == selectedKey then
+                        Selected
+                    else
+                        NotSelected
+
+        boolToUiSettingState bool =
+            case bool of
+                True ->
+                    Selected
+
+                False ->
+                    NotSelected
+
+        graphicsButtons =
+            [ ( "Fast"
+              , boolToUiSettingState (not model.useFancyExplosion)
+              , Just (ChangeSetting ToggleFancyExplosion)
+              )
+            , ( "Fancy"
+              , boolToUiSettingState model.useFancyExplosion
+              , Just (ChangeSetting ToggleFancyExplosion)
+              )
+            ]
+
+        config =
+            { rows = 24
+            , cols = 12
+            , rowPadding = 0
+            , width = model.screenWidth
+            , height = model.screenHeight
+            , xOffset = 0
+            , yOffset = 0
+            }
+
+        newGrid =
+            Grid.create config
+                -- page header
+                |> setWidth 10
+                |> setHeight 4
+                |> insert ( "Options", Label, Nothing )
+                |> nextSection
+                -- controls
+                |> createPlayerRow model.player1 (getUiSettingState Left) (PrepareToChangePlayerKey Left) "Player1"
+                |> nextSection
+                |> createPlayerRow model.player2 (getUiSettingState Right) (PrepareToChangePlayerKey Right) "Player2"
+                |> nextSection
+                -- graphical quality
+                |> createToggleRow "Quality" graphicsButtons
+                |> nextSection
+                -- back button
+                |> setHeight 4
+                |> setWidth 6
+                |> insert ( "Back", Label, Just (GoToPage Title) )
+                -- Note about key codes
+                |> markAsStartCol
+                |> setHeight 1
+                |> setWidth 7
+                |> insert ( "Note: non-alphanumeric keys will show raw key code, but will work fine.", NotSelected, Nothing )
+                |> nextRow
+                |> insert ( "Nobody has made a comprehensive keycode->string function for Elm yet.", NotSelected, Nothing )
+                |> nextRow
+                |> insert ( "I might take a stab at it after I wrap up more interesting features.", NotSelected, Nothing )
+    in
     Svg.g
         []
-        [ svgButton 10 50 100 50 "back" (GoToPage Title)
-        , drawControlsMenu model.screenWidth 600 400 100 50 model.player1 model.player2 maybeChangingKey
-        , svgButton 10 500 450 50 ("Fancy graphics: " ++ toString model.useFancyExplosion) (ChangeSetting ToggleFancyExplosion)
+        (List.map (drawRegion newGrid.config) newGrid.data)
+
+
+createPlayerRow : Player -> (MovementKey -> UiSettingState) -> (MovementKey -> Msg) -> String -> Grid GridData -> Grid GridData
+createPlayerRow player getState makeMsg name grid =
+    grid
+        |> setWidth 6
+        |> setHeight 4
+        |> insert ( name, Label, Nothing )
+        |> markAsStartCol
+        |> setHeight 2
+        |> insert ( "Jump: " ++ keyToString player.jumpKey, getState JumpKey, Just (makeMsg JumpKey) )
+        |> nextRow
+        |> setWidth 3
+        |> insert ( "Left: " ++ keyToString player.leftKey, getState LeftKey, Just (makeMsg LeftKey) )
+        |> insert ( "Right: " ++ keyToString player.rightKey, getState RightKey, Just (makeMsg RightKey) )
+        |> Grid.resetStartCol
+
+
+createToggleRow : String -> List GridData -> Grid GridData -> Grid GridData
+createToggleRow name buttons grid =
+    let
+        gridWithLabel =
+            grid
+                |> setWidth 6
+                |> setHeight 4
+                |> insert ( name, Label, Nothing )
+                |> setWidth ((grid.config.cols - 6) // List.length buttons)
+    in
+    List.foldl insert gridWithLabel buttons
+
+
+drawRegion : Grid.Config -> ( Grid.Region, GridData ) -> Svg Msg
+drawRegion cf ( region, ( text, state, maybeMsg ) ) =
+    let
+        skewed =
+            region |> Grid.regionToPath cf |> Grid.skewPath -uiSlope
+
+        ( textX, textY ) =
+            Grid.centroid skewed
+
+        points =
+            polygonPoints skewed
+
+        cellColor : UiSettingState -> Color
+        cellColor setting =
+            case setting of
+                Label ->
+                    uiColor.menuTextBackground
+
+                Selected ->
+                    uiColor.hudTertiaryBackground
+
+                NotSelected ->
+                    uiColor.hudSecondaryBackground
+    in
+    Svg.g
+        (case maybeMsg of
+            Nothing ->
+                []
+
+            Just msg ->
+                [ Svg.Attributes.cursor "pointer"
+                , Svg.Events.onClick msg
+                ]
+        )
+        [ Svg.polygon
+            [ Svg.Attributes.points points
+            , Svg.Attributes.fill (colorToHex (cellColor state))
+            , Svg.Attributes.stroke "white"
+            ]
+            []
+        , Svg.text_
+            [ Svg.Attributes.x (toString textX)
+            , Svg.Attributes.y (toString textY)
+            , Svg.Attributes.fill "white"
+            , Svg.Attributes.style
+                ("text-anchor: middle; font-family: sans-serif; font-size: "
+                    ++ toString (toFloat region.h * 0.7 * Grid.rowHeight cf)
+                    ++ "px; alignment-baseline: middle"
+                )
+            ]
+            [ Svg.text text
+            ]
         ]
+
+
+polygonPoints : List Float2 -> String
+polygonPoints path =
+    path
+        |> List.map (\( x, y ) -> ( toString x, toString y ))
+        |> List.map (\( x, y ) -> x ++ " " ++ y)
+        |> String.join ", "
 
 
 drawAnchoredText : number -> number -> number -> String -> String -> Svg Msg
@@ -394,112 +555,6 @@ keyToString key =
             |> String.dropRight 1
     else
         toString key
-
-
-drawControlsMenu : Float -> Float -> Float -> Float -> Float -> MovementKeys a -> MovementKeys a -> Maybe ( Side, MovementKey ) -> Svg Msg
-drawControlsMenu screenWidth width height sideOffset topOffset p1Keys p2Keys maybeSelectedKey =
-    let
-        numRows =
-            4
-
-        actionColWidth =
-            width / 2
-
-        keyColWidth =
-            width / 4
-
-        rowHeight =
-            height / numRows
-
-        calcTopOffset row =
-            topOffset + parallelogramTopOffset height numRows row
-
-        calcSideOffset colWidth row col =
-            sideOffset + parallelogramSideOffset width height numRows colWidth row col
-
-        subMenuCell : ( Int, Int, Maybe Msg, Float, Float, Color, String ) -> Svg Msg
-        subMenuCell ( row, col, msg, width, padding, color, text ) =
-            let
-                textView =
-                    drawCenteredText text (rowHeight * (5 / 6))
-
-                cellSideOffset =
-                    calcSideOffset width row col
-
-                cellTopOffset =
-                    calcTopOffset row
-
-                paddedWidth =
-                    width - padding
-
-                paddedHeight =
-                    rowHeight - padding
-            in
-            drawUiBlock textView msg cellSideOffset cellTopOffset paddedWidth paddedHeight color screenWidth Left
-
-        keyCell ( side, movementKey ) =
-            let
-                keyText =
-                    keyToString keyCode
-
-                msg =
-                    PrepareToChangePlayerKey side movementKey
-
-                colWidth =
-                    keyColWidth
-
-                padding =
-                    5
-
-                ( col, playerKeys ) =
-                    case side of
-                        Left ->
-                            ( 2, p1Keys )
-
-                        Right ->
-                            ( 3, p2Keys )
-
-                ( row, keyCode ) =
-                    case movementKey of
-                        LeftKey ->
-                            ( 1, playerKeys.leftKey )
-
-                        RightKey ->
-                            ( 2, playerKeys.rightKey )
-
-                        JumpKey ->
-                            ( 3, playerKeys.jumpKey )
-
-                color =
-                    case maybeSelectedKey of
-                        Nothing ->
-                            uiColor.hudSecondaryBackground
-
-                        Just selectedKey ->
-                            if selectedKey == ( side, movementKey ) then
-                                uiColor.hudTertiaryBackground
-                            else
-                                uiColor.hudSecondaryBackground
-            in
-            ( row, col, Just msg, colWidth, padding, color, keyText )
-
-        cells =
-            [ ( 0, 2, Nothing, keyColWidth, 5, uiColor.menuTextBackground, "P1" )
-            , ( 0, 3, Nothing, keyColWidth, 5, uiColor.menuTextBackground, "P2" )
-            , ( 1, 0, Nothing, actionColWidth, 0, uiColor.menuTextBackground, "left" )
-            , ( 2, 0, Nothing, actionColWidth, 0, uiColor.menuTextBackground, "right" )
-            , ( 3, 0, Nothing, actionColWidth, 0, uiColor.menuTextBackground, "jump" )
-            , keyCell ( Left, LeftKey )
-            , keyCell ( Left, RightKey )
-            , keyCell ( Left, JumpKey )
-            , keyCell ( Right, LeftKey )
-            , keyCell ( Right, RightKey )
-            , keyCell ( Right, JumpKey )
-            ]
-    in
-    Svg.g
-        []
-        (List.map subMenuCell cells)
 
 
 titleView : Layout a -> Bool -> Svg Msg
