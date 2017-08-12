@@ -170,7 +170,7 @@ view model =
                             []
                             [ gameView model
                                 |> filter pauseBlurId
-                            , pauseMenu model
+                            , pauseMenu
                             ]
                     else
                         gameView model
@@ -205,15 +205,14 @@ optionsView model maybeChangingKey =
                     NotSelected
 
         graphicsButtons =
-            [ ( "Fast"
-              , boolToUiSettingState (not model.useFancyExplosion)
-              , Just (ChangeSetting ToggleFancyExplosion)
-              )
-            , ( "Fancy"
-              , boolToUiSettingState model.useFancyExplosion
-              , Just (ChangeSetting ToggleFancyExplosion)
-              )
-            ]
+            [ Fast, Fancy ]
+                |> List.map
+                    (\qs ->
+                        ( qualitySettingToString qs
+                        , boolToUiSettingState (qs == model.graphicsQuality)
+                        , Just (ChangeSetting (SetQuality qs))
+                        )
+                    )
 
         config =
             { rows = 24
@@ -516,8 +515,8 @@ pauseMenuX =
     10
 
 
-pauseMenu : Settings (Layout a) -> Svg Msg
-pauseMenu { useFancyExplosion } =
+pauseMenu : Svg Msg
+pauseMenu =
     let
         height =
             50
@@ -874,17 +873,19 @@ drawBomb position size rotation =
 
 
 drawBall : Settings a -> Explosive (Mover b) -> Svg Msg
-drawBall { useFancyExplosion } { position, size, status } =
+drawBall { graphicsQuality } { position, size, status } =
     case status of
         Exploded ->
             Svg.g [] []
 
         Exploding ->
-            if useFancyExplosion then
-                drawCircle position size explosionGradientFill
-                    |> filter turbulenceId
-            else
-                drawCircle position size explosionGradientFill
+            case graphicsQuality of
+                Fancy ->
+                    drawCircle position size explosionGradientFill
+                        |> filter turbulenceId
+
+                Fast ->
+                    drawCircle position size explosionGradientFill
 
         Safe ->
             let

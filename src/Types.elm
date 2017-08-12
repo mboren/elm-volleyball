@@ -102,7 +102,7 @@ type alias Players a =
 
 type alias Settings a =
     { a
-        | useFancyExplosion : Bool
+        | graphicsQuality : QualitySetting
     }
 
 
@@ -119,12 +119,12 @@ type alias Model =
     , player1 : Player
     , player2 : Player
     , ball : Explosive (Mover {})
-    , useFancyExplosion : Bool
+    , graphicsQuality : QualitySetting
     }
 
 
 type SettingsMsg
-    = ToggleFancyExplosion
+    = SetQuality QualitySetting
 
 
 type Msg
@@ -158,6 +158,11 @@ type alias GridData =
     ( String, UiSettingState, Maybe Msg )
 
 
+type QualitySetting
+    = Fancy
+    | Fast
+
+
 type Side
     = Left
     | Right
@@ -180,3 +185,13 @@ textAnchorToString textAnchor =
 
         End ->
             "end"
+
+
+qualitySettingToString : QualitySetting -> String
+qualitySettingToString quality =
+    case quality of
+        Fancy ->
+            "Fancy"
+
+        Fast ->
+            "Fast"

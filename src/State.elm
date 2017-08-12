@@ -87,7 +87,7 @@ init =
         p1
         p2
         defaultBall
-        False
+        Fast
     , Cmd.none
     )
 
@@ -211,10 +211,8 @@ update msg model =
 
         ChangeSetting settingsMsg ->
             case settingsMsg of
-                ToggleFancyExplosion ->
-                    ( { model
-                        | useFancyExplosion = not model.useFancyExplosion
-                      }
+                SetQuality setting ->
+                    ( { model | graphicsQuality = setting }
                     , Cmd.none
                     )
 
