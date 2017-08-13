@@ -252,6 +252,8 @@ optionsView model maybeChangingKey =
                 |> insert ( "Nobody has made a comprehensive keycode->string function for Elm yet.", NotSelected, Nothing )
                 |> nextRow
                 |> insert ( "I might take a stab at it after I wrap up more interesting features.", NotSelected, Nothing )
+                -- change UiSettingStates to Colors
+                |> Grid.map (\( text, state, msg ) -> ( text, cellColor state, msg ))
     in
     Svg.g
         []
@@ -287,7 +289,20 @@ createToggleRow name buttons grid =
     List.foldl insert gridWithLabel buttons
 
 
-drawRegion : Grid.Config -> ( Grid.Region, GridData ) -> Svg Msg
+cellColor : UiSettingState -> Color
+cellColor setting =
+    case setting of
+        Label ->
+            uiColor.menuTextBackground
+
+        Selected ->
+            uiColor.hudTertiaryBackground
+
+        NotSelected ->
+            uiColor.hudSecondaryBackground
+
+
+drawRegion : Grid.Config -> ( Grid.Region, ( String, Color, Maybe Msg ) ) -> Svg Msg
 drawRegion cf ( region, ( text, state, maybeMsg ) ) =
     let
         skewed =
@@ -298,18 +313,6 @@ drawRegion cf ( region, ( text, state, maybeMsg ) ) =
 
         points =
             polygonPoints skewed
-
-        cellColor : UiSettingState -> Color
-        cellColor setting =
-            case setting of
-                Label ->
-                    uiColor.menuTextBackground
-
-                Selected ->
-                    uiColor.hudTertiaryBackground
-
-                NotSelected ->
-                    uiColor.hudSecondaryBackground
     in
     Svg.g
         (case maybeMsg of
@@ -323,7 +326,7 @@ drawRegion cf ( region, ( text, state, maybeMsg ) ) =
         )
         [ Svg.polygon
             [ Svg.Attributes.points points
-            , Svg.Attributes.fill (colorToHex (cellColor state))
+            , Svg.Attributes.fill (colorToHex state)
             , Svg.Attributes.stroke "white"
             ]
             []

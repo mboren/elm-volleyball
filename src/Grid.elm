@@ -81,6 +81,10 @@ create config =
     }
 
 
+map : (a -> b) -> Grid a -> Grid b
+map f grid =
+    { grid | data = List.map (Tuple.mapSecond f) grid.data }
+
 
 -- Functions for manipulating cursor and inserting new regions
 -- These are all designed to work well in a pipeline.
