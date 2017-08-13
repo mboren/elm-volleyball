@@ -333,7 +333,7 @@ drawRegion cf ( region, ( text, state, maybeMsg ) ) =
             , Svg.Attributes.fill "white"
             , Svg.Attributes.style
                 ("text-anchor: middle; font-family: sans-serif; font-size: "
-                    ++ toString (toFloat region.h * 0.7 * Grid.rowHeight cf)
+                    ++ toString ((5 / 6) * Grid.regionHeight cf region)
                     ++ "px; alignment-baseline: middle"
                 )
             ]
