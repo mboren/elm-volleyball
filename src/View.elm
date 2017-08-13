@@ -560,58 +560,52 @@ keyToString key =
 
 
 titleView : Layout a -> Bool -> Svg Msg
-titleView { screenWidth } gameStarted =
+titleView { screenWidth, screenHeight } gameStarted =
     let
-        titleOffset =
-            60
+        config =
+            { rows = 29
+            , cols = 20
+            , rowPadding = 15
+            , width = screenWidth
+            , height = screenHeight
+            , xOffset = 0
+            , yOffset = 60
+            }
 
-        titleWidth =
-            screenWidth + titleOffset - rowHeight / 2
+        mainButtons =
+            [ ( "new game", Just StartGame )
+            , ( "options", Just (GoToPage (Options Nothing)) )
+            , ( "help", Just (GoToPage Instructions) )
+            ]
 
-        startOffset =
-            60
-
-        rowHeight =
-            90
-
-        padding =
-            15
-
-        startWidth =
-            500
-
-        textHeight =
-            rowHeight - 15
-
-        y : Int -> Float
-        y i =
-            startOffset + toFloat i * (rowHeight + padding)
-
-        width : Int -> Float
-        width i =
-            startWidth - ((y (i - 1) - startOffset) / uiSlope)
-
-        drawTitleScreenButton : Int -> ( String, Maybe Msg ) -> Svg Msg
-        drawTitleScreenButton i ( text, msg ) =
-            drawUiBlock (drawCenteredText text textHeight) msg -titleOffset (y (i + 1)) (width (i + 1)) rowHeight uiColor.menuTextBackground screenWidth Left
-
-        buttons =
-            (case gameStarted of
+        conditionalButtons =
+            case gameStarted of
                 True ->
                     [ ( "continue", Just (GoToPage Game) ) ]
 
                 False ->
                     []
-            )
-                ++ [ ( "new game", Just StartGame )
-                   , ( "options", Just (GoToPage (Options Nothing)) )
-                   , ( "help", Just (GoToPage Instructions) )
-                   ]
+
+        buttons =
+            conditionalButtons ++ mainButtons
+
+        gridWithTitle =
+            Grid.create config
+                |> setWidth config.cols
+                |> setHeight 5
+                |> insert ( "xtreme volleyball 2k17", uiColor.titleBackground, Nothing )
+                |> setWidth 11
+
+        finalGrid =
+            buttons
+                -- add color
+                |> List.map (\( text, msg ) -> ( text, uiColor.menuTextBackground, msg ))
+                -- insert in grid
+                |> List.foldl (\data grid -> grid |> nextRow |> insert data) gridWithTitle
     in
     Svg.g
         []
-        [ drawUiBlock (drawCenteredText "xtreme volleyball 2k17" textHeight) Nothing -titleOffset (y 0) titleWidth rowHeight uiColor.titleBackground screenWidth Left
-        , Svg.g [] (List.indexedMap drawTitleScreenButton buttons)
+        [ Svg.g [] (List.map (drawRegion finalGrid.config) finalGrid.data)
         , drawBomb ( 2 * screenWidth / 3, 350 ) 120 30
         ]
 
