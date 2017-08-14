@@ -69,10 +69,10 @@ init =
             }
 
         p1 =
-            Player.create layout defaultPlayer1Controls False Left
+            Player.create layout "Player 1" defaultPlayer1Controls False Left
 
         p2 =
-            Player.create layout defaultPlayer2Controls True Right
+            Player.create layout "Player 2" defaultPlayer2Controls True Right
     in
     ( Model
         False
@@ -101,8 +101,8 @@ update msg model =
                 , paused = False
                 , gameStarted = True
                 , warmupTimer = warmupLength
-                , player1 = Player.create model model.player1 model.player1.ai Left
-                , player2 = Player.create model model.player2 model.player2.ai Right
+                , player1 = Player.create model "Player 1" model.player1 model.player1.ai Left
+                , player2 = Player.create model "Player 2" model.player2 model.player2.ai Right
               }
             , Random.generate NewBallVelocity velocityGenerator
             )

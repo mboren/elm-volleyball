@@ -23,8 +23,8 @@ jumpSpeed =
     -0.6708203932499369
 
 
-create : Layout a -> MovementKeys b -> Bool -> Side -> Player
-create { screenWidth, screenHeight, netWidth } { leftKey, rightKey, jumpKey } ai side =
+create : Layout a -> String -> MovementKeys b -> Bool -> Side -> Player
+create { screenWidth, screenHeight, netWidth } name { leftKey, rightKey, jumpKey } ai side =
     let
         ( leftWallX, rightWallX ) =
             case side of
@@ -76,6 +76,7 @@ create { screenWidth, screenHeight, netWidth } { leftKey, rightKey, jumpKey } ai
     , jumpKey = jumpKey
     , alive = True
     , score = 0
+    , name = name
     , ai = ai
     , waistY = waistYOffset
     , legHeight = 3 * 50 / 4

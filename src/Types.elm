@@ -12,6 +12,7 @@ type alias Player =
             (MovementKeys
                 { alive : Bool
                 , score : Int
+                , name : String
                 , waistY : Float
                 , legHeight : Float
                 , fixedLegX : Float
