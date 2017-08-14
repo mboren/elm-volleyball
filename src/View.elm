@@ -232,9 +232,9 @@ optionsView model maybeChangingKey =
                 |> insert ( "Options", Label, Nothing )
                 |> nextSection
                 -- controls
-                |> createPlayerRow model.player1 (getUiSettingState Left) (PrepareToChangePlayerKey Left) "Player1"
+                |> createPlayerRow model.player1 (getUiSettingState Left) (PrepareToChangePlayerKey Left)
                 |> nextSection
-                |> createPlayerRow model.player2 (getUiSettingState Right) (PrepareToChangePlayerKey Right) "Player2"
+                |> createPlayerRow model.player2 (getUiSettingState Right) (PrepareToChangePlayerKey Right)
                 |> nextSection
                 -- graphical quality
                 |> createToggleRow "Quality" graphicsButtons
@@ -260,12 +260,12 @@ optionsView model maybeChangingKey =
         (List.map (drawRegion newGrid.config) newGrid.data)
 
 
-createPlayerRow : Player -> (MovementKey -> UiSettingState) -> (MovementKey -> Msg) -> String -> Grid GridData -> Grid GridData
-createPlayerRow player getState makeMsg name grid =
+createPlayerRow : Player -> (MovementKey -> UiSettingState) -> (MovementKey -> Msg) -> Grid GridData -> Grid GridData
+createPlayerRow player getState makeMsg grid =
     grid
         |> setWidth 6
         |> setHeight 4
-        |> insert ( name, Label, Nothing )
+        |> insert ( player.name, Label, Nothing )
         |> markAsStartCol
         |> setHeight 2
         |> insert ( "Jump: " ++ keyToString player.jumpKey, getState JumpKey, Just (makeMsg JumpKey) )
@@ -641,8 +641,8 @@ gameView model =
         , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
         , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Left
         , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Right
-        , drawUiBlock (drawCenteredText "Player 1" (60 * 5 / 6)) Nothing (-60 / 2) 0 220 60 uiColor.menuTextBackground model.screenWidth Left
-        , drawUiBlock (drawCenteredText "Player 2" (60 * 5 / 6)) Nothing (-60 / 2) 0 220 60 uiColor.menuTextBackground model.screenWidth Right
+        , drawUiBlock (drawCenteredText model.player1.name (60 * 5 / 6)) Nothing (-60 / 2) 0 220 60 uiColor.menuTextBackground model.screenWidth Left
+        , drawUiBlock (drawCenteredText model.player2.name (60 * 5 / 6)) Nothing (-60 / 2) 0 220 60 uiColor.menuTextBackground model.screenWidth Right
         , drawControlToggle model model.player1 (Just TogglePlayer1Ai) 200 0 120 55 Left
         , drawControlToggle model model.player2 (Just TogglePlayer2Ai) 200 0 120 55 Right
         ]
