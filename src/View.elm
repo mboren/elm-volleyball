@@ -636,6 +636,21 @@ filter filterId svg =
 
 gameView : Model -> Svg Msg
 gameView model =
+    let
+        grid =
+            { rows = 1
+            , cols = 1
+            , rowPadding = 0
+            , width = 220
+            , height = 60
+            , xOffset = 0
+            , yOffset = 0
+            }
+                |> Grid.create
+                |> setWidth 1
+                |> setHeight 1
+                |> insert PlayerName
+    in
     Svg.g
         []
         [ Svg.rect
@@ -656,11 +671,26 @@ gameView model =
         , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
         , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Left
         , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Right
-        , drawUiBlock (drawCenteredText model.player1.name (60 * 5 / 6)) Nothing (-60 / 2) 0 220 60 uiColor.menuTextBackground model.screenWidth Left
-        , drawUiBlock (drawCenteredText model.player2.name (60 * 5 / 6)) Nothing (-60 / 2) 0 220 60 uiColor.menuTextBackground model.screenWidth Right
         , drawControlToggle model model.player1 (Just TogglePlayer1Ai) 200 0 120 55 Left
         , drawControlToggle model model.player2 (Just TogglePlayer2Ai) 200 0 120 55 Right
+        , [ ( model.player1, Left ), ( model.player2, Right ) ]
+            |> List.map (Basics.uncurry (drawHud grid))
+            |> Svg.g []
         ]
+
+
+drawHud : Grid HudElement -> Player -> Side -> Svg Msg
+drawHud { config, data } player side =
+    data
+        |> List.map (drawHudElement config player side)
+        |> Svg.g []
+
+
+drawHudElement : Grid.Config -> Player -> Side -> ( Grid.Region, HudElement ) -> Svg Msg
+drawHudElement cfg player side ( region, element ) =
+    case element of
+        PlayerName ->
+            drawRegion cfg side ( region, ( player.name, uiColor.menuTextBackground, Nothing ) )
 
 
 drawNet : Layout a -> Svg Msg

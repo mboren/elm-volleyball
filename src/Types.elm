@@ -159,6 +159,10 @@ type alias GridData =
     ( String, UiSettingState, Maybe Msg )
 
 
+type HudElement
+    = PlayerName
+
+
 type QualitySetting
     = Fancy
     | Fast
