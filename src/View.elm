@@ -257,7 +257,7 @@ optionsView model maybeChangingKey =
     in
     Svg.g
         [ Svg.Attributes.stroke "white" ]
-        (List.map (drawRegion newGrid.config) newGrid.data)
+        (List.map (drawRegion newGrid.config Left) newGrid.data)
 
 
 createPlayerRow : Player -> (MovementKey -> UiSettingState) -> (MovementKey -> Msg) -> Grid GridData -> Grid GridData
@@ -302,17 +302,31 @@ cellColor setting =
             uiColor.hudSecondaryBackground
 
 
-drawRegion : Grid.Config -> ( Grid.Region, ( String, Color, Maybe Msg ) ) -> Svg Msg
-drawRegion cf ( region, ( text, state, maybeMsg ) ) =
+drawRegion : Grid.Config -> Side -> ( Grid.Region, ( String, Color, Maybe Msg ) ) -> Svg Msg
+drawRegion cf side ( region, ( text, state, maybeMsg ) ) =
     let
         skewed =
             region |> Grid.regionToPath cf |> Grid.skewPath -uiSlope
 
-        ( textX, textY ) =
+        ( midpointX, textY ) =
             Grid.centroid skewed
 
         points =
             polygonPoints skewed
+
+        ( textX, transform ) =
+            case side of
+                Left ->
+                    ( midpointX, "" )
+
+                Right ->
+                    -- mirror the background polygon and shift text
+                    Debug.log "hardcoded screenWidth!"
+                        ( 1000 - midpointX
+                        , "translate("
+                            ++ toString 1000
+                            ++ ",0) scale(-1,1)"
+                        )
     in
     Svg.g
         (case maybeMsg of
@@ -327,6 +341,7 @@ drawRegion cf ( region, ( text, state, maybeMsg ) ) =
         [ Svg.polygon
             [ Svg.Attributes.points points
             , Svg.Attributes.fill (colorToHex state)
+            , Svg.Attributes.transform transform
             ]
             []
         , Svg.text_
@@ -605,7 +620,7 @@ titleView { screenWidth, screenHeight } gameStarted =
     in
     Svg.g
         []
-        [ Svg.g [] (List.map (drawRegion finalGrid.config) finalGrid.data)
+        [ Svg.g [] (List.map (drawRegion finalGrid.config Left) finalGrid.data)
         , drawBomb ( 2 * screenWidth / 3, 350 ) 120 30
         ]
 
