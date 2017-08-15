@@ -146,6 +146,21 @@ nextRow grid =
             }
     }
 
+{-| Move cursor down one row and move to startCol
+-}
+prevRow : Grid a -> Grid a
+prevRow grid =
+    let
+        oldCursor =
+            grid.cursor
+    in
+    { grid
+        | cursor =
+            { oldCursor
+                | col = grid.startCol
+                , row = oldCursor.row - oldCursor.h
+            }
+    }
 
 {-| Create a 1 row gap. Useful for separating sections by an amount
 larger than rowPadding

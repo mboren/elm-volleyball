@@ -488,6 +488,22 @@ instructionsView layout player =
                 , fixedLegX = playerX - 30
                 , freeLegX = playerX + 30
             }
+
+        config =
+            { rows = 2
+            , cols = 2
+            , rowPadding = 0
+            , width = 120
+            , height = 55
+            , xOffset = controlsX + 200
+            , yOffset = controlsY
+            }
+
+        controlToggle =
+            Grid.create config
+                |> setWidth 2
+                |> setHeight 2
+                |> insertControlToggle
     in
     Svg.g
         []
@@ -499,7 +515,7 @@ instructionsView layout player =
         , drawCircle ( explodeX, explodeY ) 80 explosionGradientFill
             |> filter turbulenceId
         , drawAnchoredText explodeX (explodeY + 100) 20 Middle Color.black "Fig 3: an explosion"
-        , drawControlToggle layout player Nothing controlsX controlsY 120 55 Left
+        , drawHud controlToggle player Left
         , drawAnchoredText controlsX (controlsY + 60) (textHeight - 10) Start Color.black "Fig 4: AI toggle" -- , "switch"]
         , drawAnchoredText (controlsX + 65) (controlsY + 60 + 20) (textHeight - 10) Start Color.black "switch"
         , Svg.text_
@@ -516,16 +532,6 @@ instructionsView layout player =
             ]
             mainTextTspans
         ]
-
-
-parallelogramSideOffset : Float -> Float -> Int -> Float -> Int -> Int -> Float
-parallelogramSideOffset width height numRows colWidth row col =
-    toFloat (numRows - row - 1) * height / (uiSlope * toFloat numRows) + toFloat col * colWidth
-
-
-parallelogramTopOffset : Float -> Int -> Int -> Float
-parallelogramTopOffset height numRows row =
-    toFloat row * height / toFloat numRows
 
 
 pauseMenuX : Float
@@ -634,12 +640,45 @@ filter filterId svg =
         ]
 
 
+insertControlToggle : Grid HudElement -> Grid HudElement
+insertControlToggle grid =
+    let
+        -- We want the cursor after this function to act
+        -- just like we had called insert a single time.
+        -- I think this is a handy convention, but I have
+        -- no way to guarantee it, so I have some mixed
+        -- feelings about it.
+        endingCursor =
+            grid
+                |> Grid.goRight
+                |> .cursor
+
+        newGrid =
+            grid
+                |> markAsStartCol
+                |> setHeight (grid.cursor.h // 2)
+                |> insert Controls
+                |> nextRow
+                |> setWidth (grid.cursor.w // 2)
+                |> insert (Toggle Left)
+                |> insert (Toggle Right)
+                |> Grid.prevRow
+                |> setHeight grid.cursor.h
+                |> setWidth grid.cursor.w
+                |> Grid.goRight
+    in
+    { newGrid
+        | startCol = grid.startCol
+        , cursor = endingCursor
+    }
+
+
 gameView : Model -> Svg Msg
 gameView model =
     let
         grid =
-            { rows = 1
-            , cols = 10
+            { rows = 2
+            , cols = 20
             , rowPadding = 0
             , width = 445
             , height = 60
@@ -647,12 +686,12 @@ gameView model =
             , yOffset = 0
             }
                 |> Grid.create
-                |> setHeight 1
-                |> setWidth 5
+                |> setHeight 2
+                |> setWidth 10
                 |> insert PlayerName
-                |> setWidth 3
-                |> insert Controls
-                |> setWidth 2
+                |> setWidth 6
+                |> insertControlToggle
+                |> setWidth 4
                 |> insert Score
     in
     Svg.g
@@ -675,8 +714,6 @@ gameView model =
             drawBall model model.ball
         , svgButton pauseMenuX 70 140 50 "Pause" TogglePause
         , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
-        , drawControlToggle model model.player1 (Just TogglePlayer1Ai) 200 0 120 55 Left
-        , drawControlToggle model model.player2 (Just TogglePlayer2Ai) 200 0 120 55 Right
         ]
 
 
@@ -689,6 +726,15 @@ drawHud { config, data } player side =
 
 drawHudElement : Grid.Config -> Player -> Side -> ( Grid.Region, HudElement ) -> Svg Msg
 drawHudElement cfg player side ( region, element ) =
+    let
+        aiToggleMsg =
+            case side of
+                Left ->
+                    TogglePlayer1Ai
+
+                Right ->
+                    TogglePlayer2Ai
+    in
     case element of
         PlayerName ->
             drawRegion cfg side ( region, ( player.name, uiColor.menuTextBackground, Nothing ) )
@@ -697,7 +743,41 @@ drawHudElement cfg player side ( region, element ) =
             drawRegion cfg side ( region, ( toString player.score, uiColor.hudTertiaryBackground, Nothing ) )
 
         Controls ->
-            drawRegion cfg side ( region, ( "", uiColor.hudSecondaryBackground, Nothing ) )
+            drawRegion cfg side ( region, ( "Controls", uiColor.hudSecondaryBackground, Just aiToggleMsg ) )
+
+        Toggle toggleSide ->
+            case toggleSide of
+                Left ->
+                    drawRegion cfg side ( region, ( "AI", getToggleColor player.ai, Just aiToggleMsg ) )
+
+                Right ->
+                    let
+                        h =
+                            Grid.regionHeight cfg region
+
+                        dx =
+                            case side of
+                                Left ->
+                                    identity
+
+                                Right ->
+                                    \x -> 1000 - x
+
+                        dy =
+                            \y -> y - h / 2
+
+                        ( x, y ) =
+                            Grid.regionToPath cfg region
+                                |> Grid.skewPath -uiSlope
+                                |> Grid.centroid
+                                |> Tuple.mapFirst dx
+                                |> Tuple.mapSecond dy
+                    in
+                    Svg.g
+                        []
+                        [ drawRegion cfg side ( region, ( "", getToggleColor (not player.ai), Just aiToggleMsg ) )
+                        , drawControls player (55 / 2) x y
+                        ]
 
 
 drawNet : Layout a -> Svg Msg
@@ -995,129 +1075,12 @@ svgButton x y w h text onClickEvent =
         ]
 
 
-drawControlToggle : Layout a -> MovementKeys { b | ai : Bool } -> Maybe Msg -> Float -> Float -> Float -> Float -> Side -> Svg Msg
-drawControlToggle layout player clickEvent sideOffset topOffset w h side =
-    let
-        labelX =
-            sideOffset + (h / 2) / uiSlope
-
-        aiFill =
-            getToggleColor player.ai
-
-        keyboardFill =
-            getToggleColor (not player.ai)
-
-        drawKeyboardControls =
-            drawControls player (h / 2)
-    in
-    Svg.g
-        []
-        [ drawUiBlock (drawCenteredText "Controls" (h / 2 - 5)) Nothing labelX topOffset w (h / 2) uiColor.hudSecondaryBackground layout.screenWidth side
-        , drawUiBlock (drawCenteredText "AI" (h / 2 - 5)) clickEvent sideOffset (topOffset + h / 2) (w / 2) (h / 2) aiFill layout.screenWidth side
-        , drawUiBlock drawKeyboardControls clickEvent (sideOffset + w / 2) (topOffset + h / 2) (w / 2) (h / 2) keyboardFill layout.screenWidth side
-        ]
-
-
 getToggleColor : Bool -> Color
 getToggleColor selected =
     if selected then
         uiColor.toggleSelected
     else
         uiColor.toggleNotSelected
-
-
-{-| Convert list of ordered pairs into a string suitable for Svg.Attributes.points
--}
-pointsListToString : List ( number, number ) -> String
-pointsListToString list =
-    list
-        |> List.map (\( x, y ) -> toString x ++ " " ++ toString y)
-        |> String.join ", "
-
-
-parallelogramPoints : Float -> Float -> Float -> Float -> List ( Float, Float )
-parallelogramPoints x y w h =
-    let
-        xoffset =
-            h / uiSlope
-    in
-    [ ( x, y + h )
-    , ( x + w, y + h )
-    , ( x + w + xoffset, y )
-    , ( x + xoffset, y )
-    ]
-
-
-{-| Draws a parallelogram, and takes a callback function to draw its contents.
-Most of the UI is made up of these blocks.
--}
-drawUiBlock : (Float -> Float -> Svg Msg) -> Maybe Msg -> Float -> Float -> Float -> Float -> Color -> Float -> Side -> Svg Msg
-drawUiBlock contents clickEvent sideOffset topOffset baseWidth height fill screenWidth side =
-    let
-        points =
-            parallelogramPoints sideOffset topOffset baseWidth height
-                -- cut off side if it hangs off the screen
-                |> List.map (\( x, y ) -> ( max 0 x, y ))
-                |> pointsListToString
-
-        midpointOffset =
-            sideOffset + (baseWidth + height / uiSlope) / 2
-
-        midpointX =
-            case side of
-                Left ->
-                    midpointOffset
-
-                Right ->
-                    screenWidth - midpointOffset
-
-        -- mirror the background polygon if we're on the right
-        transform =
-            case side of
-                Left ->
-                    Svg.Attributes.transform ""
-
-                Right ->
-                    Svg.Attributes.transform
-                        ("translate("
-                            ++ toString screenWidth
-                            ++ ",0) scale(-1,1)"
-                        )
-    in
-    Svg.g
-        (case clickEvent of
-            Nothing ->
-                []
-
-            Just event ->
-                [ Svg.Events.onClick event
-                , Svg.Attributes.cursor "pointer"
-                ]
-        )
-        [ Svg.polygon
-            [ Svg.Attributes.points points
-            , Svg.Attributes.fill (colorToHex fill)
-            , transform
-            ]
-            []
-        , contents midpointX topOffset
-        ]
-
-
-drawCenteredText : String -> number -> Float -> Float -> Svg Msg
-drawCenteredText text size x y =
-    Svg.text_
-        [ Svg.Attributes.x (toString x)
-        , Svg.Attributes.y (toString y)
-        , Svg.Attributes.style
-            ("text-anchor: middle; font-family: sans-serif; font-size: "
-                ++ toString size
-                ++ "px; alignment-baseline: before-edge"
-            )
-        , Svg.Attributes.fill "white"
-        ]
-        [ Svg.text text
-        ]
 
 
 {-| Compact display of movement keys that is horizontally and vertically

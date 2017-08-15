@@ -163,6 +163,7 @@ type HudElement
     = PlayerName
     | Score
     | Controls
+    | Toggle Side
 
 
 type QualitySetting
