@@ -639,17 +639,21 @@ gameView model =
     let
         grid =
             { rows = 1
-            , cols = 1
+            , cols = 10
             , rowPadding = 0
-            , width = 220
+            , width = 445
             , height = 60
             , xOffset = 0
             , yOffset = 0
             }
                 |> Grid.create
-                |> setWidth 1
                 |> setHeight 1
+                |> setWidth 5
                 |> insert PlayerName
+                |> setWidth 3
+                |> Grid.goRight
+                |> setWidth 2
+                |> insert Score
     in
     Svg.g
         []
@@ -667,7 +671,6 @@ gameView model =
           else
             drawBall model model.ball
         , svgButton pauseMenuX 70 140 50 "Pause" TogglePause
-        , drawScore model
         , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
         , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Left
         , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Right
@@ -691,6 +694,9 @@ drawHudElement cfg player side ( region, element ) =
     case element of
         PlayerName ->
             drawRegion cfg side ( region, ( player.name, uiColor.menuTextBackground, Nothing ) )
+
+        Score ->
+            drawRegion cfg side ( region, ( toString player.score, uiColor.hudTertiaryBackground, Nothing ) )
 
 
 drawNet : Layout a -> Svg Msg
@@ -985,22 +991,6 @@ svgButton x y w h text onClickEvent =
             ]
             [ Svg.text text
             ]
-        ]
-
-
-drawScore : Layout (Players a) -> Svg Msg
-drawScore { player1, player2, screenWidth } =
-    let
-        size =
-            60
-
-        offset =
-            324
-    in
-    Svg.g
-        []
-        [ drawUiBlock (drawCenteredText (toString player1.score) 60) Nothing offset 0 90 60 uiColor.hudTertiaryBackground screenWidth Left
-        , drawUiBlock (drawCenteredText (toString player2.score) 60) Nothing offset 0 90 60 uiColor.hudTertiaryBackground screenWidth Right
         ]
 
 
