@@ -651,7 +651,7 @@ gameView model =
                 |> setWidth 5
                 |> insert PlayerName
                 |> setWidth 3
-                |> Grid.goRight
+                |> insert Controls
                 |> setWidth 2
                 |> insert Score
     in
@@ -663,6 +663,9 @@ gameView model =
             , Svg.Attributes.fill (colorToHex uiColor.sky)
             ]
             []
+        , [ ( model.player1, Left ), ( model.player2, Right ) ]
+            |> List.map (Basics.uncurry (drawHud grid))
+            |> Svg.g []
         , drawNet model
         , drawPlayer model.player1
         , drawPlayer model.player2
@@ -672,13 +675,8 @@ gameView model =
             drawBall model model.ball
         , svgButton pauseMenuX 70 140 50 "Pause" TogglePause
         , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
-        , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Left
-        , drawUiBlock (drawCenteredText "" 0) Nothing 190 0 135 60 uiColor.hudSecondaryBackground model.screenWidth Right
         , drawControlToggle model model.player1 (Just TogglePlayer1Ai) 200 0 120 55 Left
         , drawControlToggle model model.player2 (Just TogglePlayer2Ai) 200 0 120 55 Right
-        , [ ( model.player1, Left ), ( model.player2, Right ) ]
-            |> List.map (Basics.uncurry (drawHud grid))
-            |> Svg.g []
         ]
 
 
@@ -697,6 +695,9 @@ drawHudElement cfg player side ( region, element ) =
 
         Score ->
             drawRegion cfg side ( region, ( toString player.score, uiColor.hudTertiaryBackground, Nothing ) )
+
+        Controls ->
+            drawRegion cfg side ( region, ( "", uiColor.hudSecondaryBackground, Nothing ) )
 
 
 drawNet : Layout a -> Svg Msg

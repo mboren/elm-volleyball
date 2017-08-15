@@ -162,6 +162,7 @@ type alias GridData =
 type HudElement
     = PlayerName
     | Score
+    | Controls
 
 
 type QualitySetting
