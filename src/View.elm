@@ -256,7 +256,7 @@ optionsView model maybeChangingKey =
                 |> Grid.map (\( text, state, msg ) -> ( text, cellColor state, msg ))
     in
     Svg.g
-        []
+        [ Svg.Attributes.stroke "white" ]
         (List.map (drawRegion newGrid.config) newGrid.data)
 
 
@@ -327,13 +327,13 @@ drawRegion cf ( region, ( text, state, maybeMsg ) ) =
         [ Svg.polygon
             [ Svg.Attributes.points points
             , Svg.Attributes.fill (colorToHex state)
-            , Svg.Attributes.stroke "white"
             ]
             []
         , Svg.text_
             [ Svg.Attributes.x (toString textX)
             , Svg.Attributes.y (toString textY)
             , Svg.Attributes.fill "white"
+            , Svg.Attributes.strokeWidth "0"
             , Svg.Attributes.style
                 ("text-anchor: middle; font-family: sans-serif; font-size: "
                     ++ toString ((5 / 6) * Grid.regionHeight cf region)
