@@ -208,10 +208,7 @@ optionsView model maybeChangingKey =
             [ Fast, Fancy ]
                 |> List.map
                     (\qs ->
-                        ( qualitySettingToString qs
-                        , boolToUiSettingState (qs == model.graphicsQuality)
-                        , Just (ChangeSetting (SetQuality qs))
-                        )
+                        OptionsMenu (QualityButton (boolToUiSettingState (qs == model.graphicsQuality)) qs)
                     )
 
         config =
@@ -229,12 +226,12 @@ optionsView model maybeChangingKey =
                 -- page header
                 |> setWidth 10
                 |> setHeight 4
-                |> insert ( "Options", Label, Nothing )
+                |> insert (OptionsMenu OptionsTitle)
                 |> nextSection
                 -- controls
-                |> createPlayerRow model.player1 (getUiSettingState Left) (PrepareToChangePlayerKey Left)
+                |> createPlayerRow model.player1 getUiSettingState Left
                 |> nextSection
-                |> createPlayerRow model.player2 (getUiSettingState Right) (PrepareToChangePlayerKey Right)
+                |> createPlayerRow model.player2 getUiSettingState Right
                 |> nextSection
                 -- graphical quality
                 |> createToggleRow "Quality" graphicsButtons
@@ -242,37 +239,35 @@ optionsView model maybeChangingKey =
                 -- back button
                 |> setHeight 4
                 |> setWidth 6
-                |> insert ( "Back", Label, Just (GoToPage Title) )
+                |> insert (OptionsMenu BackButton)
                 -- Note about key codes
                 |> markAsStartCol
                 |> setHeight 1
                 |> setWidth 7
-                |> insert ( "Note: non-alphanumeric keys will show raw key code, but will work fine.", NotSelected, Nothing )
+                |> insert (OptionsMenu (InfoText "Note: non-alphanumeric keys will show raw key code, but will work fine."))
                 |> nextRow
-                |> insert ( "Nobody has made a comprehensive keycode->string function for Elm yet.", NotSelected, Nothing )
+                |> insert (OptionsMenu (InfoText "Nobody has made a comprehensive keycode->string function for Elm yet."))
                 |> nextRow
-                |> insert ( "I might take a stab at it after I wrap up more interesting features.", NotSelected, Nothing )
-                -- change UiSettingStates to Colors
-                |> Grid.map (\( text, state, msg ) -> ( text, cellColor state, msg ))
+                |> insert (OptionsMenu (InfoText "I might take a stab at it after I wrap up more interesting features."))
     in
     Svg.g
         [ Svg.Attributes.stroke "white" ]
-        (List.map (drawRegion newGrid.config Left) newGrid.data)
+        [ drawGrid model.screenWidth newGrid ]
 
 
-createPlayerRow : Player -> (MovementKey -> UiSettingState) -> (MovementKey -> Msg) -> Grid GridData -> Grid GridData
-createPlayerRow player getState makeMsg grid =
+createPlayerRow : Player -> (Side -> MovementKey -> UiSettingState) -> Side -> Grid GridData -> Grid GridData
+createPlayerRow player getState side grid =
     grid
         |> setWidth 6
         |> setHeight 4
-        |> insert ( player.name, Label, Nothing )
+        |> insert (OptionsMenu (OptionLabel player.name))
         |> markAsStartCol
         |> setHeight 2
-        |> insert ( "Jump: " ++ keyToString player.jumpKey, getState JumpKey, Just (makeMsg JumpKey) )
+        |> insert (OptionsMenu (KeyChangeButton (getState side JumpKey) player JumpKey side))
         |> nextRow
         |> setWidth 3
-        |> insert ( "Left: " ++ keyToString player.leftKey, getState LeftKey, Just (makeMsg LeftKey) )
-        |> insert ( "Right: " ++ keyToString player.rightKey, getState RightKey, Just (makeMsg RightKey) )
+        |> insert (OptionsMenu (KeyChangeButton (getState side LeftKey) player LeftKey side))
+        |> insert (OptionsMenu (KeyChangeButton (getState side RightKey) player RightKey side))
         |> Grid.resetStartCol
 
 
@@ -283,7 +278,7 @@ createToggleRow name buttons grid =
             grid
                 |> setWidth 6
                 |> setHeight 4
-                |> insert ( name, Label, Nothing )
+                |> insert (OptionsMenu (OptionLabel name))
                 |> setWidth ((grid.config.cols - 6) // List.length buttons)
     in
     List.foldl insert gridWithLabel buttons
@@ -292,9 +287,6 @@ createToggleRow name buttons grid =
 cellColor : UiSettingState -> Color
 cellColor setting =
     case setting of
-        Label ->
-            uiColor.menuTextBackground
-
         Selected ->
             uiColor.hudTertiaryBackground
 
@@ -302,62 +294,193 @@ cellColor setting =
             uiColor.hudSecondaryBackground
 
 
-drawRegion : Grid.Config -> Side -> ( Grid.Region, ( String, Color, Maybe Msg ) ) -> Svg Msg
-drawRegion cf side ( region, ( text, state, maybeMsg ) ) =
-    let
-        skewed =
-            region |> Grid.regionToPath cf |> Grid.skewPath -uiSlope
+hudTransform : Float -> Side -> Svg.Attribute Msg
+hudTransform screenWidth side =
+    case side of
+        Left ->
+            -- results in <... transform>, which has no effect
+            Svg.Attributes.transform ""
 
-        ( midpointX, textY ) =
-            Grid.centroid skewed
+        Right ->
+            Svg.Attributes.transform
+                -- move to other side of screen
+                ("translate("
+                    ++ toString screenWidth
+                    ++ ",0)"
+                    -- flip horizontally
+                    ++ " scale(-1,1)"
+                )
 
-        points =
-            polygonPoints skewed
 
-        ( textX, transform ) =
-            case side of
+hudColor : HudElement -> Color
+hudColor element =
+    case element of
+        PlayerName _ _ ->
+            uiColor.menuTextBackground
+
+        Score _ _ ->
+            uiColor.hudTertiaryBackground
+
+        Controls _ _ ->
+            uiColor.hudSecondaryBackground
+
+        Toggle toggleSide player _ ->
+            case toggleSide of
                 Left ->
-                    ( midpointX, "" )
+                    getToggleColor player.ai
 
                 Right ->
-                    -- mirror the background polygon and shift text
-                    Debug.log "hardcoded screenWidth!"
-                        ( 1000 - midpointX
-                        , "translate("
-                            ++ toString 1000
-                            ++ ",0) scale(-1,1)"
-                        )
-    in
-    Svg.g
-        (case maybeMsg of
-            Nothing ->
-                []
+                    getToggleColor (not player.ai)
 
-            Just msg ->
-                [ Svg.Attributes.cursor "pointer"
-                , Svg.Events.onClick msg
-                ]
-        )
-        [ Svg.polygon
-            [ Svg.Attributes.points points
-            , Svg.Attributes.fill (colorToHex state)
-            , Svg.Attributes.transform transform
-            ]
+
+colorToFill : Color -> Svg.Attribute Msg
+colorToFill color =
+    Svg.Attributes.fill (colorToHex color)
+
+
+keyChangeText : MovementKeys a -> MovementKey -> String
+keyChangeText { leftKey, rightKey, jumpKey } key =
+    case key of
+        LeftKey ->
+            "Left: " ++ keyToString leftKey
+
+        RightKey ->
+            "Right: " ++ keyToString rightKey
+
+        JumpKey ->
+            "Jump: " ++ keyToString jumpKey
+
+
+uiElementToPrimitives : Grid.Config -> Grid.Region -> GridData -> List UiPrimitive
+uiElementToPrimitives config region element =
+    let
+        makeText : Side -> String -> Maybe Msg -> UiPrimitive
+        makeText =
+            Text (Grid.regionHeight config region) Middle (Grid.centroid path)
+
+        leftText : String -> Maybe Msg -> UiPrimitive
+        leftText =
+            makeText Left
+
+        makePoly : Side -> Color -> Maybe Msg -> UiPrimitive
+        makePoly =
+            Polygon path
+
+        leftPoly : Color -> Maybe Msg -> UiPrimitive
+        leftPoly =
+            Polygon path Left
+
+        path =
+            region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
+    in
+    case element of
+        Main elem ->
+            case elem of
+                MainTitle ->
+                    [ leftPoly uiColor.titleBackground Nothing
+                    , leftText "xtreme volleyball 2k17" Nothing
+                    ]
+
+                Button text msg ->
+                    [ leftPoly uiColor.menuTextBackground (Just msg)
+                    , leftText text (Just msg)
+                    ]
+
+        OptionsMenu elem ->
+            case elem of
+                OptionsTitle ->
+                    [ leftPoly uiColor.titleBackground Nothing
+                    , leftText "Options" Nothing
+                    ]
+
+                OptionLabel text ->
+                    [ leftPoly uiColor.menuTextBackground Nothing
+                    , leftText text Nothing
+                    ]
+
+                KeyChangeButton state player key side ->
+                    [ leftPoly (cellColor state) (Just (PrepareToChangePlayerKey side key))
+                    , leftText (keyChangeText player key) (Just (PrepareToChangePlayerKey side key))
+                    ]
+
+                QualityButton state qualitySetting ->
+                    [ leftPoly (cellColor state) (Just (ChangeSetting (SetQuality qualitySetting)))
+                    , leftText (qualitySettingToString qualitySetting) (Just (ChangeSetting (SetQuality qualitySetting)))
+                    ]
+
+                BackButton ->
+                    [ leftPoly uiColor.menuTextBackground (Just (GoToPage Title))
+                    , leftText "Back" (Just (GoToPage Title))
+                    ]
+
+                InfoText text ->
+                    [ leftPoly (cellColor NotSelected) Nothing
+                    , leftText text Nothing
+                    ]
+
+        Hud elem ->
+            let
+                color =
+                    hudColor elem
+            in
+            case elem of
+                PlayerName player side ->
+                    [ makePoly side color Nothing
+                    , makeText side player.name Nothing
+                    ]
+
+                Score player side ->
+                    [ makePoly side color Nothing
+                    , makeText side (toString player.score) Nothing
+                    ]
+
+                Controls player side ->
+                    [ makePoly side color Nothing
+                    , makeText side "controls" Nothing
+                    ]
+
+                Toggle toggleSide player side ->
+                    let
+                        msg =
+                            case side of
+                                Left ->
+                                    Just TogglePlayer1Ai
+
+                                Right ->
+                                    Just TogglePlayer2Ai
+                    in
+                    case toggleSide of
+                        Left ->
+                            [ makePoly side color msg
+                            , makeText side "AI" msg
+                            ]
+
+                        Right ->
+                            [ makePoly side color msg
+                            , makeText side "ESF" msg
+                            ]
+
+
+textSideTransform : Float -> Side -> (Float -> Float)
+textSideTransform screenWidth side =
+    case side of
+        Left ->
+            identity
+
+        Right ->
+            \x -> screenWidth - x
+
+
+createClickAttributes : Maybe Msg -> List (Svg.Attribute Msg)
+createClickAttributes maybeMsg =
+    case maybeMsg of
+        Nothing ->
             []
-        , Svg.text_
-            [ Svg.Attributes.x (toString textX)
-            , Svg.Attributes.y (toString textY)
-            , Svg.Attributes.fill "white"
-            , Svg.Attributes.strokeWidth "0"
-            , Svg.Attributes.style
-                ("text-anchor: middle; font-family: sans-serif; font-size: "
-                    ++ toString ((5 / 6) * Grid.regionHeight cf region)
-                    ++ "px; alignment-baseline: middle"
-                )
+
+        Just msg ->
+            [ Svg.Attributes.cursor "pointer"
+            , Svg.Events.onClick msg
             ]
-            [ Svg.text text
-            ]
-        ]
 
 
 polygonPoints : List Float2 -> String
@@ -504,6 +627,7 @@ instructionsView layout player =
                 |> setWidth 2
                 |> setHeight 2
                 |> insertControlToggle
+                |> Grid.map (\partialElem -> Hud (partialElem player Left))
     in
     Svg.g
         []
@@ -515,7 +639,7 @@ instructionsView layout player =
         , drawCircle ( explodeX, explodeY ) 80 explosionGradientFill
             |> filter turbulenceId
         , drawAnchoredText explodeX (explodeY + 100) 20 Middle Color.black "Fig 3: an explosion"
-        , drawHud controlToggle player Left
+        , drawGrid layout.screenWidth controlToggle
         , drawAnchoredText controlsX (controlsY + 60) (textHeight - 10) Start Color.black "Fig 4: AI toggle" -- , "switch"]
         , drawAnchoredText (controlsX + 65) (controlsY + 60 + 20) (textHeight - 10) Start Color.black "switch"
         , Svg.text_
@@ -594,15 +718,15 @@ titleView { screenWidth, screenHeight } gameStarted =
             }
 
         mainButtons =
-            [ ( "new game", Just StartGame )
-            , ( "options", Just (GoToPage (Options Nothing)) )
-            , ( "help", Just (GoToPage Instructions) )
+            [ Main (Button "new game" StartGame)
+            , Main (Button "options" (GoToPage (Options Nothing)))
+            , Main (Button "help" (GoToPage Instructions))
             ]
 
         conditionalButtons =
             case gameStarted of
                 True ->
-                    [ ( "continue", Just (GoToPage Game) ) ]
+                    [ Main (Button "continue" (GoToPage Game)) ]
 
                 False ->
                     []
@@ -614,21 +738,28 @@ titleView { screenWidth, screenHeight } gameStarted =
             Grid.create config
                 |> setWidth config.cols
                 |> setHeight 5
-                |> insert ( "xtreme volleyball 2k17", uiColor.titleBackground, Nothing )
+                |> insert (Main MainTitle)
                 |> setWidth 11
 
         finalGrid =
             buttons
-                -- add color
-                |> List.map (\( text, msg ) -> ( text, uiColor.menuTextBackground, msg ))
-                -- insert in grid
                 |> List.foldl (\data grid -> grid |> nextRow |> insert data) gridWithTitle
     in
     Svg.g
         []
-        [ Svg.g [] (List.map (drawRegion finalGrid.config Left) finalGrid.data)
+        [ drawGrid screenWidth finalGrid
         , drawBomb ( 2 * screenWidth / 3, 350 ) 120 30
         ]
+
+
+drawGrid : Float -> Grid GridData -> Svg Msg
+drawGrid screenWidth grid =
+    grid.data
+        |> List.unzip
+        |> uncurry (List.map2 (uiElementToPrimitives grid.config))
+        |> List.foldl (++) []
+        |> List.map (drawUiPrimitive screenWidth)
+        |> Svg.g []
 
 
 filter : String -> Svg Msg -> Svg Msg
@@ -640,7 +771,7 @@ filter filterId svg =
         ]
 
 
-insertControlToggle : Grid HudElement -> Grid HudElement
+insertControlToggle : Grid (Player -> Side -> HudElement) -> Grid (Player -> Side -> HudElement)
 insertControlToggle grid =
     let
         -- We want the cursor after this function to act
@@ -693,6 +824,12 @@ gameView model =
                 |> insertControlToggle
                 |> setWidth 4
                 |> insert Score
+
+        drawBothSidesOfHud =
+            [ ( model.player1, Left ), ( model.player2, Right ) ]
+                |> List.map (\( player, side ) -> Grid.map (\x -> Hud (x player side)) grid)
+                |> List.map (drawGrid model.screenWidth)
+                |> Svg.g []
     in
     Svg.g
         []
@@ -702,9 +839,7 @@ gameView model =
             , Svg.Attributes.fill (colorToHex uiColor.sky)
             ]
             []
-        , [ ( model.player1, Left ), ( model.player2, Right ) ]
-            |> List.map (Basics.uncurry (drawHud grid))
-            |> Svg.g []
+        , drawBothSidesOfHud
         , drawNet model
         , drawPlayer model.player1
         , drawPlayer model.player2
@@ -717,67 +852,39 @@ gameView model =
         ]
 
 
-drawHud : Grid HudElement -> Player -> Side -> Svg Msg
-drawHud { config, data } player side =
-    data
-        |> List.map (drawHudElement config player side)
-        |> Svg.g []
+createStyle : Float -> TextAnchor -> String
+createStyle height anchor =
+    "text-anchor: "
+        ++ textAnchorToString anchor
+        ++ "; font-family: sans-serif; font-size: "
+        ++ toString height
+        ++ "px; alignment-baseline: middle"
 
 
-drawHudElement : Grid.Config -> Player -> Side -> ( Grid.Region, HudElement ) -> Svg Msg
-drawHudElement cfg player side ( region, element ) =
-    let
-        aiToggleMsg =
-            case side of
-                Left ->
-                    TogglePlayer1Ai
+drawUiPrimitive : Float -> UiPrimitive -> Svg Msg
+drawUiPrimitive screenWidth prim =
+    case prim of
+        Polygon path side color maybeMsg ->
+            Svg.polygon
+                ([ Svg.Attributes.points (polygonPoints path)
+                 , Svg.Attributes.fill (colorToHex color)
+                 , hudTransform screenWidth side
+                 ]
+                    ++ createClickAttributes maybeMsg
+                )
+                []
 
-                Right ->
-                    TogglePlayer2Ai
-    in
-    case element of
-        PlayerName ->
-            drawRegion cfg side ( region, ( player.name, uiColor.menuTextBackground, Nothing ) )
-
-        Score ->
-            drawRegion cfg side ( region, ( toString player.score, uiColor.hudTertiaryBackground, Nothing ) )
-
-        Controls ->
-            drawRegion cfg side ( region, ( "Controls", uiColor.hudSecondaryBackground, Just aiToggleMsg ) )
-
-        Toggle toggleSide ->
-            case toggleSide of
-                Left ->
-                    drawRegion cfg side ( region, ( "AI", getToggleColor player.ai, Just aiToggleMsg ) )
-
-                Right ->
-                    let
-                        h =
-                            Grid.regionHeight cfg region
-
-                        dx =
-                            case side of
-                                Left ->
-                                    identity
-
-                                Right ->
-                                    \x -> 1000 - x
-
-                        dy =
-                            \y -> y - h / 2
-
-                        ( x, y ) =
-                            Grid.regionToPath cfg region
-                                |> Grid.skewPath -uiSlope
-                                |> Grid.centroid
-                                |> Tuple.mapFirst dx
-                                |> Tuple.mapSecond dy
-                    in
-                    Svg.g
-                        []
-                        [ drawRegion cfg side ( region, ( "", getToggleColor (not player.ai), Just aiToggleMsg ) )
-                        , drawControls player (55 / 2) x y
-                        ]
+        Text height anchor ( x, y ) side text maybeMsg ->
+            Svg.text_
+                ([ Svg.Attributes.x (toString (textSideTransform screenWidth side x))
+                 , Svg.Attributes.y (toString y)
+                 , Svg.Attributes.style (createStyle height anchor)
+                 , Svg.Attributes.fill "white"
+                 , Svg.Attributes.strokeWidth "0"
+                 ]
+                    ++ createClickAttributes maybeMsg
+                )
+                [ Svg.text text ]
 
 
 drawNet : Layout a -> Svg Msg

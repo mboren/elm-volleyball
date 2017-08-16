@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Animation exposing (Animation)
+import Color
 import Keyboard
 import Time exposing (Time)
 import Vector2 as V2 exposing (Float2, Vec2)
@@ -149,21 +150,41 @@ type MovementKey
     | JumpKey
 
 
+type UiPrimitive
+    = Polygon (List Float2) Side Color.Color (Maybe Msg)
+    | Text Float TextAnchor ( Float, Float ) Side String (Maybe Msg)
+
+
 type UiSettingState
-    = Label
-    | Selected
+    = Selected
     | NotSelected
 
 
-type alias GridData =
-    ( String, UiSettingState, Maybe Msg )
+type GridData
+    = Main MainMenuElement
+    | OptionsMenu OptionsMenuElement
+    | Hud HudElement
+
+
+type MainMenuElement
+    = MainTitle
+    | Button String Msg
+
+
+type OptionsMenuElement
+    = OptionsTitle
+    | OptionLabel String
+    | KeyChangeButton UiSettingState Player MovementKey Side
+    | QualityButton UiSettingState QualitySetting
+    | BackButton
+    | InfoText String
 
 
 type HudElement
-    = PlayerName
-    | Score
-    | Controls
-    | Toggle Side
+    = PlayerName Player Side
+    | Score Player Side
+    | Controls Player Side
+    | Toggle Side Player Side
 
 
 type QualitySetting
