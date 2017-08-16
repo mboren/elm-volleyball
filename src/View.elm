@@ -354,9 +354,15 @@ keyChangeText { leftKey, rightKey, jumpKey } key =
 uiElementToPrimitives : Grid.Config -> Grid.Region -> GridData -> List UiPrimitive
 uiElementToPrimitives config region element =
     let
+        height =
+            Grid.regionHeight config region
+
+        position =
+            Grid.centroid path
+
         makeText : Side -> String -> Maybe Msg -> UiPrimitive
         makeText =
-            Text (Grid.regionHeight config region) Middle (Grid.centroid path)
+            Text height Middle position
 
         leftText : String -> Maybe Msg -> UiPrimitive
         leftText =
@@ -436,7 +442,7 @@ uiElementToPrimitives config region element =
 
                 Controls player side ->
                     [ makePoly side color Nothing
-                    , makeText side "controls" Nothing
+                    , makeText side "Controls" Nothing
                     ]
 
                 Toggle toggleSide player side ->
@@ -456,9 +462,31 @@ uiElementToPrimitives config region element =
                             ]
 
                         Right ->
-                            [ makePoly side color msg
-                            , makeText side "ESF" msg
-                            ]
+                            makePoly side color msg
+                                :: controlsTextPrimitives position height player side msg
+
+
+controlsTextPrimitives : Float2 -> Float -> MovementKeys a -> Side -> Maybe Msg -> List UiPrimitive
+controlsTextPrimitives ( x, y ) height player side msg =
+    let
+        quarterHeight =
+            height / 4
+
+        jumpPosition =
+            ( x, y - quarterHeight )
+
+        leftAndRightPosition =
+            ( x, y + quarterHeight )
+
+        jumpText =
+            keyToString player.jumpKey
+
+        leftAndRightText =
+            keyToString player.leftKey ++ " " ++ keyToString player.rightKey
+    in
+    [ Text (height / 2) Middle jumpPosition side jumpText msg
+    , Text (height / 2) Middle leftAndRightPosition side leftAndRightText msg
+    ]
 
 
 textSideTransform : Float -> Side -> (Float -> Float)
