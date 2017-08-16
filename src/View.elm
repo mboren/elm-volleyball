@@ -405,18 +405,30 @@ uiElementToPrimitives config region element =
                     ]
 
                 KeyChangeButton state player key side ->
-                    [ leftPoly (cellColor state) (Just (PrepareToChangePlayerKey side key))
-                    , leftText (keyChangeText player key) (Just (PrepareToChangePlayerKey side key))
+                    let
+                        msg =
+                            Just (PrepareToChangePlayerKey side key)
+                    in
+                    [ leftPoly (cellColor state) msg
+                    , leftText (keyChangeText player key) msg
                     ]
 
                 QualityButton state qualitySetting ->
-                    [ leftPoly (cellColor state) (Just (ChangeSetting (SetQuality qualitySetting)))
-                    , leftText (qualitySettingToString qualitySetting) (Just (ChangeSetting (SetQuality qualitySetting)))
+                    let
+                        msg =
+                            Just (ChangeSetting (SetQuality qualitySetting))
+                    in
+                    [ leftPoly (cellColor state) msg
+                    , leftText (qualitySettingToString qualitySetting) msg
                     ]
 
                 BackButton ->
-                    [ leftPoly uiColor.menuTextBackground (Just (GoToPage Title))
-                    , leftText "Back" (Just (GoToPage Title))
+                    let
+                        msg =
+                            Just (GoToPage Title)
+                    in
+                    [ leftPoly uiColor.menuTextBackground msg
+                    , leftText "Back" msg
                     ]
 
                 InfoText text ->
