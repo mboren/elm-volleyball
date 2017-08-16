@@ -158,13 +158,8 @@ update msg model =
             , Cmd.none
             )
 
-        TogglePlayer1Ai ->
-            ( { model | player1 = Player.toggleAi model.player1 }
-            , Cmd.none
-            )
-
-        TogglePlayer2Ai ->
-            ( { model | player2 = Player.toggleAi model.player2 }
+        ToggleAi side ->
+            ( mapPlayer (Player.toggleAi) side model
             , Cmd.none
             )
 
@@ -176,32 +171,16 @@ update msg model =
 
         ChangePlayerKey side movementKey keyCode ->
             let
-                player =
-                    case side of
-                        Left ->
-                            model.player1
-
-                        Right ->
-                            model.player2
-
-                newPlayer =
+                newModel =
                     case movementKey of
                         LeftKey ->
-                            { player | leftKey = keyCode }
+                            mapPlayer (\p->{ p | leftKey = keyCode }) side model
 
                         RightKey ->
-                            { player | rightKey = keyCode }
+                            mapPlayer (\p->{ p | rightKey = keyCode }) side model
 
                         JumpKey ->
-                            { player | jumpKey = keyCode }
-
-                newModel =
-                    case side of
-                        Left ->
-                            { model | player1 = newPlayer }
-
-                        Right ->
-                            { model | player2 = newPlayer }
+                            mapPlayer (\p->{ p | jumpKey = keyCode }) side model
             in
             ( { newModel
                 | page = Options Nothing
@@ -507,3 +486,11 @@ mapPlayers f players =
         | player1 = f players.player1
         , player2 = f players.player2
     }
+
+mapPlayer : (Player -> Player) -> PlayerSide -> Players a -> Players a
+mapPlayer f side players =
+    case side of
+        Left ->
+            { players | player1 = f players.player1 }
+        Right ->
+            { players | player2 = f players.player2 }

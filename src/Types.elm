@@ -92,7 +92,7 @@ type Page
     = Title
     | Instructions
     | Game
-    | Options (Maybe ( Side, MovementKey ))
+    | Options (Maybe ( PlayerSide, MovementKey ))
 
 
 type alias Players a =
@@ -136,10 +136,9 @@ type Msg
     | Press Keyboard.KeyCode
     | Release Keyboard.KeyCode
     | NewBallVelocity Float2
-    | TogglePlayer1Ai
-    | TogglePlayer2Ai
+    | ToggleAi PlayerSide
     | TogglePause
-    | PrepareToChangePlayerKey Side MovementKey
+    | PrepareToChangePlayerKey PlayerSide MovementKey
     | ChangePlayerKey Side MovementKey Keyboard.KeyCode
     | ChangeSetting SettingsMsg
 
@@ -174,7 +173,7 @@ type MainMenuElement
 type OptionsMenuElement
     = OptionsTitle
     | OptionLabel String
-    | KeyChangeButton UiSettingState Player MovementKey Side
+    | KeyChangeButton UiSettingState Player MovementKey PlayerSide
     | QualityButton UiSettingState QualitySetting
     | BackButton
     | InfoText String
@@ -191,16 +190,19 @@ type QualitySetting
     = Fancy
     | Fast
 
+-- indicates that we're referring specifically to
+-- the player on the right
+type alias PlayerSide = Side
 
 type Side
     = Left
     | Right
 
-
 type TextAnchor
     = Start
     | Middle
     | End
+
 
 
 textAnchorToString : TextAnchor -> String

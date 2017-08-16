@@ -448,12 +448,7 @@ uiElementToPrimitives config region element =
                 Toggle toggleSide player side ->
                     let
                         msg =
-                            case side of
-                                Left ->
-                                    Just TogglePlayer1Ai
-
-                                Right ->
-                                    Just TogglePlayer2Ai
+                            Just (ToggleAi side)
                     in
                     case toggleSide of
                         Left ->
