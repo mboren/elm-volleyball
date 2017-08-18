@@ -165,15 +165,15 @@ view model =
                     instructionsView model model.player1
 
                 Game ->
-                    if model.paused then
-                        Svg.g
-                            []
-                            [ gameView model
+                    Svg.g
+                        []
+                        [ if model.paused then
+                            gameView model
                                 |> filter pauseBlurId
-                            , pauseMenu
-                            ]
-                    else
-                        gameView model
+                          else
+                            gameView model
+                        , pauseMenu model.paused
+                        ]
 
                 Options maybeChangingKey ->
                     optionsView model maybeChangingKey
@@ -693,28 +693,36 @@ instructionsView layout player =
         ]
 
 
-pauseMenuX : Float
-pauseMenuX =
-    10
-
-
-pauseMenu : Svg Msg
-pauseMenu =
+pauseMenu : Bool -> Svg Msg
+pauseMenu paused =
     let
-        height =
-            50
-
-        padding =
-            10
-
-        y i =
-            70 + i * (height + padding)
+        config =
+            { rows = 2
+            , cols = 1
+            , rowPadding = 10
+            , width = 220
+            , height = 100
+            , xOffset = 0
+            , yOffset = 70
+            }
     in
-    Svg.g
-        []
-        [ svgButton pauseMenuX (y 0) 140 50 "Play" TogglePause
-        , svgButton pauseMenuX (y 1) 220 50 "Main menu" (GoToPage Title)
-        ]
+    Grid.create config
+        |> setWidth 1
+        |> setHeight 1
+        |> insertPauseMenu paused
+        |> drawGrid 1000
+
+
+insertPauseMenu : Bool -> Grid GridData -> Grid GridData
+insertPauseMenu paused grid =
+    if paused then
+        grid
+            |> insert (Main (Button "Resume" TogglePause))
+            |> nextRow
+            |> insert (Main (Button "Main menu" (GoToPage Title)))
+    else
+        grid
+            |> insert (Main (Button "Pause" TogglePause))
 
 
 {-| Convert a keycode into a string.
@@ -883,7 +891,6 @@ gameView model =
             drawTimer (model.warmupTimer + Time.second) (0.5 * model.screenWidth) 140 120
           else
             drawBall model model.ball
-        , svgButton pauseMenuX 70 140 50 "Pause" TogglePause
         , drawTimer model.ball.countdown (0.5 * model.screenWidth) 0 80
         ]
 
