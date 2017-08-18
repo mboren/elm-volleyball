@@ -191,19 +191,22 @@ type QualitySetting
     = Fancy
     | Fast
 
--- indicates that we're referring specifically to
--- the player on the right
-type alias PlayerSide = Side
+
+{-| indicates that we're referring specifically to the player on the right
+-}
+type alias PlayerSide =
+    Side
+
 
 type Side
     = Left
     | Right
 
+
 type TextAnchor
     = Start
     | Middle
     | End
-
 
 
 textAnchorToString : TextAnchor -> String
