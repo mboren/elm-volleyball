@@ -649,8 +649,8 @@ instructionsView layout player =
             }
 
         config =
-            { rows = 2
-            , cols = 2
+            { rows = 55
+            , cols = 120
             , rowPadding = 0
             , width = 120
             , height = 55
@@ -660,8 +660,8 @@ instructionsView layout player =
 
         controlToggle =
             Grid.create config
-                |> setWidth 2
-                |> setHeight 2
+                |> setWidth 120
+                |> setHeight 55
                 |> insertControlToggle
                 |> Grid.map (\partialElem -> Hud (partialElem player Left))
     in
@@ -852,21 +852,21 @@ gameView : Model -> Svg Msg
 gameView model =
     let
         grid =
-            { rows = 2
-            , cols = 20
+            { rows = floor model.screenHeight
+            , cols = floor model.screenWidth
             , rowPadding = 0
-            , width = 445
-            , height = 60
+            , width = model.screenWidth
+            , height = model.screenHeight
             , xOffset = 0
             , yOffset = 0
             }
                 |> Grid.create
-                |> setHeight 2
-                |> setWidth 10
+                |> setHeight 60
+                |> setWidth 220
                 |> insert PlayerName
-                |> setWidth 6
+                |> setWidth 135
                 |> insertControlToggle
-                |> setWidth 4
+                |> setWidth 90
                 |> insert Score
 
         leftHud =
