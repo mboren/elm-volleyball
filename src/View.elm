@@ -172,7 +172,7 @@ view model =
                                 |> filter pauseBlurId
                           else
                             gameView model
-                        , pauseMenu model.paused
+                        , pauseMenu model.screenWidth model.paused
                         ]
 
                 Options maybeChangingKey ->
@@ -694,8 +694,8 @@ instructionsView layout player =
         ]
 
 
-pauseMenu : Bool -> Svg Msg
-pauseMenu paused =
+pauseMenu : Float -> Bool -> Svg Msg
+pauseMenu screenWidth paused =
     let
         config =
             { rows = 2
@@ -711,7 +711,7 @@ pauseMenu paused =
         |> setWidth 1
         |> setHeight 1
         |> insertPauseMenu paused
-        |> drawGrid 1000
+        |> drawGrid screenWidth
 
 
 insertPauseMenu : Bool -> Grid GridData -> Grid GridData
