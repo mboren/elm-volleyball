@@ -860,11 +860,11 @@ gameView model =
                 |> setWidth 4
                 |> insert Score
 
-        drawBothSidesOfHud =
-            [ ( model.player1, Left ), ( model.player2, Right ) ]
-                |> List.map (\( player, side ) -> Grid.map (\x -> Hud (x player side)) grid)
-                |> List.map (drawGrid model.screenWidth)
-                |> Svg.g []
+        leftHud =
+            Grid.map (\x -> Hud (x model.player1 Left)) grid
+
+        rightHud =
+            Grid.map (\x -> Hud (x model.player2 Right)) grid
     in
     Svg.g
         []
@@ -874,7 +874,8 @@ gameView model =
             , Svg.Attributes.fill (colorToHex uiColor.sky)
             ]
             []
-        , drawBothSidesOfHud
+        , drawGrid model.screenWidth leftHud
+        , drawGrid model.screenWidth rightHud
         , drawNet model
         , drawPlayer model.player1
         , drawPlayer model.player2
