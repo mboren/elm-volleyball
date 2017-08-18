@@ -324,6 +324,9 @@ hudColor element =
         Controls _ _ ->
             uiColor.hudSecondaryBackground
 
+        ControlsBackground _ _ ->
+            uiColor.hudSecondaryBackground
+
         Toggle toggleSide player _ ->
             case toggleSide of
                 Left ->
@@ -453,9 +456,12 @@ hudElementToPrimitives path height position elem =
             , makeText side (toString player.score) Nothing
             ]
 
-        Controls player side ->
+        ControlsBackground player side ->
             [ makePoly side color Nothing
-            , makeText side "Controls" Nothing
+            ]
+
+        Controls player side ->
+            [ makeText side "Controls" Nothing
             ]
 
         Toggle toggleSide player side ->
@@ -830,19 +836,22 @@ insertControlToggle grid =
                 |> Grid.goRight
                 |> .cursor
 
+        padding =
+            5
+
         newGrid =
             grid
                 |> markAsStartCol
+                |> Grid.insertBackground ControlsBackground
                 |> setHeight (grid.cursor.h // 2)
                 |> insert Controls
                 |> nextRow
-                |> setWidth (grid.cursor.w // 2)
-                |> insert (Toggle Left)
-                |> insert (Toggle Right)
-                |> Grid.prevRow
-                |> setHeight grid.cursor.h
-                |> setWidth grid.cursor.w
+                |> setWidth padding
                 |> Grid.goRight
+                |> setWidth ((grid.cursor.w // 2) - padding)
+                |> setHeight ((grid.cursor.h // 2) - padding)
+                |> insert (Toggle Left)
+                |> Grid.insert (Toggle Right)
     in
     { newGrid
         | startCol = grid.startCol

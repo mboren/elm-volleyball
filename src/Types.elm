@@ -183,6 +183,7 @@ type HudElement
     = PlayerName Player Side
     | Score Player Side
     | Controls Player Side
+    | ControlsBackground Player Side
     | Toggle Side Player Side
 
 

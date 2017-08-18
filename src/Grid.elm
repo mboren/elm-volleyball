@@ -97,6 +97,11 @@ insert newCellData grid =
     { grid | data = ( grid.cursor, newCellData ) :: grid.data }
         |> goRight
 
+{-| Insert a cell at cursor location without advancing cursor
+-}
+insertBackground : a -> Grid a -> Grid a
+insertBackground newCellData grid =
+    { grid | data = ( grid.cursor, newCellData ) :: grid.data }
 
 {-| Change cursor width
 -}
