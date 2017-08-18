@@ -785,9 +785,11 @@ titleView { screenWidth, screenHeight } gameStarted =
                 |> insert (Main MainTitle)
                 |> setWidth 11
 
+        addRow row =
+            nextRow >> insert row
+
         finalGrid =
-            buttons
-                |> List.foldl (\data grid -> grid |> nextRow |> insert data) gridWithTitle
+            List.foldl addRow gridWithTitle buttons
     in
     Svg.g
         []
