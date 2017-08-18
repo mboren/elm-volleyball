@@ -393,48 +393,39 @@ uiElementToPrimitives config region element =
                     ]
 
         OptionsMenu elem ->
-            case elem of
-                OptionsTitle ->
-                    [ leftPoly uiColor.titleBackground Nothing
-                    , leftText "Options" Nothing
-                    ]
+            let
+                ( color, clickEvent, text ) =
+                    case elem of
+                        OptionsTitle ->
+                            ( uiColor.titleBackground, Nothing, "Options" )
 
-                OptionLabel text ->
-                    [ leftPoly uiColor.menuTextBackground Nothing
-                    , leftText text Nothing
-                    ]
+                        OptionLabel text ->
+                            ( uiColor.menuTextBackground, Nothing, text )
 
-                KeyChangeButton state player key side ->
-                    let
-                        msg =
-                            Just (PrepareToChangePlayerKey side key)
-                    in
-                    [ leftPoly (cellColor state) msg
-                    , leftText (keyChangeText player key) msg
-                    ]
+                        KeyChangeButton state player key side ->
+                            ( cellColor state
+                            , Just (PrepareToChangePlayerKey side key)
+                            , keyChangeText player key
+                            )
 
-                QualityButton state qualitySetting ->
-                    let
-                        msg =
-                            Just (ChangeSetting (SetQuality qualitySetting))
-                    in
-                    [ leftPoly (cellColor state) msg
-                    , leftText (qualitySettingToString qualitySetting) msg
-                    ]
+                        QualityButton state qualitySetting ->
+                            ( cellColor state
+                            , Just (ChangeSetting (SetQuality qualitySetting))
+                            , qualitySettingToString qualitySetting
+                            )
 
-                BackButton ->
-                    let
-                        msg =
-                            Just (GoToPage Title)
-                    in
-                    [ leftPoly uiColor.menuTextBackground msg
-                    , leftText "Back" msg
-                    ]
+                        BackButton ->
+                            ( uiColor.menuTextBackground
+                            , Just (GoToPage Title)
+                            , "Back"
+                            )
 
-                InfoText text ->
-                    [ leftPoly (cellColor NotSelected) Nothing
-                    , leftText text Nothing
-                    ]
+                        InfoText text ->
+                            ( cellColor NotSelected, Nothing, text )
+            in
+            [ leftPoly color clickEvent
+            , leftText text clickEvent
+            ]
 
         Hud elem ->
             let
