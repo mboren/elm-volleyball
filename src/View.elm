@@ -355,7 +355,7 @@ uiElementToPrimitives : Grid.Config -> Grid.Region -> GridData -> List UiPrimiti
 uiElementToPrimitives config region element =
     let
         height =
-            Grid.regionHeight config region
+            Grid.regionHeight config region * 5 / 6
 
         path =
             region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
