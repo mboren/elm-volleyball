@@ -357,27 +357,19 @@ uiElementToPrimitives config region element =
         height =
             Grid.regionHeight config region
 
+        path =
+            region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
+
         position =
             Grid.centroid path
 
-        makeText : Side -> String -> Maybe Msg -> UiPrimitive
-        makeText =
-            Text height Middle position
-
         leftText : String -> Maybe Msg -> UiPrimitive
         leftText =
-            makeText Left
-
-        makePoly : Side -> Color -> Maybe Msg -> UiPrimitive
-        makePoly =
-            Polygon path
+            Text height Middle position Left
 
         leftPoly : Color -> Maybe Msg -> UiPrimitive
         leftPoly =
             Polygon path Left
-
-        path =
-            region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
     in
     case element of
         Main elem ->
@@ -393,75 +385,93 @@ uiElementToPrimitives config region element =
                     ]
 
         OptionsMenu elem ->
-            let
-                ( color, clickEvent, text ) =
-                    case elem of
-                        OptionsTitle ->
-                            ( uiColor.titleBackground, Nothing, "Options" )
-
-                        OptionLabel text ->
-                            ( uiColor.menuTextBackground, Nothing, text )
-
-                        KeyChangeButton state player key side ->
-                            ( cellColor state
-                            , Just (PrepareToChangePlayerKey side key)
-                            , keyChangeText player key
-                            )
-
-                        QualityButton state qualitySetting ->
-                            ( cellColor state
-                            , Just (ChangeSetting (SetQuality qualitySetting))
-                            , qualitySettingToString qualitySetting
-                            )
-
-                        BackButton ->
-                            ( uiColor.menuTextBackground
-                            , Just (GoToPage Title)
-                            , "Back"
-                            )
-
-                        InfoText text ->
-                            ( cellColor NotSelected, Nothing, text )
-            in
-            [ leftPoly color clickEvent
-            , leftText text clickEvent
-            ]
+            optionsMenuElementToPrimitives leftText leftPoly elem
 
         Hud elem ->
-            let
-                color =
-                    hudColor elem
-            in
+            hudElementToPrimitives path height position elem
+
+
+optionsMenuElementToPrimitives : (String -> Maybe Msg -> UiPrimitive) -> (Color -> Maybe Msg -> UiPrimitive) -> OptionsMenuElement -> List UiPrimitive
+optionsMenuElementToPrimitives makeText makePoly elem =
+    let
+        ( color, clickEvent, text ) =
             case elem of
-                PlayerName player side ->
-                    [ makePoly side color Nothing
-                    , makeText side player.name Nothing
-                    ]
+                OptionsTitle ->
+                    ( uiColor.titleBackground, Nothing, "Options" )
 
-                Score player side ->
-                    [ makePoly side color Nothing
-                    , makeText side (toString player.score) Nothing
-                    ]
+                OptionLabel text ->
+                    ( uiColor.menuTextBackground, Nothing, text )
 
-                Controls player side ->
-                    [ makePoly side color Nothing
-                    , makeText side "Controls" Nothing
-                    ]
+                KeyChangeButton state player key side ->
+                    ( cellColor state
+                    , Just (PrepareToChangePlayerKey side key)
+                    , keyChangeText player key
+                    )
 
-                Toggle toggleSide player side ->
-                    let
-                        msg =
-                            Just (ToggleAi side)
-                    in
+                QualityButton state qualitySetting ->
+                    ( cellColor state
+                    , Just (ChangeSetting (SetQuality qualitySetting))
+                    , qualitySettingToString qualitySetting
+                    )
+
+                BackButton ->
+                    ( uiColor.menuTextBackground
+                    , Just (GoToPage Title)
+                    , "Back"
+                    )
+
+                InfoText text ->
+                    ( cellColor NotSelected, Nothing, text )
+    in
+    [ makePoly color clickEvent
+    , makeText text clickEvent
+    ]
+
+
+hudElementToPrimitives : List Float2 -> Float -> Float2 -> HudElement -> List UiPrimitive
+hudElementToPrimitives path height position elem =
+    let
+        color =
+            hudColor elem
+
+        makeText : Side -> String -> Maybe Msg -> UiPrimitive
+        makeText =
+            Text height Middle position
+
+        makePoly : Side -> Color -> Maybe Msg -> UiPrimitive
+        makePoly =
+            Polygon path
+    in
+    case elem of
+        PlayerName player side ->
+            [ makePoly side color Nothing
+            , makeText side player.name Nothing
+            ]
+
+        Score player side ->
+            [ makePoly side color Nothing
+            , makeText side (toString player.score) Nothing
+            ]
+
+        Controls player side ->
+            [ makePoly side color Nothing
+            , makeText side "Controls" Nothing
+            ]
+
+        Toggle toggleSide player side ->
+            let
+                msg =
+                    Just (ToggleAi side)
+
+                textPrimitives =
                     case toggleSide of
                         Left ->
-                            [ makePoly side color msg
-                            , makeText side "AI" msg
-                            ]
+                            [ makeText side "AI" msg ]
 
                         Right ->
-                            makePoly side color msg
-                                :: controlsTextPrimitives position height player side msg
+                            controlsTextPrimitives position height player side msg
+            in
+            makePoly side color msg :: textPrimitives
 
 
 controlsTextPrimitives : Float2 -> Float -> MovementKeys a -> Side -> Maybe Msg -> List UiPrimitive
