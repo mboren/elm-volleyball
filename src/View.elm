@@ -396,12 +396,7 @@ svgButton x y w h text onClickEvent =
         , Svg.Attributes.cursor "pointer"
         , Svg.Events.onClick onClickEvent
         ]
-        [ Svg.rect
-            [ Svg.Attributes.width (toString w)
-            , Svg.Attributes.height (toString h)
-            , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
-            ]
-            []
+        [ drawRect ( 0, 0 ) w h uiColor.menuTextBackground
         , Svg.text_
             [ Svg.Attributes.x (toString (toFloat w / 2.0))
             , Svg.Attributes.y (toString (toFloat h / 2.0))
@@ -638,12 +633,7 @@ gameView model =
     in
     Svg.g
         []
-        [ Svg.rect
-            [ Svg.Attributes.width "100%"
-            , Svg.Attributes.height "100%"
-            , Svg.Attributes.fill (colorToHex uiColor.sky)
-            ]
-            []
+        [ drawRect ( 0, 0 ) model.screenWidth model.screenHeight uiColor.sky
         , drawGrid model.screenWidth leftHud
         , drawGrid model.screenWidth rightHud
         , drawNet model
@@ -1049,14 +1039,7 @@ drawBomb position size rotation =
     Svg.g
         [ Svg.Attributes.transform transform ]
         [ drawCircle ( 0, 0 ) size (colorToHex uiColor.bomb)
-        , Svg.rect
-            [ Svg.Attributes.width (toString stemW)
-            , Svg.Attributes.height (toString stemH)
-            , Svg.Attributes.fill (colorToHex uiColor.bomb)
-            , Svg.Attributes.x (toString stemX)
-            , Svg.Attributes.y (toString stemY)
-            ]
-            []
+        , drawRect ( stemX, stemY ) stemW stemH uiColor.bomb
         , Svg.path
             [ Svg.Attributes.d (pathString wickPath)
             , Svg.Attributes.stroke (colorToHex uiColor.wick)
@@ -1080,14 +1063,14 @@ drawCircle position radius fill =
 
 drawNet : Layout a -> Svg Msg
 drawNet { screenWidth, screenHeight, netWidth, netHeight } =
-    Svg.rect
-        [ Svg.Attributes.x (toString ((screenWidth - netWidth) / 2))
-        , Svg.Attributes.y (toString (screenHeight - netHeight))
-        , Svg.Attributes.width (toString netWidth)
-        , Svg.Attributes.height (toString netHeight)
-        , Svg.Attributes.fill (colorToHex uiColor.net)
-        ]
-        []
+    let
+        x =
+            (screenWidth - netWidth) / 2
+
+        y =
+            screenHeight - netHeight
+    in
+    drawRect ( x, y ) netWidth netHeight uiColor.net
 
 
 {-| Stringify everything and stick it all together in a string
@@ -1270,3 +1253,15 @@ keyToString key =
             |> String.dropRight 1
     else
         toString key
+
+
+drawRect : ( number, number ) -> number -> number -> Color -> Svg Msg
+drawRect ( x, y ) width height color =
+    Svg.rect
+        [ Svg.Attributes.x (toString x)
+        , Svg.Attributes.y (toString y)
+        , Svg.Attributes.width (toString width)
+        , Svg.Attributes.height (toString height)
+        , Svg.Attributes.fill (colorToHex color)
+        ]
+        []
