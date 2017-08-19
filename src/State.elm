@@ -254,7 +254,7 @@ ballStep dt model ball =
                 ball
                     |> adjustBallBounds model
                     |> Mover.applyGravity
-                    |> Mover.bounceOffWalls model.screenHeight 0.9
+                    |> Mover.bounceOffWalls 0.9
                     |> applyPlayerCollision model.screenWidth model.player1
                     |> applyPlayerCollision model.screenWidth model.player2
                     |> Mover.updatePosition model.screenHeight dt

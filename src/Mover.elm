@@ -51,8 +51,8 @@ stopAtFloor floorY mover =
         mover
 
 
-bounceOffWalls : Float -> Float -> Mover a -> Mover a
-bounceOffWalls screenHeight bounciness mover =
+bounceOffWalls : Float -> Mover a -> Mover a
+bounceOffWalls bounciness mover =
     let
         ( x, y ) =
             mover.position
