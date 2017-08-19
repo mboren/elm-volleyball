@@ -159,7 +159,7 @@ update msg model =
             )
 
         ToggleAi side ->
-            ( mapPlayer (Player.toggleAi) side model
+            ( mapPlayer Player.toggleAi side model
             , Cmd.none
             )
 
@@ -174,13 +174,13 @@ update msg model =
                 newModel =
                     case movementKey of
                         LeftKey ->
-                            mapPlayer (\p->{ p | leftKey = keyCode }) side model
+                            mapPlayer (\p -> { p | leftKey = keyCode }) side model
 
                         RightKey ->
-                            mapPlayer (\p->{ p | rightKey = keyCode }) side model
+                            mapPlayer (\p -> { p | rightKey = keyCode }) side model
 
                         JumpKey ->
-                            mapPlayer (\p->{ p | jumpKey = keyCode }) side model
+                            mapPlayer (\p -> { p | jumpKey = keyCode }) side model
             in
             ( { newModel
                 | page = Options Nothing
@@ -487,10 +487,12 @@ mapPlayers f players =
         , player2 = f players.player2
     }
 
+
 mapPlayer : (Player -> Player) -> PlayerSide -> Players a -> Players a
 mapPlayer f side players =
     case side of
         Left ->
             { players | player1 = f players.player1 }
+
         Right ->
             { players | player2 = f players.player2 }
