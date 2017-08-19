@@ -362,10 +362,12 @@ adjustBallBounds { screenWidth, screenHeight, netWidth, netHeight } ball =
                 -- right of net
                 ( netX, screenWidth )
             else
-                -- if we're precisely in the middle, crash.
-                -- I want to see how common this case is to determine
-                -- how much effort to put into resolving it nicely.
-                Debug.crash "ball in middle" ( 0, screenWidth )
+                {- Act like ball is on the right if it's perfectly in the center.
+                   This probably affects balance very slightly, but I've never
+                   had this happen under normal gameplay conditions, so it
+                   should be negligible
+                -}
+                ( netX, screenWidth )
     in
     { ball
         | leftWallX = newLeftWall
