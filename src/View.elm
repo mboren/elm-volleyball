@@ -181,377 +181,62 @@ view model =
         ]
 
 
-optionsView : Model -> Maybe ( Side, MovementKey ) -> Svg Msg
-optionsView model maybeChangingKey =
+
+-- Main menu page
+
+
+titleView : Layout a -> Bool -> Svg Msg
+titleView { screenWidth, screenHeight } gameStarted =
     let
-        getUiSettingState : Side -> MovementKey -> UiSettingState
-        getUiSettingState side key =
-            case maybeChangingKey of
-                Nothing ->
-                    NotSelected
-
-                Just ( selectedSide, selectedKey ) ->
-                    if side == selectedSide && key == selectedKey then
-                        Selected
-                    else
-                        NotSelected
-
-        boolToUiSettingState bool =
-            case bool of
-                True ->
-                    Selected
-
-                False ->
-                    NotSelected
-
-        graphicsButtons =
-            [ Fast, Fancy ]
-                |> List.map
-                    (\qs ->
-                        OptionsMenu (QualityButton (boolToUiSettingState (qs == model.graphicsQuality)) qs)
-                    )
-
         config =
-            { rows = 24
-            , cols = 12
-            , rowPadding = 0
-            , width = model.screenWidth
-            , height = model.screenHeight
+            { rows = 29
+            , cols = 20
+            , rowPadding = 15
+            , width = screenWidth
+            , height = screenHeight
             , xOffset = 0
-            , yOffset = 0
+            , yOffset = 60
             }
 
-        newGrid =
+        mainButtons =
+            [ Main (Button "new game" StartGame)
+            , Main (Button "options" (GoToPage (Options Nothing)))
+            , Main (Button "help" (GoToPage Instructions))
+            ]
+
+        conditionalButtons =
+            case gameStarted of
+                True ->
+                    [ Main (Button "continue" (GoToPage Game)) ]
+
+                False ->
+                    []
+
+        buttons =
+            conditionalButtons ++ mainButtons
+
+        gridWithTitle =
             Grid.create config
-                -- page header
-                |> setWidth 10
-                |> setHeight 4
-                |> insert (OptionsMenu OptionsTitle)
-                |> nextSection
-                -- controls
-                |> createPlayerRow model.player1 getUiSettingState Left
-                |> nextSection
-                |> createPlayerRow model.player2 getUiSettingState Right
-                |> nextSection
-                -- graphical quality
-                |> createToggleRow "Quality" graphicsButtons
-                |> nextSection
-                -- back button
-                |> setHeight 4
-                |> setWidth 6
-                |> insert (OptionsMenu BackButton)
-                -- Note about key codes
-                |> markAsStartCol
-                |> setHeight 1
-                |> setWidth 7
-                |> insert (OptionsMenu (InfoText "Note: non-alphanumeric keys will show raw key code, but will work fine."))
-                |> nextRow
-                |> insert (OptionsMenu (InfoText "Nobody has made a comprehensive keycode->string function for Elm yet."))
-                |> nextRow
-                |> insert (OptionsMenu (InfoText "I might take a stab at it after I wrap up more interesting features."))
+                |> setWidth config.cols
+                |> setHeight 5
+                |> insert (Main MainTitle)
+                |> setWidth 11
+
+        addRow row =
+            nextRow >> insert row
+
+        finalGrid =
+            List.foldl addRow gridWithTitle buttons
     in
     Svg.g
-        [ Svg.Attributes.stroke "white" ]
-        [ drawGrid model.screenWidth newGrid ]
-
-
-createPlayerRow : Player -> (Side -> MovementKey -> UiSettingState) -> Side -> Grid GridData -> Grid GridData
-createPlayerRow player getState side grid =
-    grid
-        |> setWidth 6
-        |> setHeight 4
-        |> insert (OptionsMenu (OptionLabel player.name))
-        |> markAsStartCol
-        |> setHeight 2
-        |> insert (OptionsMenu (KeyChangeButton (getState side JumpKey) player JumpKey side))
-        |> nextRow
-        |> setWidth 3
-        |> insert (OptionsMenu (KeyChangeButton (getState side LeftKey) player LeftKey side))
-        |> insert (OptionsMenu (KeyChangeButton (getState side RightKey) player RightKey side))
-        |> Grid.resetStartCol
-
-
-createToggleRow : String -> List GridData -> Grid GridData -> Grid GridData
-createToggleRow name buttons grid =
-    let
-        gridWithLabel =
-            grid
-                |> setWidth 6
-                |> setHeight 4
-                |> insert (OptionsMenu (OptionLabel name))
-                |> setWidth ((grid.config.cols - 6) // List.length buttons)
-    in
-    List.foldl insert gridWithLabel buttons
-
-
-cellColor : UiSettingState -> Color
-cellColor setting =
-    case setting of
-        Selected ->
-            uiColor.hudTertiaryBackground
-
-        NotSelected ->
-            uiColor.hudSecondaryBackground
-
-
-hudTransform : Float -> Side -> Svg.Attribute Msg
-hudTransform screenWidth side =
-    case side of
-        Left ->
-            -- results in <... transform>, which has no effect
-            Svg.Attributes.transform ""
-
-        Right ->
-            Svg.Attributes.transform
-                -- move to other side of screen
-                ("translate("
-                    ++ toString screenWidth
-                    ++ ",0)"
-                    -- flip horizontally
-                    ++ " scale(-1,1)"
-                )
-
-
-hudColor : HudElement -> Color
-hudColor element =
-    case element of
-        PlayerName _ _ ->
-            uiColor.menuTextBackground
-
-        Score _ _ ->
-            uiColor.hudTertiaryBackground
-
-        Controls _ _ ->
-            uiColor.hudSecondaryBackground
-
-        ControlsBackground _ _ ->
-            uiColor.hudSecondaryBackground
-
-        Toggle toggleSide player _ ->
-            case toggleSide of
-                Left ->
-                    getToggleColor player.ai
-
-                Right ->
-                    getToggleColor (not player.ai)
-
-
-colorToFill : Color -> Svg.Attribute Msg
-colorToFill color =
-    Svg.Attributes.fill (colorToHex color)
-
-
-keyChangeText : MovementKeys a -> MovementKey -> String
-keyChangeText { leftKey, rightKey, jumpKey } key =
-    case key of
-        LeftKey ->
-            "Left: " ++ keyToString leftKey
-
-        RightKey ->
-            "Right: " ++ keyToString rightKey
-
-        JumpKey ->
-            "Jump: " ++ keyToString jumpKey
-
-
-uiElementToPrimitives : Grid.Config -> Grid.Region -> GridData -> List UiPrimitive
-uiElementToPrimitives config region element =
-    let
-        height =
-            Grid.regionHeight config region * 5 / 6
-
-        path =
-            region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
-
-        position =
-            Grid.centroid path
-
-        leftText : String -> Maybe Msg -> UiPrimitive
-        leftText =
-            Text height Middle position Left
-
-        leftPoly : Color -> Maybe Msg -> UiPrimitive
-        leftPoly =
-            Polygon path Left
-    in
-    case element of
-        Main elem ->
-            case elem of
-                MainTitle ->
-                    [ leftPoly uiColor.titleBackground Nothing
-                    , leftText "xtreme volleyball 2k17" Nothing
-                    ]
-
-                Button text msg ->
-                    [ leftPoly uiColor.menuTextBackground (Just msg)
-                    , leftText text (Just msg)
-                    ]
-
-        OptionsMenu elem ->
-            optionsMenuElementToPrimitives leftText leftPoly elem
-
-        Hud elem ->
-            hudElementToPrimitives path height position elem
-
-
-optionsMenuElementToPrimitives : (String -> Maybe Msg -> UiPrimitive) -> (Color -> Maybe Msg -> UiPrimitive) -> OptionsMenuElement -> List UiPrimitive
-optionsMenuElementToPrimitives makeText makePoly elem =
-    let
-        ( color, clickEvent, text ) =
-            case elem of
-                OptionsTitle ->
-                    ( uiColor.titleBackground, Nothing, "Options" )
-
-                OptionLabel text ->
-                    ( uiColor.menuTextBackground, Nothing, text )
-
-                KeyChangeButton state player key side ->
-                    ( cellColor state
-                    , Just (PrepareToChangePlayerKey side key)
-                    , keyChangeText player key
-                    )
-
-                QualityButton state qualitySetting ->
-                    ( cellColor state
-                    , Just (ChangeSetting (SetQuality qualitySetting))
-                    , qualitySettingToString qualitySetting
-                    )
-
-                BackButton ->
-                    ( uiColor.menuTextBackground
-                    , Just (GoToPage Title)
-                    , "Back"
-                    )
-
-                InfoText text ->
-                    ( cellColor NotSelected, Nothing, text )
-    in
-    [ makePoly color clickEvent
-    , makeText text clickEvent
-    ]
-
-
-hudElementToPrimitives : List Float2 -> Float -> Float2 -> HudElement -> List UiPrimitive
-hudElementToPrimitives path height position elem =
-    let
-        color =
-            hudColor elem
-
-        makeText : Side -> String -> Maybe Msg -> UiPrimitive
-        makeText =
-            Text height Middle position
-
-        makePoly : Side -> Color -> Maybe Msg -> UiPrimitive
-        makePoly =
-            Polygon path
-    in
-    case elem of
-        PlayerName player side ->
-            [ makePoly side color Nothing
-            , makeText side player.name Nothing
-            ]
-
-        Score player side ->
-            [ makePoly side color Nothing
-            , makeText side (toString player.score) Nothing
-            ]
-
-        ControlsBackground player side ->
-            [ makePoly side color Nothing
-            ]
-
-        Controls player side ->
-            [ makeText side "Controls" Nothing
-            ]
-
-        Toggle toggleSide player side ->
-            let
-                msg =
-                    Just (ToggleAi side)
-
-                textPrimitives =
-                    case toggleSide of
-                        Left ->
-                            [ makeText side "AI" msg ]
-
-                        Right ->
-                            controlsTextPrimitives position height player side msg
-            in
-            makePoly side color msg :: textPrimitives
-
-
-controlsTextPrimitives : Float2 -> Float -> MovementKeys a -> Side -> Maybe Msg -> List UiPrimitive
-controlsTextPrimitives ( x, y ) height player side msg =
-    let
-        quarterHeight =
-            height / 4
-
-        jumpPosition =
-            ( x, y - quarterHeight )
-
-        leftAndRightPosition =
-            ( x, y + quarterHeight )
-
-        jumpText =
-            keyToString player.jumpKey
-
-        leftAndRightText =
-            keyToString player.leftKey ++ " " ++ keyToString player.rightKey
-    in
-    [ Text (height / 2) Middle jumpPosition side jumpText msg
-    , Text (height / 2) Middle leftAndRightPosition side leftAndRightText msg
-    ]
-
-
-textSideTransform : Float -> Side -> (Float -> Float)
-textSideTransform screenWidth side =
-    case side of
-        Left ->
-            identity
-
-        Right ->
-            \x -> screenWidth - x
-
-
-createClickAttributes : Maybe Msg -> List (Svg.Attribute Msg)
-createClickAttributes maybeMsg =
-    case maybeMsg of
-        Nothing ->
-            []
-
-        Just msg ->
-            [ Svg.Attributes.cursor "pointer"
-            , Svg.Events.onClick msg
-            ]
-
-
-polygonPoints : List Float2 -> String
-polygonPoints path =
-    path
-        |> List.map (\( x, y ) -> ( toString x, toString y ))
-        |> List.map (\( x, y ) -> x ++ " " ++ y)
-        |> String.join ", "
-
-
-drawAnchoredText : number -> number -> number -> TextAnchor -> Color -> String -> Svg Msg
-drawAnchoredText x y height textAnchor color text =
-    Svg.text_
-        [ Svg.Attributes.x (toString x)
-        , Svg.Attributes.y (toString y)
-        , Svg.Attributes.style
-            ("text-anchor: "
-                ++ textAnchorToString textAnchor
-                ++ "; "
-                ++ "font-family: sans-serif; "
-                ++ "font-size: "
-                ++ toString height
-                ++ "px; "
-                ++ "alignment-baseline: before-edge"
-            )
-        , Svg.Attributes.fill (colorToHex color)
+        []
+        [ drawGrid screenWidth finalGrid
+        , drawBomb ( 2 * screenWidth / 3, 350 ) 120 30
         ]
-        [ Svg.text text
-        ]
+
+
+
+-- Instructions page
 
 
 instructionsView : Layout a -> Player -> Svg Msg
@@ -682,7 +367,7 @@ instructionsView layout player =
             |> filter turbulenceId
         , drawAnchoredText explodeX (explodeY + 100) 20 Middle Color.black "Fig 3: an explosion"
         , drawGrid layout.screenWidth controlToggle
-        , drawAnchoredText controlsX (controlsY + 60) (textHeight - 10) Start Color.black "Fig 4: AI toggle" -- , "switch"]
+        , drawAnchoredText controlsX (controlsY + 60) (textHeight - 10) Start Color.black "Fig 4: AI toggle"
         , drawAnchoredText (controlsX + 65) (controlsY + 60 + 20) (textHeight - 10) Start Color.black "switch"
         , Svg.text_
             [ Svg.Attributes.x (toString 0)
@@ -700,163 +385,228 @@ instructionsView layout player =
         ]
 
 
-pauseMenu : Float -> Bool -> Svg Msg
-pauseMenu screenWidth paused =
+svgButton : number -> number -> Int -> Int -> String -> Msg -> Svg Msg
+svgButton x y w h text onClickEvent =
     let
-        config =
-            { rows = 2
-            , cols = 1
-            , rowPadding = 10
-            , width = 220
-            , height = 100
-            , xOffset = 0
-            , yOffset = 70
-            }
+        transform =
+            "translate(" ++ toString x ++ "," ++ toString y ++ ")"
     in
-    Grid.create config
-        |> setWidth 1
-        |> setHeight 1
-        |> insertPauseMenu paused
-        |> drawGrid screenWidth
-
-
-insertPauseMenu : Bool -> Grid GridData -> Grid GridData
-insertPauseMenu paused grid =
-    if paused then
-        grid
-            |> insert (Main (Button "Resume" TogglePause))
-            |> nextRow
-            |> insert (Main (Button "Main menu" (GoToPage Title)))
-    else
-        grid
-            |> insert (Main (Button "Pause" TogglePause))
-
-
-{-| Convert a keycode into a string.
-
-The only key codes that map directly to the correct unicode symbol
-are the letter and digit keys, so for everything else, we just
-show the stringified keycode.
-
--}
-keyToString : Char.KeyCode -> String
-keyToString key =
-    if
-        (key >= Char.toCode 'A' && key <= Char.toCode 'Z')
-            || (key >= Char.toCode '0' && key <= Char.toCode '9')
-    then
-        key
-            |> Char.fromCode
-            |> toString
-            |> String.dropLeft 1
-            |> String.dropRight 1
-    else
-        toString key
-
-
-titleView : Layout a -> Bool -> Svg Msg
-titleView { screenWidth, screenHeight } gameStarted =
-    let
-        config =
-            { rows = 29
-            , cols = 20
-            , rowPadding = 15
-            , width = screenWidth
-            , height = screenHeight
-            , xOffset = 0
-            , yOffset = 60
-            }
-
-        mainButtons =
-            [ Main (Button "new game" StartGame)
-            , Main (Button "options" (GoToPage (Options Nothing)))
-            , Main (Button "help" (GoToPage Instructions))
+    Svg.g
+        [ Svg.Attributes.transform transform
+        , Svg.Attributes.cursor "pointer"
+        , Svg.Events.onClick onClickEvent
+        ]
+        [ Svg.rect
+            [ Svg.Attributes.width (toString w)
+            , Svg.Attributes.height (toString h)
+            , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
             ]
+            []
+        , Svg.text_
+            [ Svg.Attributes.x (toString (toFloat w / 2.0))
+            , Svg.Attributes.y (toString (toFloat h / 2.0))
+            , Svg.Attributes.style
+                ("text-anchor: middle; font-family: sans-serif; font-size: "
+                    ++ toString (h - 5)
+                    ++ "px; alignment-baseline: middle"
+                )
+            , Svg.Attributes.fill "white"
+            ]
+            [ Svg.text text
+            ]
+        ]
 
-        conditionalButtons =
-            case gameStarted of
+
+drawAnchoredText : number -> number -> number -> TextAnchor -> Color -> String -> Svg Msg
+drawAnchoredText x y height textAnchor color text =
+    Svg.text_
+        [ Svg.Attributes.x (toString x)
+        , Svg.Attributes.y (toString y)
+        , Svg.Attributes.style
+            ("text-anchor: "
+                ++ textAnchorToString textAnchor
+                ++ "; "
+                ++ "font-family: sans-serif; "
+                ++ "font-size: "
+                ++ toString height
+                ++ "px; "
+                ++ "alignment-baseline: before-edge"
+            )
+        , Svg.Attributes.fill (colorToHex color)
+        ]
+        [ Svg.text text
+        ]
+
+
+
+-- Options page
+
+
+optionsView : Model -> Maybe ( Side, MovementKey ) -> Svg Msg
+optionsView model maybeChangingKey =
+    let
+        getUiSettingState : Side -> MovementKey -> UiSettingState
+        getUiSettingState side key =
+            case maybeChangingKey of
+                Nothing ->
+                    NotSelected
+
+                Just ( selectedSide, selectedKey ) ->
+                    if side == selectedSide && key == selectedKey then
+                        Selected
+                    else
+                        NotSelected
+
+        boolToUiSettingState bool =
+            case bool of
                 True ->
-                    [ Main (Button "continue" (GoToPage Game)) ]
+                    Selected
 
                 False ->
-                    []
+                    NotSelected
 
-        buttons =
-            conditionalButtons ++ mainButtons
+        graphicsButtons =
+            [ Fast, Fancy ]
+                |> List.map
+                    (\qs ->
+                        OptionsMenu (QualityButton (boolToUiSettingState (qs == model.graphicsQuality)) qs)
+                    )
 
-        gridWithTitle =
-            Grid.create config
-                |> setWidth config.cols
-                |> setHeight 5
-                |> insert (Main MainTitle)
-                |> setWidth 11
-
-        addRow row =
-            nextRow >> insert row
-
-        finalGrid =
-            List.foldl addRow gridWithTitle buttons
-    in
-    Svg.g
-        []
-        [ drawGrid screenWidth finalGrid
-        , drawBomb ( 2 * screenWidth / 3, 350 ) 120 30
-        ]
-
-
-drawGrid : Float -> Grid GridData -> Svg Msg
-drawGrid screenWidth grid =
-    grid.data
-        |> List.unzip
-        |> uncurry (List.map2 (uiElementToPrimitives grid.config))
-        |> List.foldl (++) []
-        |> List.map (drawUiPrimitive screenWidth)
-        |> Svg.g []
-
-
-filter : String -> Svg Msg -> Svg Msg
-filter filterId svg =
-    Svg.g
-        [ Svg.Attributes.filter ("url(#" ++ filterId ++ ")")
-        ]
-        [ svg
-        ]
-
-
-insertControlToggle : Grid (Player -> Side -> HudElement) -> Grid (Player -> Side -> HudElement)
-insertControlToggle grid =
-    let
-        -- We want the cursor after this function to act
-        -- just like we had called insert a single time.
-        -- I think this is a handy convention, but I have
-        -- no way to guarantee it, so I have some mixed
-        -- feelings about it.
-        endingCursor =
-            grid
-                |> Grid.goRight
-                |> .cursor
-
-        padding =
-            5
+        config =
+            { rows = 24
+            , cols = 12
+            , rowPadding = 0
+            , width = model.screenWidth
+            , height = model.screenHeight
+            , xOffset = 0
+            , yOffset = 0
+            }
 
         newGrid =
-            grid
+            Grid.create config
+                -- page header
+                |> setWidth 10
+                |> setHeight 4
+                |> insert (OptionsMenu OptionsTitle)
+                |> nextSection
+                -- controls
+                |> createPlayerRow model.player1 getUiSettingState Left
+                |> nextSection
+                |> createPlayerRow model.player2 getUiSettingState Right
+                |> nextSection
+                -- graphical quality
+                |> createToggleRow "Quality" graphicsButtons
+                |> nextSection
+                -- back button
+                |> setHeight 4
+                |> setWidth 6
+                |> insert (OptionsMenu BackButton)
+                -- Note about key codes
                 |> markAsStartCol
-                |> Grid.insertBackground ControlsBackground
-                |> setHeight (grid.cursor.h // 2)
-                |> insert Controls
+                |> setHeight 1
+                |> setWidth 7
+                |> insert (OptionsMenu (InfoText "Note: non-alphanumeric keys will show raw key code, but will work fine."))
                 |> nextRow
-                |> setWidth padding
-                |> Grid.goRight
-                |> setWidth ((grid.cursor.w // 2) - padding)
-                |> setHeight ((grid.cursor.h // 2) - padding)
-                |> insert (Toggle Left)
-                |> Grid.insert (Toggle Right)
+                |> insert (OptionsMenu (InfoText "Nobody has made a comprehensive keycode->string function for Elm yet."))
+                |> nextRow
+                |> insert (OptionsMenu (InfoText "I might take a stab at it after I wrap up more interesting features."))
     in
-    { newGrid
-        | startCol = grid.startCol
-        , cursor = endingCursor
-    }
+    Svg.g
+        [ Svg.Attributes.stroke "white" ]
+        [ drawGrid model.screenWidth newGrid ]
+
+
+createPlayerRow : Player -> (Side -> MovementKey -> UiSettingState) -> Side -> Grid GridData -> Grid GridData
+createPlayerRow player getState side grid =
+    grid
+        |> setWidth 6
+        |> setHeight 4
+        |> insert (OptionsMenu (OptionLabel player.name))
+        |> markAsStartCol
+        |> setHeight 2
+        |> insert (OptionsMenu (KeyChangeButton (getState side JumpKey) player JumpKey side))
+        |> nextRow
+        |> setWidth 3
+        |> insert (OptionsMenu (KeyChangeButton (getState side LeftKey) player LeftKey side))
+        |> insert (OptionsMenu (KeyChangeButton (getState side RightKey) player RightKey side))
+        |> Grid.resetStartCol
+
+
+createToggleRow : String -> List GridData -> Grid GridData -> Grid GridData
+createToggleRow name buttons grid =
+    let
+        gridWithLabel =
+            grid
+                |> setWidth 6
+                |> setHeight 4
+                |> insert (OptionsMenu (OptionLabel name))
+                |> setWidth ((grid.config.cols - 6) // List.length buttons)
+    in
+    List.foldl insert gridWithLabel buttons
+
+
+cellColor : UiSettingState -> Color
+cellColor setting =
+    case setting of
+        Selected ->
+            uiColor.hudTertiaryBackground
+
+        NotSelected ->
+            uiColor.hudSecondaryBackground
+
+
+keyChangeText : MovementKeys a -> MovementKey -> String
+keyChangeText { leftKey, rightKey, jumpKey } key =
+    case key of
+        LeftKey ->
+            "Left: " ++ keyToString leftKey
+
+        RightKey ->
+            "Right: " ++ keyToString rightKey
+
+        JumpKey ->
+            "Jump: " ++ keyToString jumpKey
+
+
+optionsMenuElementToPrimitives : (String -> Maybe Msg -> UiPrimitive) -> (Color -> Maybe Msg -> UiPrimitive) -> OptionsMenuElement -> List UiPrimitive
+optionsMenuElementToPrimitives makeText makePoly elem =
+    let
+        ( color, clickEvent, text ) =
+            case elem of
+                OptionsTitle ->
+                    ( uiColor.titleBackground, Nothing, "Options" )
+
+                OptionLabel text ->
+                    ( uiColor.menuTextBackground, Nothing, text )
+
+                KeyChangeButton state player key side ->
+                    ( cellColor state
+                    , Just (PrepareToChangePlayerKey side key)
+                    , keyChangeText player key
+                    )
+
+                QualityButton state qualitySetting ->
+                    ( cellColor state
+                    , Just (ChangeSetting (SetQuality qualitySetting))
+                    , qualitySettingToString qualitySetting
+                    )
+
+                BackButton ->
+                    ( uiColor.menuTextBackground
+                    , Just (GoToPage Title)
+                    , "Back"
+                    )
+
+                InfoText text ->
+                    ( cellColor NotSelected, Nothing, text )
+    in
+    [ makePoly color clickEvent
+    , makeText text clickEvent
+    ]
+
+
+
+-- Game page
 
 
 gameView : Model -> Svg Msg
@@ -907,51 +657,247 @@ gameView model =
         ]
 
 
-createStyle : Float -> TextAnchor -> String
-createStyle height anchor =
-    "text-anchor: "
-        ++ textAnchorToString anchor
-        ++ "; font-family: sans-serif; font-size: "
-        ++ toString height
-        ++ "px; alignment-baseline: middle"
+
+-- Game HUD
 
 
-drawUiPrimitive : Float -> UiPrimitive -> Svg Msg
-drawUiPrimitive screenWidth prim =
-    case prim of
-        Polygon path side color maybeMsg ->
-            Svg.polygon
-                ([ Svg.Attributes.points (polygonPoints path)
-                 , Svg.Attributes.fill (colorToHex color)
-                 , hudTransform screenWidth side
-                 ]
-                    ++ createClickAttributes maybeMsg
-                )
-                []
-
-        Text height anchor ( x, y ) side text maybeMsg ->
-            Svg.text_
-                ([ Svg.Attributes.x (toString (textSideTransform screenWidth side x))
-                 , Svg.Attributes.y (toString y)
-                 , Svg.Attributes.style (createStyle height anchor)
-                 , Svg.Attributes.fill "white"
-                 , Svg.Attributes.strokeWidth "0"
-                 ]
-                    ++ createClickAttributes maybeMsg
-                )
-                [ Svg.text text ]
-
-
-drawNet : Layout a -> Svg Msg
-drawNet { screenWidth, screenHeight, netWidth, netHeight } =
-    Svg.rect
-        [ Svg.Attributes.x (toString ((screenWidth - netWidth) / 2))
-        , Svg.Attributes.y (toString (screenHeight - netHeight))
-        , Svg.Attributes.width (toString netWidth)
-        , Svg.Attributes.height (toString netHeight)
-        , Svg.Attributes.fill (colorToHex uiColor.net)
+drawTimer : Time -> Float -> Float -> Float -> Svg Msg
+drawTimer time x y height =
+    Svg.text_
+        [ Svg.Attributes.x (toString x)
+        , Svg.Attributes.y (toString y)
+        , Svg.Attributes.style
+            ("text-anchor: middle; font-family: sans-serif; font-size: "
+                ++ toString height
+                ++ "px; alignment-baseline: before-edge"
+            )
+        , Svg.Attributes.fill "white"
         ]
+        [ Svg.text (toString (floor (Time.inSeconds time)))
+        ]
+
+
+insertControlToggle : Grid (Player -> Side -> HudElement) -> Grid (Player -> Side -> HudElement)
+insertControlToggle grid =
+    let
+        -- We want the cursor after this function to act
+        -- just like we had called insert a single time.
+        -- I think this is a handy convention, but I have
+        -- no way to guarantee it, so I have some mixed
+        -- feelings about it.
+        endingCursor =
+            grid
+                |> Grid.goRight
+                |> .cursor
+
+        padding =
+            5
+
+        newGrid =
+            grid
+                |> markAsStartCol
+                |> Grid.insertBackground ControlsBackground
+                |> setHeight (grid.cursor.h // 2)
+                |> insert Controls
+                |> nextRow
+                |> setWidth padding
+                |> Grid.goRight
+                |> setWidth ((grid.cursor.w // 2) - padding)
+                |> setHeight ((grid.cursor.h // 2) - padding)
+                |> insert (Toggle Left)
+                |> Grid.insert (Toggle Right)
+    in
+    { newGrid
+        | startCol = grid.startCol
+        , cursor = endingCursor
+    }
+
+
+hudElementToPrimitives : List Float2 -> Float -> Float2 -> HudElement -> List UiPrimitive
+hudElementToPrimitives path height position elem =
+    let
+        color =
+            hudColor elem
+
+        makeText : Side -> String -> Maybe Msg -> UiPrimitive
+        makeText =
+            Text height Middle position
+
+        makePoly : Side -> Color -> Maybe Msg -> UiPrimitive
+        makePoly =
+            Polygon path
+    in
+    case elem of
+        PlayerName player side ->
+            [ makePoly side color Nothing
+            , makeText side player.name Nothing
+            ]
+
+        Score player side ->
+            [ makePoly side color Nothing
+            , makeText side (toString player.score) Nothing
+            ]
+
+        ControlsBackground player side ->
+            [ makePoly side color Nothing
+            ]
+
+        Controls player side ->
+            [ makeText side "Controls" Nothing
+            ]
+
+        Toggle toggleSide player side ->
+            let
+                msg =
+                    Just (ToggleAi side)
+
+                textPrimitives =
+                    case toggleSide of
+                        Left ->
+                            [ makeText side "AI" msg ]
+
+                        Right ->
+                            controlsTextPrimitives position height player side msg
+            in
+            makePoly side color msg :: textPrimitives
+
+
+controlsTextPrimitives : Float2 -> Float -> MovementKeys a -> Side -> Maybe Msg -> List UiPrimitive
+controlsTextPrimitives ( x, y ) height player side msg =
+    let
+        quarterHeight =
+            height / 4
+
+        jumpPosition =
+            ( x, y - quarterHeight )
+
+        leftAndRightPosition =
+            ( x, y + quarterHeight )
+
+        jumpText =
+            keyToString player.jumpKey
+
+        leftAndRightText =
+            keyToString player.leftKey ++ " " ++ keyToString player.rightKey
+    in
+    [ Text (height / 2) Middle jumpPosition side jumpText msg
+    , Text (height / 2) Middle leftAndRightPosition side leftAndRightText msg
+    ]
+
+
+hudColor : HudElement -> Color
+hudColor element =
+    case element of
+        PlayerName _ _ ->
+            uiColor.menuTextBackground
+
+        Score _ _ ->
+            uiColor.hudTertiaryBackground
+
+        Controls _ _ ->
+            uiColor.hudSecondaryBackground
+
+        ControlsBackground _ _ ->
+            uiColor.hudSecondaryBackground
+
+        Toggle toggleSide player _ ->
+            case toggleSide of
+                Left ->
+                    getToggleColor player.ai
+
+                Right ->
+                    getToggleColor (not player.ai)
+
+
+getToggleColor : Bool -> Color
+getToggleColor selected =
+    if selected then
+        uiColor.toggleSelected
+    else
+        uiColor.toggleNotSelected
+
+
+
+-- Pause menu
+
+
+pauseMenu : Float -> Bool -> Svg Msg
+pauseMenu screenWidth paused =
+    let
+        config =
+            { rows = 2
+            , cols = 1
+            , rowPadding = 10
+            , width = 220
+            , height = 100
+            , xOffset = 0
+            , yOffset = 70
+            }
+    in
+    Grid.create config
+        |> setWidth 1
+        |> setHeight 1
+        |> insertPauseMenu paused
+        |> drawGrid screenWidth
+
+
+insertPauseMenu : Bool -> Grid GridData -> Grid GridData
+insertPauseMenu paused grid =
+    if paused then
+        grid
+            |> insert (Main (Button "Resume" TogglePause))
+            |> nextRow
+            |> insert (Main (Button "Main menu" (GoToPage Title)))
+    else
+        grid
+            |> insert (Main (Button "Pause" TogglePause))
+
+
+
+-- Game objects
+
+
+drawPlayer : Player -> Svg Msg
+drawPlayer player =
+    let
+        fillColor =
+            case player.alive of
+                True ->
+                    uiColor.player
+
+                False ->
+                    uiColor.dead
+
+        ( px, py ) =
+            player.position
+
+        torsoY =
+            py - 50
+
+        torsoHeight =
+            70
+
+        headRadius =
+            25
+
+        headY =
+            -0.8 * headRadius + torsoY - torsoHeight / 2
+    in
+    Svg.g
         []
+        [ drawCircle ( px, headY ) headRadius (colorToHex fillColor)
+        , drawLegs fillColor player
+        , drawArm fillColor Left player.position player.leftArm
+        , drawArm fillColor Right player.position player.rightArm
+        , Svg.ellipse
+            [ Svg.Attributes.cx (toString px)
+            , Svg.Attributes.cy (toString torsoY)
+            , Svg.Attributes.rx (toString player.size)
+            , Svg.Attributes.ry (toString (torsoHeight / 2))
+            , Svg.Attributes.fill (colorToHex fillColor)
+            ]
+            []
+        ]
 
 
 drawArm : Color -> Side -> Float2 -> Arm -> Svg Msg
@@ -1036,77 +982,35 @@ drawLegs strokeColor player =
         []
 
 
-drawPlayer : Player -> Svg Msg
-drawPlayer player =
-    let
-        fillColor =
-            case player.alive of
-                True ->
-                    uiColor.player
+drawBall : Settings a -> Explosive (Mover b) -> Svg Msg
+drawBall { graphicsQuality } { position, size, status } =
+    case status of
+        Exploded ->
+            Svg.g [] []
 
-                False ->
-                    uiColor.dead
+        Exploding ->
+            case graphicsQuality of
+                Fancy ->
+                    drawCircle position size explosionGradientFill
+                        |> filter turbulenceId
 
-        ( px, py ) =
-            player.position
+                Fast ->
+                    drawCircle position size explosionGradientFill
 
-        torsoY =
-            py - 50
+        Safe ->
+            let
+                -- degrees per horizontal distance unit
+                angularSpeed =
+                    3 * 360 / 1000
 
-        torsoHeight =
-            70
-
-        headRadius =
-            25
-
-        headY =
-            -0.8 * headRadius + torsoY - torsoHeight / 2
-    in
-    Svg.g
-        []
-        [ drawCircle ( px, headY ) headRadius (colorToHex fillColor)
-        , drawLegs fillColor player
-        , drawArm fillColor Left player.position player.leftArm
-        , drawArm fillColor Right player.position player.rightArm
-        , Svg.ellipse
-            [ Svg.Attributes.cx (toString px)
-            , Svg.Attributes.cy (toString torsoY)
-            , Svg.Attributes.rx (toString player.size)
-            , Svg.Attributes.ry (toString (torsoHeight / 2))
-            , Svg.Attributes.fill (colorToHex fillColor)
-            ]
-            []
-        ]
-
-
-drawTimer : Time -> Float -> Float -> Float -> Svg Msg
-drawTimer time x y height =
-    Svg.text_
-        [ Svg.Attributes.x (toString x)
-        , Svg.Attributes.y (toString y)
-        , Svg.Attributes.style
-            ("text-anchor: middle; font-family: sans-serif; font-size: "
-                ++ toString height
-                ++ "px; alignment-baseline: before-edge"
-            )
-        , Svg.Attributes.fill "white"
-        ]
-        [ Svg.text (toString (floor (Time.inSeconds time)))
-        ]
-
-
-{-| Stringify everything and stick it all together in a string
-that we can use for attribute "d" of Svg.path
-example:
-[(M,50,50),(L,100,100)] -> "M50 50 L100 100"
--}
-pathString : List ( String, List number ) -> String
-pathString list =
-    list
-        |> List.map (Tuple.mapSecond (List.map toString))
-        |> List.map (Tuple.mapSecond (String.join " "))
-        |> List.map (uncurry (++))
-        |> String.join " "
+                -- Angle is determined completely by the X value.
+                -- This looks pretty convincing. It appears to change rotational
+                -- direction when it bounces, and rotation appears to slow down
+                -- or speed up as the ball itself does.
+                angle =
+                    V2.getX position * angularSpeed
+            in
+            drawBomb position size angle
 
 
 drawBomb : Float2 -> Float -> Float -> Svg Msg
@@ -1163,37 +1067,6 @@ drawBomb position size rotation =
         ]
 
 
-drawBall : Settings a -> Explosive (Mover b) -> Svg Msg
-drawBall { graphicsQuality } { position, size, status } =
-    case status of
-        Exploded ->
-            Svg.g [] []
-
-        Exploding ->
-            case graphicsQuality of
-                Fancy ->
-                    drawCircle position size explosionGradientFill
-                        |> filter turbulenceId
-
-                Fast ->
-                    drawCircle position size explosionGradientFill
-
-        Safe ->
-            let
-                -- degrees per horizontal distance unit
-                angularSpeed =
-                    3 * 360 / 1000
-
-                -- Angle is determined completely by the X value.
-                -- This looks pretty convincing. It appears to change rotational
-                -- direction when it bounces, and rotation appears to slow down
-                -- or speed up as the ball itself does.
-                angle =
-                    V2.getX position * angularSpeed
-            in
-            drawBomb position size angle
-
-
 drawCircle : Float2 -> Float -> String -> Svg Msg
 drawCircle position radius fill =
     Svg.circle
@@ -1205,41 +1078,195 @@ drawCircle position radius fill =
         []
 
 
-svgButton : number -> number -> Int -> Int -> String -> Msg -> Svg Msg
-svgButton x y w h text onClickEvent =
+drawNet : Layout a -> Svg Msg
+drawNet { screenWidth, screenHeight, netWidth, netHeight } =
+    Svg.rect
+        [ Svg.Attributes.x (toString ((screenWidth - netWidth) / 2))
+        , Svg.Attributes.y (toString (screenHeight - netHeight))
+        , Svg.Attributes.width (toString netWidth)
+        , Svg.Attributes.height (toString netHeight)
+        , Svg.Attributes.fill (colorToHex uiColor.net)
+        ]
+        []
+
+
+{-| Stringify everything and stick it all together in a string
+that we can use for attribute "d" of Svg.path
+example:
+[(M,50,50),(L,100,100)] -> "M50 50 L100 100"
+-}
+pathString : List ( String, List number ) -> String
+pathString list =
+    list
+        |> List.map (Tuple.mapSecond (List.map toString))
+        |> List.map (Tuple.mapSecond (String.join " "))
+        |> List.map (uncurry (++))
+        |> String.join " "
+
+
+
+-- UI functions used for multiple pages
+
+
+drawGrid : Float -> Grid GridData -> Svg Msg
+drawGrid screenWidth grid =
+    grid.data
+        |> List.unzip
+        |> uncurry (List.map2 (uiElementToPrimitives grid.config))
+        |> List.foldl (++) []
+        |> List.map (drawUiPrimitive screenWidth)
+        |> Svg.g []
+
+
+uiElementToPrimitives : Grid.Config -> Grid.Region -> GridData -> List UiPrimitive
+uiElementToPrimitives config region element =
     let
-        transform =
-            "translate(" ++ toString x ++ "," ++ toString y ++ ")"
+        height =
+            Grid.regionHeight config region * 5 / 6
+
+        path =
+            region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
+
+        position =
+            Grid.centroid path
+
+        leftText : String -> Maybe Msg -> UiPrimitive
+        leftText =
+            Text height Middle position Left
+
+        leftPoly : Color -> Maybe Msg -> UiPrimitive
+        leftPoly =
+            Polygon path Left
     in
-    Svg.g
-        [ Svg.Attributes.transform transform
-        , Svg.Attributes.cursor "pointer"
-        , Svg.Events.onClick onClickEvent
-        ]
-        [ Svg.rect
-            [ Svg.Attributes.width (toString w)
-            , Svg.Attributes.height (toString h)
-            , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
-            ]
-            []
-        , Svg.text_
-            [ Svg.Attributes.x (toString (toFloat w / 2.0))
-            , Svg.Attributes.y (toString (toFloat h / 2.0))
-            , Svg.Attributes.style
-                ("text-anchor: middle; font-family: sans-serif; font-size: "
-                    ++ toString (h - 5)
-                    ++ "px; alignment-baseline: middle"
+    case element of
+        Main elem ->
+            case elem of
+                MainTitle ->
+                    [ leftPoly uiColor.titleBackground Nothing
+                    , leftText "xtreme volleyball 2k17" Nothing
+                    ]
+
+                Button text msg ->
+                    [ leftPoly uiColor.menuTextBackground (Just msg)
+                    , leftText text (Just msg)
+                    ]
+
+        OptionsMenu elem ->
+            optionsMenuElementToPrimitives leftText leftPoly elem
+
+        Hud elem ->
+            hudElementToPrimitives path height position elem
+
+
+drawUiPrimitive : Float -> UiPrimitive -> Svg Msg
+drawUiPrimitive screenWidth prim =
+    case prim of
+        Polygon path side color maybeMsg ->
+            Svg.polygon
+                ([ Svg.Attributes.points (polygonPoints path)
+                 , Svg.Attributes.fill (colorToHex color)
+                 , hudTransform screenWidth side
+                 ]
+                    ++ createClickAttributes maybeMsg
                 )
-            , Svg.Attributes.fill "white"
+                []
+
+        Text height anchor ( x, y ) side text maybeMsg ->
+            Svg.text_
+                ([ Svg.Attributes.x (toString (textSideTransform screenWidth side x))
+                 , Svg.Attributes.y (toString y)
+                 , Svg.Attributes.style (createStyle height anchor)
+                 , Svg.Attributes.fill "white"
+                 , Svg.Attributes.strokeWidth "0"
+                 ]
+                    ++ createClickAttributes maybeMsg
+                )
+                [ Svg.text text ]
+
+
+textSideTransform : Float -> Side -> (Float -> Float)
+textSideTransform screenWidth side =
+    case side of
+        Left ->
+            identity
+
+        Right ->
+            \x -> screenWidth - x
+
+
+createClickAttributes : Maybe Msg -> List (Svg.Attribute Msg)
+createClickAttributes maybeMsg =
+    case maybeMsg of
+        Nothing ->
+            []
+
+        Just msg ->
+            [ Svg.Attributes.cursor "pointer"
+            , Svg.Events.onClick msg
             ]
-            [ Svg.text text
-            ]
+
+
+polygonPoints : List Float2 -> String
+polygonPoints path =
+    path
+        |> List.map (\( x, y ) -> ( toString x, toString y ))
+        |> List.map (\( x, y ) -> x ++ " " ++ y)
+        |> String.join ", "
+
+
+createStyle : Float -> TextAnchor -> String
+createStyle height anchor =
+    "text-anchor: "
+        ++ textAnchorToString anchor
+        ++ "; font-family: sans-serif; font-size: "
+        ++ toString height
+        ++ "px; alignment-baseline: middle"
+
+
+hudTransform : Float -> Side -> Svg.Attribute Msg
+hudTransform screenWidth side =
+    case side of
+        Left ->
+            -- results in <... transform>, which has no effect
+            Svg.Attributes.transform ""
+
+        Right ->
+            Svg.Attributes.transform
+                -- move to other side of screen
+                ("translate("
+                    ++ toString screenWidth
+                    ++ ",0)"
+                    -- flip horizontally
+                    ++ " scale(-1,1)"
+                )
+
+
+filter : String -> Svg Msg -> Svg Msg
+filter filterId svg =
+    Svg.g
+        [ Svg.Attributes.filter ("url(#" ++ filterId ++ ")")
+        ]
+        [ svg
         ]
 
 
-getToggleColor : Bool -> Color
-getToggleColor selected =
-    if selected then
-        uiColor.toggleSelected
+{-| Convert a keycode into a string.
+
+The only key codes that map directly to the correct unicode symbol
+are the letter and digit keys, so for everything else, we just
+show the stringified keycode.
+
+-}
+keyToString : Char.KeyCode -> String
+keyToString key =
+    if
+        (key >= Char.toCode 'A' && key <= Char.toCode 'Z')
+            || (key >= Char.toCode '0' && key <= Char.toCode '9')
+    then
+        key
+            |> Char.fromCode
+            |> toString
+            |> String.dropLeft 1
+            |> String.dropRight 1
     else
-        uiColor.toggleNotSelected
+        toString key
