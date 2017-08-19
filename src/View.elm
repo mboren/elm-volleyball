@@ -385,30 +385,12 @@ instructionsView layout player =
         ]
 
 
-svgButton : number -> number -> Int -> Int -> String -> Msg -> Svg Msg
+svgButton : Float -> Float -> Float -> Float -> String -> Msg -> Svg Msg
 svgButton x y w h text onClickEvent =
-    let
-        transform =
-            "translate(" ++ toString x ++ "," ++ toString y ++ ")"
-    in
     Svg.g
-        [ Svg.Attributes.transform transform
-        , Svg.Attributes.cursor "pointer"
-        , Svg.Events.onClick onClickEvent
-        ]
-        [ drawRect ( 0, 0 ) w h uiColor.menuTextBackground
-        , Svg.text_
-            [ Svg.Attributes.x (toString (toFloat w / 2.0))
-            , Svg.Attributes.y (toString (toFloat h / 2.0))
-            , Svg.Attributes.style
-                ("text-anchor: middle; font-family: sans-serif; font-size: "
-                    ++ toString (h - 5)
-                    ++ "px; alignment-baseline: middle"
-                )
-            , Svg.Attributes.fill "white"
-            ]
-            [ Svg.text text
-            ]
+        (createClickAttributes (Just onClickEvent))
+        [ drawRect ( x, y ) w h uiColor.menuTextBackground
+        , drawAnchoredText (x + w / 2) y (h - 5) Middle Color.white text
         ]
 
 
