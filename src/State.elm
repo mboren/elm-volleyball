@@ -143,7 +143,7 @@ update msg model =
                 , warmupTimer = max 0 (model.warmupTimer - dt)
             }
                 |> revivePlayersOnRoundStart
-                |> mapPlayers (playerStep dt model.screenHeight model.ball)
+                |> mapPlayers (playerStep (model.warmupTimer > 0) model.screenHeight dt model.ball)
                 |> resetAtEndOfRound
 
         Press key ->
@@ -231,12 +231,12 @@ subscriptions model =
                     Sub.none
 
 
-playerStep : Time -> Float -> Explosive (Mover b) -> Player -> Player
-playerStep dt screenHeight ball player =
+playerStep : Bool -> Float -> Time -> Explosive (Mover b) -> Player -> Player
+playerStep warmingUp screenHeight dt ball player =
     player
         |> Mover.applyGravity
         |> Player.applyMovementKeys
-        |> Player.aiMovement ball
+        |> Player.aiMovement warmingUp ball
         |> Player.applyJump
         |> Mover.updatePosition screenHeight dt
         |> Mover.stopAtWalls

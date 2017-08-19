@@ -124,26 +124,31 @@ toggleAi player =
 -- MOVEMENT
 
 
-aiMovement : Explosive (Mover a) -> Player -> Player
-aiMovement ball player =
+aiMovement : Bool -> Explosive (Mover a) -> Player -> Player
+aiMovement warmingUp ball player =
     if player.ai then
         let
             ( px, py ) =
                 player.position
 
-            ( bx, by ) =
-                ball.position
-
-            dist =
-                abs (px - bx)
-
             explodingSoon =
                 ball.countdown <= 0.5 * Time.second
+
+            ( tx, ty ) =
+                if warmingUp then
+                    ( 0.5 * (player.leftWallX + player.rightWallX)
+                    , 300
+                    )
+                else
+                    ball.position
+
+            dist =
+                abs (px - tx)
         in
         { player
-            | leftPressed = xor explodingSoon (px > bx && dist > player.size)
-            , rightPressed = xor explodingSoon (px < bx && dist > player.size)
-            , jumpPressed = dist < 200 && by < 200
+            | leftPressed = xor explodingSoon (px > tx && dist > player.size)
+            , rightPressed = xor explodingSoon (px < tx && dist > player.size)
+            , jumpPressed = dist < 200 && ty < 200
         }
     else
         player
