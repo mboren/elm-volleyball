@@ -372,13 +372,7 @@ instructionsView layout player =
         , Svg.text_
             [ Svg.Attributes.x (toString 0)
             , Svg.Attributes.y (toString 20)
-            , Svg.Attributes.style
-                ("text-anchor: start; font-family: sans-serif; "
-                    ++ "font-size: "
-                    ++ toString textHeight
-                    ++ "px; "
-                    ++ "alignment-baseline: before-edge"
-                )
+            , Svg.Attributes.style (styleToString (TextStyle Start BeforeEdge textHeight))
             , Svg.Attributes.fill (colorToHex uiColor.menuTextBackground)
             ]
             mainTextTspans
@@ -394,21 +388,19 @@ svgButton x y w h text onClickEvent =
         ]
 
 
-drawAnchoredText : number -> number -> number -> TextAnchor -> Color -> String -> Svg Msg
+drawAnchoredText : number -> number -> Float -> TextAnchor -> Color -> String -> Svg Msg
 drawAnchoredText x y height textAnchor color text =
+    let
+        style =
+            { textAnchor = textAnchor
+            , fontSize = height
+            , alignmentBaseline = BeforeEdge
+            }
+    in
     Svg.text_
         [ Svg.Attributes.x (toString x)
         , Svg.Attributes.y (toString y)
-        , Svg.Attributes.style
-            ("text-anchor: "
-                ++ textAnchorToString textAnchor
-                ++ "; "
-                ++ "font-family: sans-serif; "
-                ++ "font-size: "
-                ++ toString height
-                ++ "px; "
-                ++ "alignment-baseline: before-edge"
-            )
+        , Svg.Attributes.style (styleToString style)
         , Svg.Attributes.fill (colorToHex color)
         ]
         [ Svg.text text
@@ -638,11 +630,7 @@ drawTimer time x y height =
     Svg.text_
         [ Svg.Attributes.x (toString x)
         , Svg.Attributes.y (toString y)
-        , Svg.Attributes.style
-            ("text-anchor: middle; font-family: sans-serif; font-size: "
-                ++ toString height
-                ++ "px; alignment-baseline: before-edge"
-            )
+        , Svg.Attributes.style (styleToString (TextStyle Middle BeforeEdge height))
         , Svg.Attributes.fill "white"
         ]
         [ Svg.text (toString (floor (Time.inSeconds time)))
@@ -691,9 +679,15 @@ hudElementToPrimitives path height position elem =
         color =
             hudColor elem
 
+        style =
+            { textAnchor = Middle
+            , fontSize = height
+            , alignmentBaseline = MiddleAlignment
+            }
+
         makeText : Side -> String -> Maybe Msg -> UiPrimitive
         makeText =
-            Text height Middle position
+            Text style position
 
         makePoly : Side -> Color -> Maybe Msg -> UiPrimitive
         makePoly =
@@ -751,9 +745,15 @@ controlsTextPrimitives ( x, y ) height player side msg =
 
         leftAndRightText =
             keyToString player.leftKey ++ " " ++ keyToString player.rightKey
+
+        style =
+            { textAnchor = Middle
+            , fontSize = height / 2
+            , alignmentBaseline = MiddleAlignment
+            }
     in
-    [ Text (height / 2) Middle jumpPosition side jumpText msg
-    , Text (height / 2) Middle leftAndRightPosition side leftAndRightText msg
+    [ Text style jumpPosition side jumpText msg
+    , Text style leftAndRightPosition side leftAndRightText msg
     ]
 
 
@@ -1092,12 +1092,18 @@ uiElementToPrimitives config region element =
         path =
             region |> Grid.regionToPath config |> Grid.skewPath -uiSlope
 
+        style =
+            { textAnchor = Middle
+            , fontSize = height
+            , alignmentBaseline = MiddleAlignment
+            }
+
         position =
             Grid.centroid path
 
         leftText : String -> Maybe Msg -> UiPrimitive
         leftText =
-            Text height Middle position Left
+            Text style position Left
 
         leftPoly : Color -> Maybe Msg -> UiPrimitive
         leftPoly =
@@ -1136,11 +1142,11 @@ drawUiPrimitive screenWidth prim =
                 )
                 []
 
-        Text height anchor ( x, y ) side text maybeMsg ->
+        Text style ( x, y ) side text maybeMsg ->
             Svg.text_
                 ([ Svg.Attributes.x (toString (textSideTransform screenWidth side x))
                  , Svg.Attributes.y (toString y)
-                 , Svg.Attributes.style (createStyle height anchor)
+                 , Svg.Attributes.style (styleToString style)
                  , Svg.Attributes.fill "white"
                  , Svg.Attributes.strokeWidth "0"
                  ]
@@ -1177,15 +1183,6 @@ polygonPoints path =
         |> List.map (\( x, y ) -> ( toString x, toString y ))
         |> List.map (\( x, y ) -> x ++ " " ++ y)
         |> String.join ", "
-
-
-createStyle : Float -> TextAnchor -> String
-createStyle height anchor =
-    "text-anchor: "
-        ++ textAnchorToString anchor
-        ++ "; font-family: sans-serif; font-size: "
-        ++ toString height
-        ++ "px; alignment-baseline: middle"
 
 
 hudTransform : Float -> Side -> Svg.Attribute Msg

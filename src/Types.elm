@@ -151,7 +151,20 @@ type MovementKey
 
 type UiPrimitive
     = Polygon (List Float2) Side Color.Color (Maybe Msg)
-    | Text Float TextAnchor ( Float, Float ) Side String (Maybe Msg)
+    | Text TextStyle ( Float, Float ) Side String (Maybe Msg)
+
+
+type alias TextStyle =
+    { textAnchor : TextAnchor
+    , alignmentBaseline : AlignmentBaseline
+    , fontSize : Float
+    }
+
+
+type AlignmentBaseline
+    = MiddleAlignment
+    | BeforeEdge
+    | Central
 
 
 type UiSettingState
@@ -230,3 +243,28 @@ qualitySettingToString quality =
 
         Fast ->
             "Fast"
+
+
+baselineToString : AlignmentBaseline -> String
+baselineToString alignmentBaseline =
+    case alignmentBaseline of
+        MiddleAlignment ->
+            "middle"
+
+        BeforeEdge ->
+            "before-edge"
+
+        Central ->
+            "central"
+
+
+styleToString : TextStyle -> String
+styleToString style =
+    let
+        cssDeclaration property value =
+            property ++ ": " ++ value ++ ";"
+    in
+    cssDeclaration "text-anchor" (textAnchorToString style.textAnchor)
+        ++ cssDeclaration "alignment-baseline" (baselineToString style.alignmentBaseline)
+        ++ cssDeclaration "font-size" (toString style.fontSize ++ "px")
+        ++ cssDeclaration "font-family" "sans-serif"
