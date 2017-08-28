@@ -3,7 +3,7 @@ module View exposing (view)
 import Char
 import Color exposing (Color)
 import Color.Convert exposing (colorToHex)
-import Grid exposing (Grid, insert, markAsStartCol, nextRow, nextSection, setHeight, setWidth)
+import Grid exposing (Grid, insert, markAsStartCol, nextRow, setHeight, setWidth)
 import Html exposing (Html, div)
 import Html.Attributes
 import Svg exposing (Svg)

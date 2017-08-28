@@ -188,17 +188,6 @@ prevRow grid =
             }
     }
 
-{-| Create a 1 row gap. Useful for separating sections by an amount
-larger than rowPadding
--}
-nextSection : Grid a -> Grid a
-nextSection grid =
-    grid
-        |> nextRow
-        |> setHeight 1
-        |> nextRow
-        |> setHeight grid.cursor.h
-
 
 {-| Calling this will make nextRow start at this column the next time it is called
 It's like setting the indentation level for UI elements.
