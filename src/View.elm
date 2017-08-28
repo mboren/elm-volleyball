@@ -457,12 +457,12 @@ optionsView model maybeChangingKey =
         newGrid =
             Grid.create config
                 -- page header
-                |> setWidth 10
-                |> setHeight 4
+                |> setWidth (5 * config.cols // 6)
+                |> setHeight (config.rows // 6)
                 |> insert (OptionsMenu OptionsTitle)
                 |> nextSection
                 -- controls
-                |> setWidth 12
+                |> setWidth config.cols
                 |> Grid.insertComposite (createPlayerRow model.player1 getUiSettingState Left)
                 |> nextSection
                 |> Grid.insertComposite (createPlayerRow model.player2 getUiSettingState Right)
@@ -471,12 +471,12 @@ optionsView model maybeChangingKey =
                 |> createToggleRow "Quality" graphicsButtons
                 |> nextSection
                 -- back button
-                |> setWidth 6
+                |> setWidth (config.cols // 2)
                 |> insert (OptionsMenu BackButton)
                 -- Note about key codes
                 |> markAsStartCol
-                |> setHeight 1
-                |> setWidth 7
+                |> setHeight (config.rows // 24)
+                |> setWidth (7 * config.cols // 12)
                 |> insert (OptionsMenu (InfoText "Note: non-alphanumeric keys will show raw key code, but will work fine."))
                 |> nextRow
                 |> insert (OptionsMenu (InfoText "Nobody has made a comprehensive keycode->string function for Elm yet."))
@@ -641,37 +641,21 @@ drawTimer time x y height =
 insertControlToggle : Grid (Player -> Side -> HudElement) -> Grid (Player -> Side -> HudElement)
 insertControlToggle grid =
     let
-        -- We want the cursor after this function to act
-        -- just like we had called insert a single time.
-        -- I think this is a handy convention, but I have
-        -- no way to guarantee it, so I have some mixed
-        -- feelings about it.
-        endingCursor =
-            grid
-                |> Grid.goRight
-                |> .cursor
-
         padding =
             5
-
-        newGrid =
-            grid
-                |> markAsStartCol
-                |> Grid.insertBackground ControlsBackground
-                |> setHeight (grid.cursor.h // 2)
-                |> insert Controls
-                |> nextRow
-                |> setWidth padding
-                |> Grid.goRight
-                |> setWidth ((grid.cursor.w // 2) - padding)
-                |> setHeight ((grid.cursor.h // 2) - padding)
-                |> insert (Toggle Left)
-                |> Grid.insert (Toggle Right)
     in
-    { newGrid
-        | startCol = grid.startCol
-        , cursor = endingCursor
-    }
+    grid
+        |> markAsStartCol
+        |> Grid.insertBackground ControlsBackground
+        |> setHeight (grid.cursor.h // 2)
+        |> insert Controls
+        |> nextRow
+        |> setWidth padding
+        |> Grid.goRight
+        |> setWidth ((grid.cursor.w // 2) - padding)
+        |> setHeight ((grid.cursor.h // 2) - padding)
+        |> insert (Toggle Left)
+        |> Grid.insert (Toggle Right)
 
 
 hudElementToPrimitives : List Float2 -> Float -> Float2 -> HudElement -> List UiPrimitive
