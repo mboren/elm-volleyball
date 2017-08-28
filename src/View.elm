@@ -189,13 +189,13 @@ titleView : Layout a -> Bool -> Svg Msg
 titleView { screenWidth, screenHeight } gameStarted =
     let
         config =
-            { rows = 29
-            , cols = 20
-            , rowPadding = 15
+            { rows = floor screenHeight
+            , cols = floor screenWidth
+            , rowPadding = 0
             , width = screenWidth
             , height = screenHeight
             , xOffset = 0
-            , yOffset = 60
+            , yOffset = 0
             }
 
         mainButtons =
@@ -218,12 +218,15 @@ titleView { screenWidth, screenHeight } gameStarted =
         gridWithTitle =
             Grid.create config
                 |> setWidth config.cols
-                |> setHeight 5
+                |> setHeight 90
                 |> insert (Main MainTitle)
-                |> setWidth 11
+                |> setWidth 500
+
+        pad =
+            setHeight 15 >> nextRow >> setHeight 90
 
         addRow row =
-            nextRow >> insert row
+            nextRow >> pad >> insert row
 
         finalGrid =
             List.foldl addRow gridWithTitle buttons
