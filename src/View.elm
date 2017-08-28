@@ -443,10 +443,12 @@ optionsView model maybeChangingKey =
                     (\qs ->
                         OptionsMenu (QualityButton (boolToUiSettingState (qs == model.graphicsQuality)) qs)
                     )
+        pad =
+            nextRow >> setHeight 15 >> nextRow >> setHeight 90
 
         config =
-            { rows = 24
-            , cols = 12
+            { rows = floor model.screenHeight
+            , cols = floor model.screenWidth
             , rowPadding = 0
             , width = model.screenWidth
             , height = model.screenHeight
@@ -457,25 +459,25 @@ optionsView model maybeChangingKey =
         newGrid =
             Grid.create config
                 -- page header
-                |> setWidth (5 * config.cols // 6)
-                |> setHeight (config.rows // 6)
+                |> setWidth config.cols
+                |> setHeight 90
                 |> insert (OptionsMenu OptionsTitle)
-                |> nextSection
+                |> pad
                 -- controls
                 |> setWidth config.cols
                 |> Grid.insertComposite (createPlayerRow model.player1 getUiSettingState Left)
-                |> nextSection
+                |> pad
                 |> Grid.insertComposite (createPlayerRow model.player2 getUiSettingState Right)
-                |> nextSection
+                |> pad
                 -- graphical quality
                 |> createToggleRow "Quality" graphicsButtons
-                |> nextSection
+                |> pad
                 -- back button
                 |> setWidth (config.cols // 2)
                 |> insert (OptionsMenu BackButton)
                 -- Note about key codes
                 |> markAsStartCol
-                |> setHeight (config.rows // 24)
+                |> setHeight 21
                 |> setWidth (7 * config.cols // 12)
                 |> insert (OptionsMenu (InfoText "Note: non-alphanumeric keys will show raw key code, but will work fine."))
                 |> nextRow
