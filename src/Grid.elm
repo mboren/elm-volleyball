@@ -28,6 +28,7 @@ results in something like this:
 +-----+-----+
 |.....C.....|
 +-----------+
+
 -}
 
 
@@ -86,6 +87,7 @@ map f grid =
     { grid | data = List.map (Tuple.mapSecond f) grid.data }
 
 
+
 -- Functions for manipulating cursor and inserting new regions
 -- These are all designed to work well in a pipeline.
 
@@ -124,6 +126,7 @@ insertBackground : a -> Grid a -> Grid a
 insertBackground newCellData grid =
     { grid | data = ( grid.cursor, newCellData ) :: grid.data }
 
+
 {-| Change cursor width
 -}
 setWidth : Int -> Cursor a -> Cursor a
@@ -156,6 +159,7 @@ goRight curs =
     in
     { curs | cursor = { oldCursor | col = oldCursor.col + oldCursor.w } }
 
+
 {-| Move cursor down one row and move to startCol
 -}
 nextRow : Grid a -> Grid a
@@ -171,6 +175,7 @@ nextRow grid =
                 , row = oldCursor.row + oldCursor.h
             }
     }
+
 
 {-| Move cursor down one row and move to startCol
 -}
