@@ -176,6 +176,7 @@ nextSection grid =
         |> nextRow
         |> setHeight 1
         |> nextRow
+        |> setHeight grid.cursor.h
 
 
 {-| Calling this will make nextRow start at this column the next time it is called

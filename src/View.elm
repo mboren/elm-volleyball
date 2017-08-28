@@ -467,7 +467,6 @@ optionsView model maybeChangingKey =
                 |> createToggleRow "Quality" graphicsButtons
                 |> nextSection
                 -- back button
-                |> setHeight 4
                 |> setWidth 6
                 |> insert (OptionsMenu BackButton)
                 -- Note about key codes
