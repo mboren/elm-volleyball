@@ -97,6 +97,27 @@ insert newCellData grid =
     { grid | data = ( grid.cursor, newCellData ) :: grid.data }
         |> goRight
 
+
+{-| Apply a function to grid and then set cursor and startCol as though insert
+was called a single time.
+-}
+insertComposite : (Grid a -> Grid a) -> Grid a -> Grid a
+insertComposite insertFunc grid =
+    let
+        endingCursor =
+            grid
+                |> goRight
+                |> .cursor
+
+        newGrid =
+            insertFunc grid
+    in
+    { newGrid
+        | startCol = grid.startCol
+        , cursor = endingCursor
+    }
+
+
 {-| Insert a cell at cursor location without advancing cursor
 -}
 insertBackground : a -> Grid a -> Grid a

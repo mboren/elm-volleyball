@@ -353,7 +353,7 @@ instructionsView layout player =
             Grid.create config
                 |> setWidth 120
                 |> setHeight 55
-                |> insertControlToggle
+                |> Grid.insertComposite insertControlToggle
                 |> Grid.map (\partialElem -> Hud (partialElem player Left))
     in
     Svg.g
@@ -459,9 +459,10 @@ optionsView model maybeChangingKey =
                 |> insert (OptionsMenu OptionsTitle)
                 |> nextSection
                 -- controls
-                |> createPlayerRow model.player1 getUiSettingState Left
+                |> setWidth 12
+                |> Grid.insertComposite (createPlayerRow model.player1 getUiSettingState Left)
                 |> nextSection
-                |> createPlayerRow model.player2 getUiSettingState Right
+                |> Grid.insertComposite (createPlayerRow model.player2 getUiSettingState Right)
                 |> nextSection
                 -- graphical quality
                 |> createToggleRow "Quality" graphicsButtons
@@ -487,14 +488,13 @@ optionsView model maybeChangingKey =
 createPlayerRow : Player -> (Side -> MovementKey -> UiSettingState) -> Side -> Grid GridData -> Grid GridData
 createPlayerRow player getState side grid =
     grid
-        |> setWidth 6
-        |> setHeight 4
+        |> setWidth (grid.cursor.w // 2)
         |> insert (OptionsMenu (OptionLabel player.name))
         |> markAsStartCol
-        |> setHeight 2
+        |> setHeight (grid.cursor.h // 2)
         |> insert (OptionsMenu (KeyChangeButton (getState side JumpKey) player JumpKey side))
         |> nextRow
-        |> setWidth 3
+        |> setWidth (grid.cursor.w // 4)
         |> insert (OptionsMenu (KeyChangeButton (getState side LeftKey) player LeftKey side))
         |> insert (OptionsMenu (KeyChangeButton (getState side RightKey) player RightKey side))
         |> Grid.resetStartCol
@@ -505,10 +505,9 @@ createToggleRow name buttons grid =
     let
         gridWithLabel =
             grid
-                |> setWidth 6
-                |> setHeight 4
+                |> setWidth (grid.cursor.w // 2)
                 |> insert (OptionsMenu (OptionLabel name))
-                |> setWidth ((grid.config.cols - 6) // List.length buttons)
+                |> setWidth ((grid.config.cols // 2) // List.length buttons)
     in
     List.foldl insert gridWithLabel buttons
 
@@ -594,7 +593,7 @@ gameView model =
                 |> setWidth 220
                 |> insert PlayerName
                 |> setWidth 135
-                |> insertControlToggle
+                |> Grid.insertComposite insertControlToggle
                 |> setWidth 90
                 |> insert Score
 
