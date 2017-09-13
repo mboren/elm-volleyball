@@ -235,7 +235,7 @@ updateLegs player =
         -- multiple of strideLength,
         -- and the free leg moves proportionally to the distance from
         -- this X value.
-        ( newFixedLegX, newFreeLegX ) =
+        ( unclampedFixedLegX, unclampedFreeLegX ) =
             if player.onGround then
                 if previousDistance < nextDistance then
                     ( previousStrideX, previousStrideX + 2 * previousDistance )
@@ -243,6 +243,15 @@ updateLegs player =
                     ( nextStrideX, nextStrideX - 2 * nextDistance )
             else
                 ( px - strideLength / 2, px + strideLength / 2 )
+
+        clampLeg =
+            clamp player.leftWallX player.rightWallX
+
+        newFixedLegX =
+            clampLeg unclampedFixedLegX
+
+        newFreeLegX =
+            clampLeg unclampedFreeLegX
     in
     { player
         | fixedLegX = newFixedLegX
