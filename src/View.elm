@@ -688,7 +688,7 @@ hudElementToPrimitives path height position elem =
 
         Score player side ->
             [ makePoly side color Nothing
-            , makeText side (toString player.score) Nothing
+            , Text { style | alignmentBaseline = Central } position side (toString player.score) Nothing
             ]
 
         ControlsBackground player side ->
