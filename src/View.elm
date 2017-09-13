@@ -846,8 +846,8 @@ drawPlayer player =
         []
         [ drawCircle ( px, headY ) headRadius (colorToHex fillColor)
         , drawLegs fillColor player
-        , drawArm fillColor Left player.position player.leftArm
-        , drawArm fillColor Right player.position player.rightArm
+        , drawArm fillColor player.limbThickness Left player.position player.leftArm
+        , drawArm fillColor player.limbThickness Right player.position player.rightArm
         , Svg.ellipse
             [ Svg.Attributes.cx (toString px)
             , Svg.Attributes.cy (toString torsoY)
@@ -859,8 +859,8 @@ drawPlayer player =
         ]
 
 
-drawArm : Color -> Side -> Float2 -> Arm -> Svg Msg
-drawArm strokeColor side playerPosition arm =
+drawArm : Color -> Float -> Side -> Float2 -> Arm -> Svg Msg
+drawArm strokeColor strokeWidth side playerPosition arm =
     let
         radius =
             50
@@ -893,7 +893,7 @@ drawArm strokeColor side playerPosition arm =
         , Svg.Attributes.stroke (colorToHex strokeColor)
         , Svg.Attributes.strokeLinecap "round"
         , Svg.Attributes.fillOpacity "0.0"
-        , Svg.Attributes.strokeWidth "20"
+        , Svg.Attributes.strokeWidth (toString strokeWidth)
         ]
         []
 
@@ -935,7 +935,7 @@ drawLegs strokeColor player =
         [ Svg.Attributes.d (pathString legPath)
         , Svg.Attributes.stroke (colorToHex strokeColor)
         , Svg.Attributes.fillOpacity "0.0"
-        , Svg.Attributes.strokeWidth "20"
+        , Svg.Attributes.strokeWidth (toString player.limbThickness)
         , Svg.Attributes.strokeLinecap "round"
         ]
         []

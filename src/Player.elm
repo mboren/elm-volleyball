@@ -84,6 +84,7 @@ create { screenWidth, screenHeight, netWidth } name { leftKey, rightKey, jumpKey
     , freeLegX = x
     , leftArm = defaultLeftArm
     , rightArm = defaultRightArm
+    , limbThickness = 20.0
     }
 
 

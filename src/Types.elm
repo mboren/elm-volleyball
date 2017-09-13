@@ -20,6 +20,7 @@ type alias Player =
                 , freeLegX : Float
                 , leftArm : Arm
                 , rightArm : Arm
+                , limbThickness : Float
                 }
             )
         )
