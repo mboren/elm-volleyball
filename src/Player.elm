@@ -26,13 +26,20 @@ jumpSpeed =
 create : Layout a -> String -> MovementKeys b -> Bool -> Side -> Player
 create { screenWidth, screenHeight, netWidth } name { leftKey, rightKey, jumpKey } ai side =
     let
+        halfLimbThickness =
+            10
+
         ( leftWallX, rightWallX ) =
             case side of
                 Left ->
-                    ( 0, (screenWidth - netWidth) / 2 )
+                    ( halfLimbThickness
+                    , -halfLimbThickness + (screenWidth - netWidth) / 2
+                    )
 
                 Right ->
-                    ( (screenWidth + netWidth) / 2, screenWidth )
+                    ( halfLimbThickness + (screenWidth + netWidth) / 2
+                    , -halfLimbThickness + screenWidth
+                    )
 
         x =
             (leftWallX + rightWallX) / 2
@@ -84,7 +91,7 @@ create { screenWidth, screenHeight, netWidth } name { leftKey, rightKey, jumpKey
     , freeLegX = x
     , leftArm = defaultLeftArm
     , rightArm = defaultRightArm
-    , limbThickness = 20.0
+    , limbThickness = 2 * halfLimbThickness
     }
 
 
