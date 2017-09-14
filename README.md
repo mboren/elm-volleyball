@@ -2,6 +2,7 @@
 
 This is a simple 2D game that I wrote to play with Elm. Specifically, I wanted to build my intuition about how to organize Elm applications as they grow. I didn't focus on fun much at all, so it probably only has a few minutes worth of entertainment value.
 
+Try it out [here](https://s3-us-west-1.amazonaws.com/hi-mom-im-on-the-internet/volleyball.html)
 
 ## Gameplay
  - Two players bounce a bomb back and forth over a net in the middle of the screen
