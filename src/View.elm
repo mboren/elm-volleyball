@@ -806,7 +806,7 @@ insertPauseMenu paused grid =
         grid
             |> insert (Main (Button "Resume" TogglePause))
             |> nextRow
-            |> insert (Main (Button "Main menu" (GoToPage Title)))
+            |> insert (Main (Button "Menu" (GoToPage Title)))
     else
         grid
             |> insert (Main (Button "Pause" TogglePause))
